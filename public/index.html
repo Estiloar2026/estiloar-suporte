@@ -14,7 +14,6 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--navy); }
 
-  /* HEADER */
   header {
     background: var(--navy); border-bottom: 3px solid var(--accent);
     padding: 0 32px; display: flex; align-items: center;
@@ -29,7 +28,6 @@
   .header-contact { color:rgba(255,255,255,0.6); font-size:13px; display:flex; align-items:center; gap:6px; }
   .header-contact strong { color:white; }
 
-  /* HERO */
   .hero {
     background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 55%, var(--sky) 100%);
     color:white; padding:56px 32px 48px; text-align:center; position:relative; overflow:hidden;
@@ -42,7 +40,6 @@
   .hero-btn { display:inline-flex; align-items:center; gap:8px; background:var(--accent); color:var(--navy); font-weight:800; font-size:14px; text-transform:uppercase; letter-spacing:0.5px; padding:13px 26px; border-radius:6px; border:none; cursor:pointer; transition:all 0.2s; font-family:'Barlow',sans-serif; }
   .hero-btn:hover { background:#ffb820; transform:translateY(-1px); box-shadow:0 8px 20px rgba(0,0,0,0.2); }
 
-  /* PRODUTOS */
   .produtos-section { max-width:1100px; margin:0 auto; padding:52px 24px 0; }
   .section-label { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:3px; color:var(--sky); margin-bottom:10px; }
   .section-title { font-family:'Barlow Condensed',sans-serif; font-size:32px; font-weight:900; text-transform:uppercase; color:var(--navy); margin-bottom:8px; }
@@ -59,23 +56,29 @@
   .produto-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,0.12); border-color:var(--sky); }
 
   .produto-img {
-    height:180px; display:flex; align-items:center; justify-content:center;
-    font-size:72px; position:relative; overflow:hidden;
+    height:200px; position:relative; overflow:hidden;
+    background: var(--navy);
   }
-  .produto-img.ac { background:linear-gradient(135deg,#0a1f44,#1a4fa0); }
-  .produto-img.gel { background:linear-gradient(135deg,#0d3d5e,#1a7fa0); }
-  .produto-img.gen { background:linear-gradient(135deg,#1a2a4a,#2a4fa0); }
 
-  .produto-img-pattern {
-    position:absolute; inset:0;
-    background:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='20' cy='20' r='10'/%3E%3C/g%3E%3C/svg%3E");
+  .produto-img img {
+    width:100%; height:100%; object-fit:cover;
+    transition: transform 0.3s ease;
   }
+
+  .produto-card:hover .produto-img img { transform: scale(1.05); }
 
   .produto-tag {
     position:absolute; top:12px; right:12px;
     background:var(--accent); color:var(--navy);
     font-size:10px; font-weight:800; text-transform:uppercase;
     letter-spacing:1px; padding:4px 10px; border-radius:20px;
+    z-index:2;
+  }
+
+  .produto-overlay {
+    position:absolute; inset:0;
+    background: linear-gradient(to top, rgba(10,31,68,0.5) 0%, transparent 60%);
+    z-index:1;
   }
 
   .produto-body { padding:20px; flex:1; display:flex; flex-direction:column; }
@@ -94,10 +97,8 @@
   }
   .produto-btn:hover { background:var(--blue); }
 
-  /* MAIN LAYOUT */
   .main { max-width:1100px; margin:0 auto; padding:40px 24px 48px; display:grid; grid-template-columns:1fr 400px; gap:32px; align-items:start; }
 
-  /* INFO CARD */
   .info-card { background:white; border-radius:12px; border:1px solid var(--border); padding:28px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
   .info-title { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:800; text-transform:uppercase; color:var(--navy); margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--accent); display:flex; align-items:center; gap:8px; }
   .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
@@ -106,7 +107,6 @@
   .info-item-label { font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px; font-weight:600; margin-bottom:3px; }
   .info-item-value { font-size:14px; font-weight:700; color:var(--navy); }
 
-  /* CHAT */
   .chat-container { position:sticky; top:88px; height:calc(100vh - 120px); display:flex; flex-direction:column; background:white; border-radius:12px; border:1px solid var(--border); box-shadow:0 4px 20px rgba(0,0,0,0.08); overflow:hidden; }
   .chat-header { background:linear-gradient(135deg,var(--navy),var(--blue)); padding:16px 20px; display:flex; align-items:center; gap:12px; flex-shrink:0; }
   .chat-avatar { width:40px; height:40px; background:linear-gradient(135deg,var(--sky),var(--accent)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
@@ -122,8 +122,8 @@
   .msg { display:flex; align-items:flex-end; gap:7px; animation:msgIn 0.3s ease; }
   @keyframes msgIn { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
   .msg.user { flex-direction:row-reverse; }
-  .msg-avatar { width:26px; height:26px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; }
-  .msg.bot .msg-avatar { background:var(--blue); color:white; font-size:10px; font-weight:700; }
+  .msg-avatar { width:26px; height:26px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; }
+  .msg.bot .msg-avatar { background:var(--blue); color:white; }
   .msg.user .msg-avatar { background:var(--accent); color:var(--navy); }
   .bubble { max-width:82%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.55; }
   .msg.bot .bubble { background:white; color:var(--navy); border-bottom-left-radius:4px; border:1px solid var(--border); box-shadow:0 1px 4px rgba(0,0,0,0.06); }
@@ -149,7 +149,6 @@
   .send-btn:hover { background:var(--navy); transform:scale(1.05); }
   .send-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
 
-  /* CONTACT */
   .contact-bar { background:var(--navy); padding:20px 32px; display:flex; justify-content:center; gap:48px; flex-wrap:wrap; }
   .contact-item { display:flex; align-items:center; gap:10px; }
   .contact-icon { width:36px; height:36px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; }
@@ -182,7 +181,6 @@
   </div>
 </header>
 
-<!-- HERO -->
 <section class="hero">
   <div class="hero-badge">⚡ Central de Suporte Técnico</div>
   <h1>Bem-vindo à<br><span>Estilo AR</span></h1>
@@ -192,7 +190,6 @@
   </button>
 </section>
 
-<!-- PRODUTOS -->
 <section class="produtos-section">
   <div class="section-label">Linha de Produtos</div>
   <div class="section-title">Nossos Equipamentos</div>
@@ -201,19 +198,18 @@
   <div class="produtos-grid">
 
     <div class="produto-card">
-      <div class="produto-img ac">
-        <div class="produto-img-pattern"></div>
-        <span style="position:relative;z-index:1">🌬️</span>
+      <div class="produto-img">
+        <img src="/images/ar.png" alt="Ar-Condicionado 100% Elétrico" onerror="this.style.display='none'">
+        <div class="produto-overlay"></div>
         <span class="produto-tag">12V / 24V</span>
       </div>
       <div class="produto-body">
         <div class="produto-nome">Ar-Condicionado<br>100% Elétrico</div>
-        <p class="produto-desc">Solução de climatização para cabines de veículos. Tecnologia 100% elétrica com múltiplos modos de operação e proteção inteligente de bateria.</p>
+        <p class="produto-desc">Solução de climatização para cabines de veículos com múltiplos modos de operação e proteção inteligente de bateria.</p>
         <div class="produto-specs">
           <span class="spec-tag">7.750 BTUs (24V)</span>
           <span class="spec-tag">7.000 BTUs (12V)</span>
           <span class="spec-tag">Gás R134a</span>
-          <span class="spec-tag">5 velocidades</span>
         </div>
         <button class="produto-btn" onclick="askProduct('ar-condicionado elétrico')">
           💬 Tenho uma dúvida
@@ -222,19 +218,18 @@
     </div>
 
     <div class="produto-card">
-      <div class="produto-img gel">
-        <div class="produto-img-pattern"></div>
-        <span style="position:relative;z-index:1">❄️</span>
+      <div class="produto-img">
+        <img src="/images/geladeira.png" alt="Geladeira Portátil" onerror="this.style.display='none'">
+        <div class="produto-overlay"></div>
         <span class="produto-tag">35L / 45L / 55L</span>
       </div>
       <div class="produto-body">
         <div class="produto-nome">Geladeira<br>Portátil</div>
-        <p class="produto-desc">Refrigerador portátil compacto com resfriamento rápido até -20°C. Ideal para viagens, camping, veículos e uso doméstico. Duas zonas de temperatura independentes.</p>
+        <p class="produto-desc">Refrigerador portátil com resfriamento rápido até -20°C. Ideal para viagens, camping e veículos. Duas zonas de temperatura independentes.</p>
         <div class="produto-specs">
           <span class="spec-tag">-20°C a +20°C</span>
           <span class="spec-tag">DC 12V/24V</span>
           <span class="spec-tag">60W</span>
-          <span class="spec-tag">2 zonas</span>
         </div>
         <button class="produto-btn" onclick="askProduct('geladeira portátil')">
           💬 Tenho uma dúvida
@@ -243,19 +238,18 @@
     </div>
 
     <div class="produto-card">
-      <div class="produto-img gen">
-        <div class="produto-img-pattern"></div>
-        <span style="position:relative;z-index:1">⚡</span>
+      <div class="produto-img">
+        <img src="/images/gerador.png" alt="Gerador Digital 24V" onerror="this.style.display='none'">
+        <div class="produto-overlay"></div>
         <span class="produto-tag">LE-3000i</span>
       </div>
       <div class="produto-body">
         <div class="produto-nome">Gerador Digital<br>24V</div>
-        <p class="produto-desc">Gerador de conversão de frequência digital com partida automática e controle remoto. Ideal para carregar baterias de veículos e alimentar equipamentos elétricos.</p>
+        <p class="produto-desc">Gerador de conversão de frequência digital com partida automática e controle remoto. Ideal para carregar baterias de veículos.</p>
         <div class="produto-specs">
           <span class="spec-tag">Até 1.800W</span>
           <span class="spec-tag">28V DC</span>
           <span class="spec-tag">Bluetooth</span>
-          <span class="spec-tag">4L tanque</span>
         </div>
         <button class="produto-btn" onclick="askProduct('gerador digital 24V')">
           💬 Tenho uma dúvida
@@ -266,46 +260,19 @@
   </div>
 </section>
 
-<!-- MAIN -->
 <div class="main">
-
   <div class="info-card">
     <div class="info-title">🏢 Sobre a Estilo AR</div>
     <div class="info-grid">
-      <div class="info-item">
-        <div class="info-item-icon">📞</div>
-        <div class="info-item-label">Telefone</div>
-        <div class="info-item-value">(34) 3293-8000</div>
-      </div>
-      <div class="info-item">
-        <div class="info-item-icon">🕐</div>
-        <div class="info-item-label">Horário</div>
-        <div class="info-item-value">Seg–Sex, 08h–18h</div>
-      </div>
-      <div class="info-item">
-        <div class="info-item-icon">📍</div>
-        <div class="info-item-label">Endereço</div>
-        <div class="info-item-value">Av. Eng. Diniz, 848 – Uberlândia/MG</div>
-      </div>
-      <div class="info-item">
-        <div class="info-item-icon">🌐</div>
-        <div class="info-item-label">Site</div>
-        <div class="info-item-value">www.estiloar.com.br</div>
-      </div>
-      <div class="info-item">
-        <div class="info-item-icon">🛡️</div>
-        <div class="info-item-label">Garantia</div>
-        <div class="info-item-value">3 meses (todos os produtos)</div>
-      </div>
-      <div class="info-item">
-        <div class="info-item-icon">📦</div>
-        <div class="info-item-label">Dica de Garantia</div>
-        <div class="info-item-value">Guarde a embalagem por 30 dias</div>
-      </div>
+      <div class="info-item"><div class="info-item-icon">📞</div><div class="info-item-label">Telefone</div><div class="info-item-value">(34) 3293-8000</div></div>
+      <div class="info-item"><div class="info-item-icon">🕐</div><div class="info-item-label">Horário</div><div class="info-item-value">Seg–Sex, 08h–18h</div></div>
+      <div class="info-item"><div class="info-item-icon">📍</div><div class="info-item-label">Endereço</div><div class="info-item-value">Av. Eng. Diniz, 848 – Uberlândia/MG</div></div>
+      <div class="info-item"><div class="info-item-icon">🌐</div><div class="info-item-label">Site</div><div class="info-item-value">www.estiloar.com.br</div></div>
+      <div class="info-item"><div class="info-item-icon">🛡️</div><div class="info-item-label">Garantia</div><div class="info-item-value">3 meses (todos os produtos)</div></div>
+      <div class="info-item"><div class="info-item-icon">📦</div><div class="info-item-label">Dica</div><div class="info-item-value">Guarde a embalagem por 30 dias</div></div>
     </div>
   </div>
 
-  <!-- CHAT -->
   <aside>
     <div class="chat-container">
       <div class="chat-header">
@@ -372,7 +339,7 @@ function askProduct(produto) {
   const msg = `Olá! Tenho uma dúvida sobre o ${produto}.`;
   document.getElementById('chatInput').value = msg;
   document.getElementById('suggestions').style.display = 'none';
-  document.querySelector('.chat-input').scrollIntoView({behavior:'smooth', block:'center'});
+  document.querySelector('.chat-container').scrollIntoView({behavior:'smooth', block:'center'});
   setTimeout(()=>sendMessage(), 300);
 }
 
