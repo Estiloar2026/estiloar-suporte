@@ -8,12 +8,40 @@ app.use(express.static('public'));
 
 const SHEET_ID = '1WWGc7tcK4Y6QJnScCv_TtU5GBk3qYPzmj4APhXAdibw';
 const DRIVE_FOLDER_ID = '14FD9T-XyxS9-9r-03si0Amrswcn_pzBR';
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'estiloar-admin-2025';
+
+// Índice de pastas em memória
+let indiceDrive = [];
+let ultimaAtualizacao = null;
+
+// Mapeamento de modelos para marcas
+const MODELOS_MARCAS = {
+  // Hyundai
+  'hr': 'hyundai', 'hd': 'hyundai', 'hr 160': 'hyundai',
+  // Scania
+  'r450': 'scania', 'r500': 'scania', 's500': 'scania', 'p360': 'scania', 'g420': 'scania',
+  // Volvo
+  'fh': 'volvo', 'fm': 'volvo', 'fmx': 'volvo', 'vm': 'volvo',
+  // Mercedes
+  'actros': 'mercedes', 'axor': 'mercedes', 'atego': 'mercedes', 'accelo': 'mercedes',
+  // Iveco
+  'tector': 'iveco', 'stralis': 'iveco', 'cursor': 'iveco',
+  // MAN
+  'tgx': 'man', 'tgs': 'man', 'tgm': 'man',
+  // Ford
+  'cargo': 'ford', 'f-max': 'ford',
+  // DAF
+  'xf': 'daf', 'cf': 'daf',
+  // Volkswagen
+  'constellation': 'volkswagen', 'delivery': 'volkswagen', 'worker': 'volkswagen',
+  // Fiat
+  'ducato': 'fiat',
+};
 
 // Busca token de acesso ao Google Drive
 async function getAccessToken() {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
-
   const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
   const now = Math.floor(Date.now() / 1000);
   const payload = Buffer.from(JSON.stringify({
@@ -23,57 +51,105 @@ async function getAccessToken() {
     exp: now + 3600,
     iat: now
   })).toString('base64url');
-
   const { createSign } = await import('crypto');
   const sign = createSign('RSA-SHA256');
   sign.update(`${header}.${payload}`);
   const signature = sign.sign(privateKey, 'base64url');
   const jwt = `${header}.${payload}.${signature}`;
-
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
   });
-
   const data = await response.json();
   return data.access_token;
 }
 
-// Busca subpastas do Drive
-async function buscarPastasDrive(query) {
-  try {
-    const token = await getAccessToken();
+// Busca subpastas de uma pasta
+async function buscarSubpastas(token, pastaId) {
+  const url = `https://www.googleapis.com/drive/v3/files?q='${pastaId}'+in+parents+and+mimeType='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name)&pageSize=1000`;
+  const response = await fetch(url, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await response.json();
+  return data.files || [];
+}
 
-    // Busca todas as pastas dentro da pasta principal
-    const url = `https://www.googleapis.com/drive/v3/files?q='${DRIVE_FOLDER_ID}'+in+parents+and+mimeType='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name)&pageSize=100`;
+// Constrói índice completo de todas as pastas (3 níveis)
+async function construirIndice() {
+  console.log('Iniciando construção do índice...');
+  const token = await getAccessToken();
+  const novoIndice = [];
 
-    const response = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+  // Nível 1: Marcas
+  const marcas = await buscarSubpastas(token, DRIVE_FOLDER_ID);
+  console.log(`Encontradas ${marcas.length} marcas`);
 
-    const data = await response.json();
-    const pastas = data.files || [];
+  for (const marca of marcas) {
+    // Nível 2: Modelos dentro de cada marca
+    const modelos = await buscarSubpastas(token, marca.id);
+    console.log(`Marca ${marca.name}: ${modelos.length} modelos`);
 
-    if (pastas.length === 0) return null;
+    for (const modelo of modelos) {
+      novoIndice.push({
+        marca: marca.name.toLowerCase(),
+        marcaNome: marca.name,
+        modelo: modelo.name.toLowerCase(),
+        modeloNome: modelo.name,
+        id: modelo.id,
+        link: `https://drive.google.com/drive/folders/${modelo.id}`
+      });
+    }
 
-    // Filtra pastas relevantes para a query
-    const queryLower = query.toLowerCase();
-    const pastasFiltradas = pastas.filter(p =>
-      p.name.toLowerCase().includes(queryLower)
-    );
-
-    const listagem = pastasFiltradas.length > 0 ? pastasFiltradas : pastas;
-
-    return listagem.map(p => ({
-      nome: p.name,
-      link: `https://drive.google.com/drive/folders/${p.id}`
-    }));
-
-  } catch (err) {
-    console.error('Erro Drive:', err);
-    return null;
+    // Se não tiver subpastas, adiciona a própria marca
+    if (modelos.length === 0) {
+      novoIndice.push({
+        marca: marca.name.toLowerCase(),
+        marcaNome: marca.name,
+        modelo: marca.name.toLowerCase(),
+        modeloNome: marca.name,
+        id: marca.id,
+        link: `https://drive.google.com/drive/folders/${marca.id}`
+      });
+    }
   }
+
+  indiceDrive = novoIndice;
+  ultimaAtualizacao = new Date();
+  console.log(`Índice construído com ${novoIndice.length} pastas`);
+  return novoIndice.length;
+}
+
+// Busca no índice
+function buscarNoIndice(query) {
+  if (indiceDrive.length === 0) return null;
+
+  const q = query.toLowerCase();
+
+  // Verifica se é um modelo conhecido e pega a marca
+  let marcaBusca = '';
+  for (const [modelo, marca] of Object.entries(MODELOS_MARCAS)) {
+    if (q.includes(modelo)) {
+      marcaBusca = marca;
+      break;
+    }
+  }
+
+  // Filtra por marca e/ou modelo — só retorna se tiver match real
+  const resultados = indiceDrive.filter(item => {
+    // Se achou a marca pelo mapeamento, filtra só por essa marca
+    if (marcaBusca) {
+      return item.marca.includes(marcaBusca);
+    }
+    // Senão, busca palavra exata na marca ou modelo
+    const palavras = q.split(' ').filter(p => p.length > 2);
+    return palavras.some(p =>
+      item.marca.includes(p) || item.modelo.includes(p)
+    );
+  });
+
+  // Só retorna se tiver match real — nunca retorna aleatório
+  return resultados.length > 0 ? resultados : null;
 }
 
 // Busca dados da planilha
@@ -95,6 +171,38 @@ async function buscarDadosPlanilha() {
     return '';
   }
 }
+
+// Rota admin para atualizar índice
+app.get('/admin/atualizar-indice', async (req, res) => {
+  const token = req.query.token;
+  if (token !== ADMIN_TOKEN) {
+    return res.status(401).json({ error: 'Não autorizado' });
+  }
+  try {
+    const total = await construirIndice();
+    res.json({
+      sucesso: true,
+      mensagem: `Índice atualizado com sucesso!`,
+      totalPastas: total,
+      atualizadoEm: ultimaAtualizacao
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Rota para ver status do índice
+app.get('/admin/status', async (req, res) => {
+  const token = req.query.token;
+  if (token !== ADMIN_TOKEN) {
+    return res.status(401).json({ error: 'Não autorizado' });
+  }
+  res.json({
+    totalPastas: indiceDrive.length,
+    ultimaAtualizacao,
+    amostra: indiceDrive.slice(0, 5)
+  });
+});
 
 const MANUAL_CONTEXT = `
 Você é o Pedro, assistente técnico da Estilo AR — empresa brasileira que distribui equipamentos de qualidade para veículos e uso geral.
@@ -122,17 +230,13 @@ EMPRESA:
 
 REGRAS IMPORTANTES:
 - NUNCA invente preços ou valores — use APENAS os dados da planilha fornecida
-- NUNCA mencione preços, informações ou comparações de outras marcas ou concorrentes
-- NUNCA acesse ou mencione informações de sites externos, internet ou outras fontes
-- Se perguntarem sobre preços de outras marcas, diga que só trabalha com os produtos da Estilo AR
-- Se perguntarem sobre concorrentes, redirecione para os benefícios dos produtos Estilo AR
-- NUNCA invente informações que não estão no manual ou na planilha
-- Se não souber responder algo, diga honestamente e sugira ligar para (34) 3293-8000
+- NUNCA invente depoimentos, avaliações ou comentários de clientes
+- NUNCA mencione preços ou informações de outras marcas ou concorrentes
+- NUNCA acesse informações de sites externos ou outras fontes
+- Sobre depoimentos e instalações: responda APENAS com os links das pastas fornecidos
+- Se não houver links disponíveis diga: "No momento não encontrei. Ligue para (34) 3293-8000."
+- Se não souber responder algo, sugira ligar para (34) 3293-8000
 - Responda APENAS com base nas informações do manual e da planilha fornecida
-- Quando receber links de pastas do Drive no contexto, você DEVE apresentá-los diretamente ao usuário
-- NUNCA diga que não tem acesso a pastas ou links — se os links estiverem no contexto, apresente-os
-- Quando houver PASTAS ENCONTRADAS NO DRIVE no contexto, liste todos os links para o usuário de forma organizada
-- Exemplo de resposta com links: "Encontrei as seguintes pastas com instalações em Scania: 📁 Scania R450: [link] 📁 Scania S500: [link]" 
 
 PRODUTOS: Ar-Condicionado 100% Elétrico, Geladeira Portátil e Gerador Digital 24V.
 
@@ -178,36 +282,45 @@ app.post('/api/chat', async (req, res) => {
     const ultimaMensagem = messages[messages.length - 1]?.content?.toLowerCase() || '';
 
     // Verifica se é pergunta sobre depoimentos/instalações
-    const palavrasDepoimento = ['depoimento', 'instalação', 'instalacao', 'cliente', 'foto', 'video', 'vídeo', 'scania', 'volvo', 'mercedes', 'iveco', 'man', 'daf', 'ford', 'caminhao', 'caminhão'];
-    const buscaDrive = palavrasDepoimento.some(p => ultimaMensagem.includes(p));
+    const palavrasDepoimento = ['depoimento', 'instalação', 'instalacao', 'cliente', 'referencia', 'referência', 'foto', 'video', 'vídeo', 'quem instalou', 'já instalou', 'ja instalou'];
+    const buscaDrive = palavrasDepoimento.some(p => ultimaMensagem.includes(p)) ||
+      Object.keys(MODELOS_MARCAS).some(m => ultimaMensagem.includes(m)) ||
+      ['scania', 'volvo', 'mercedes', 'iveco', 'man', 'daf', 'ford', 'volkswagen', 'hyundai', 'fiat', 'vw'].some(m => ultimaMensagem.includes(m));
 
-    let dadosDrive = '';
+    let respostaDrive = null;
     if (buscaDrive) {
-      // Extrai a marca/modelo da mensagem
-      const marcas = ['scania', 'volvo', 'mercedes', 'iveco', 'man', 'daf', 'ford'];
-      const marcaEncontrada = marcas.find(m => ultimaMensagem.includes(m)) || '';
-      const pastas = await buscarPastasDrive(marcaEncontrada);
-
-      if (pastas && pastas.length > 0) {
-        dadosDrive = '\n\nPASTAS ENCONTRADAS NO DRIVE (apresente esses links ao usuário de forma organizada):\n';
-        pastas.forEach(p => {
-          dadosDrive += `- ${p.nome}: ${p.link}\n`;
-        });
-      } else {
-        dadosDrive = '\n\nNenhuma pasta encontrada no Drive para essa busca.';
+      // Se índice vazio, tenta construir
+      if (indiceDrive.length === 0) {
+        try {
+          await construirIndice();
+        } catch (err) {
+          console.error('Erro ao construir índice:', err);
+        }
       }
+
+      const resultados = buscarNoIndice(ultimaMensagem);
+      if (resultados && resultados.length > 0) {
+        const linksFormatados = resultados.map(r =>
+          `📁 **${r.marcaNome} — ${r.modeloNome}**: ${r.link}`
+        ).join('\n');
+        respostaDrive = `Encontrei ${resultados.length} pasta(s) no Drive:\n\n${linksFormatados}\n\nQualquer outra dúvida é só chamar! 😊`;
+      } else {
+        respostaDrive = `Não encontrei pastas para essa busca no momento. Para mais informações ligue para **(34) 3293-8000**. 😊`;
+      }
+    }
+
+    // Se encontrou no Drive, retorna direto sem chamar o modelo
+    if (respostaDrive) {
+      return res.json({ reply: respostaDrive });
     }
 
     // Busca dados da planilha
     const dadosPlanilha = await buscarDadosPlanilha();
-
     const contextoCompleto = MANUAL_CONTEXT + `
-
 ========================================
-DADOS ATUALIZADOS DA PLANILHA (preços, promoções e formas de pagamento):
+DADOS ATUALIZADOS DA PLANILHA:
 ========================================
-${dadosPlanilha || 'Planilha temporariamente indisponível. Se perguntarem sobre preços, sugira ligar para (34) 3293-8000.'}
-${dadosDrive}
+${dadosPlanilha || 'Planilha indisponível. Se perguntarem sobre preços, sugira ligar para (34) 3293-8000.'}
 `;
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -228,24 +341,11 @@ ${dadosDrive}
     });
 
     const data = await response.json();
-
     if (!response.ok) {
-      console.error('Groq error:', JSON.stringify(data));
       return res.status(response.status).json({ error: data.error?.message || 'Erro na API' });
     }
 
-    let reply = data.choices?.[0]?.message?.content || 'Sem resposta.';
-
-    // Se encontrou pastas no Drive, injeta os links direto na resposta
-    if (buscaDrive && dadosDrive && dadosDrive.includes('http')) {
-      const linhas = dadosDrive.split('\n').filter(l => l.includes('http'));
-      const linksFormatados = linhas.map(l => {
-        const partes = l.replace('- ', '').split(': ');
-        return `📁 **${partes[0]}**: ${partes[1]}`;
-      }).join('\n');
-      reply = `Encontrei as seguintes pastas no Drive:\n\n${linksFormatados}\n\nQualquer outra dúvida é só chamar! 😊`;
-    }
-
+    const reply = data.choices?.[0]?.message?.content || 'Sem resposta.';
     res.json({ reply });
 
   } catch (err) {
@@ -254,5 +354,22 @@ ${dadosDrive}
   }
 });
 
+// Atualiza índice automaticamente a cada 24 horas
+setInterval(async () => {
+  try {
+    await construirIndice();
+  } catch (err) {
+    console.error('Erro na atualização automática:', err);
+  }
+}, 24 * 60 * 60 * 1000);
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+app.listen(PORT, async () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+  // Constrói índice ao iniciar
+  try {
+    await construirIndice();
+  } catch (err) {
+    console.error('Erro ao construir índice inicial:', err);
+  }
+});
