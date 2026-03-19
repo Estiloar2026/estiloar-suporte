@@ -11,6 +11,50 @@ const DRIVE_FOLDER_ID = '14FD9T-XyxS9-9r-03si0Amrswcn_pzBR';
 const MAPS_ID = '1VC-bF8fpFq_1unO7CLbIbeBl_1QOz1I';
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'estiloar-admin-2025';
 
+// Mapeamento de imagens técnicas
+const IMAGENS_TECNICAS = {
+  'ar': [
+    'https://estiloar-suporte.onrender.com/ar-tecnico-1.png',
+    'https://estiloar-suporte.onrender.com/ar-tecnico-2.png',
+    'https://estiloar-suporte.onrender.com/ar-tecnico-3.png'
+  ],
+  'ecocompact': [
+    'https://estiloar-suporte.onrender.com/ecocompact-tecnico-1.png',
+    'https://estiloar-suporte.onrender.com/ecocompact-tecnico-2.png',
+    'https://estiloar-suporte.onrender.com/ecocompact-tecnico-3.png',
+    'https://estiloar-suporte.onrender.com/ecocompact-tecnico-4.png'
+  ],
+  'geladeira-35l': [
+    'https://estiloar-suporte.onrender.com/geladeira-35l-tecnico-1.png',
+    'https://estiloar-suporte.onrender.com/geladeira-35l-tecnico-2.png'
+  ],
+  'geladeira-45l': [
+    'https://estiloar-suporte.onrender.com/geladeira-45l-tecnico-1.png',
+    'https://estiloar-suporte.onrender.com/geladeira-45l-tecnico-2.png'
+  ],
+  'geladeira-55l': [
+    'https://estiloar-suporte.onrender.com/geladeira-55l-tecnico-1.png',
+    'https://estiloar-suporte.onrender.com/geladeira-55l-tecnico-2.png'
+  ],
+  'gerador': [
+    'https://estiloar-suporte.onrender.com/gerador-tecnico-1.png'
+  ]
+};
+
+// Detecta pedido de imagem técnica e qual produto
+function detectarImagemTecnica(mensagem) {
+  const m = mensagem.toLowerCase();
+  if (!m.includes('tecni') && !m.includes('medida') && !m.includes('dimensão') && !m.includes('dimensao')) return null;
+  if (m.includes('eco') || m.includes('compact')) return 'ecocompact';
+  if (m.includes('35') || m.includes('35l')) return 'geladeira-35l';
+  if (m.includes('45') || m.includes('45l')) return 'geladeira-45l';
+  if (m.includes('55') || m.includes('55l')) return 'geladeira-55l';
+  if (m.includes('geladeira') || m.includes('frigobar')) return 'geladeira-35l';
+  if (m.includes('gerador')) return 'gerador';
+  if (m.includes('ar') || m.includes('condicionado') || m.includes('eletrico') || m.includes('elétrico')) return 'ar';
+  return null;
+}
+
 // Índice de pastas em memória
 let indiceDrive = [];
 let ultimaAtualizacao = null;
@@ -98,39 +142,88 @@ function buscarNoIndice(query) {
   return resultados.length > 0 ? resultados : null;
 }
 
+// Calcula distância entre duas coordenadas (Haversine)
+function calcularDistancia(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Busca coordenadas de uma cidade via Nominatim
+async function buscarCoordenadas(cidade) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cidade + ', Brasil')}&format=json&limit=1`;
+    const response = await fetch(url, { headers: { 'User-Agent': 'EstiloAR-Suporte/1.0' } });
+    const data = await response.json();
+    if (data && data.length > 0) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+    return null;
+  } catch (err) {
+    console.error('Erro coordenadas:', err);
+    return null;
+  }
+}
+
 // Busca pontos de assistência no mapa KML
 async function buscarAssistencia(cidade) {
   try {
-    const url = `https://www.google.com/maps/d/kml?mid=${MAPS_ID}&forcekml=1`;
-    const response = await fetch(url);
-    if (!response.ok) return null;
+    const url = `https://www.google.com/maps/d/u/0/kml?mid=${MAPS_ID}&forcekml=1&lid=0`;
+    const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!response.ok) {
+      console.error('KML status:', response.status);
+      return null;
+    }
     const kml = await response.text();
+    console.log('KML tamanho:', kml.length);
 
-    // Extrai placemarks do KML
     const placemarks = [];
     const regex = /<Placemark>([\s\S]*?)<\/Placemark>/g;
     let match;
     while ((match = regex.exec(kml)) !== null) {
-      const content = match[1];
-      const nome = (content.match(/<name>(.*?)<\/name>/) || [])[1] || '';
-      const desc = (content.match(/<description>([\s\S]*?)<\/description>/) || [])[1] || '';
-      const coords = (content.match(/<coordinates>(.*?)<\/coordinates>/) || [])[1] || '';
-      if (nome && coords) {
-        const [lng, lat] = coords.trim().split(',').map(Number);
-        placemarks.push({ nome: nome.trim(), descricao: desc.replace(/<[^>]*>/g, ' ').trim(), lat, lng });
+      const bloco = match[1];
+      const nome = (bloco.match(/<name>\s*([\s\S]*?)\s*<\/name>/) || [])[1] || '';
+      const desc = (bloco.match(/<description>\s*([\s\S]*?)\s*<\/description>/) || [])[1] || '';
+      const coords = (bloco.match(/<coordinates>\s*([\s\S]*?)\s*<\/coordinates>/) || [])[1] || '';
+      if (coords) {
+        const partes = coords.trim().split(/[,\s]+/);
+        const lng = parseFloat(partes[0]);
+        const lat = parseFloat(partes[1]);
+        if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+          placemarks.push({
+            nome: nome.trim(),
+            descricao: desc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
+            lat, lng
+          });
+        }
       }
     }
 
+    console.log(`KML: ${placemarks.length} pontos encontrados`);
     if (placemarks.length === 0) return null;
 
-    // Calcula distância simples por nome de cidade
-    const cidadeLower = cidade.toLowerCase();
-    const comDistancia = placemarks.map(p => {
-      const score = (p.nome.toLowerCase().includes(cidadeLower) || p.descricao.toLowerCase().includes(cidadeLower)) ? 0 : 1;
-      return { ...p, score };
-    }).sort((a, b) => a.score - b.score);
+    let coordCidade = null;
+    if (cidade && cidade.length > 2) {
+      coordCidade = await buscarCoordenadas(cidade);
+      console.log(`Coordenadas de "${cidade}":`, coordCidade);
+    }
 
-    return comDistancia.slice(0, 2);
+    if (coordCidade) {
+      const comDistancia = placemarks.map(p => ({
+        ...p,
+        distancia: calcularDistancia(coordCidade.lat, coordCidade.lng, p.lat, p.lng)
+      })).sort((a, b) => a.distancia - b.distancia);
+      return comDistancia.slice(0, 2).map(p => ({
+        ...p,
+        distanciaTexto: `${Math.round(p.distancia)} km`
+      }));
+    }
+
+    return placemarks.slice(0, 2);
   } catch (err) {
     console.error('Erro KML:', err);
     return null;
@@ -224,6 +317,16 @@ app.post('/api/chat', async (req, res) => {
 
   try {
     const ultimaMensagem = messages[messages.length - 1]?.content?.toLowerCase() || '';
+
+    // Detecta pedido de imagem técnica
+    const produtoTecnico = detectarImagemTecnica(ultimaMensagem);
+    if (produtoTecnico) {
+      const imagens = IMAGENS_TECNICAS[produtoTecnico];
+      if (imagens && imagens.length > 0) {
+        const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
+        return res.json({ reply: `Aqui estão as imagens técnicas:\n\n${links}\n\nQualquer dúvida é só chamar! 😊` });
+      }
+    }
 
     // Detecta busca de depoimentos/Drive
     const palavrasDepoimento = ['depoimento', 'instalação', 'instalacao', 'cliente', 'referencia', 'referência', 'quem instalou', 'ja instalou', 'já instalou'];
