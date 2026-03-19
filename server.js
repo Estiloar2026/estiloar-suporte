@@ -129,7 +129,10 @@ REGRAS IMPORTANTES:
 - NUNCA invente informações que não estão no manual ou na planilha
 - Se não souber responder algo, diga honestamente e sugira ligar para (34) 3293-8000
 - Responda APENAS com base nas informações do manual e da planilha fornecida
-- Quando receber links de pastas do Drive, apresente-os de forma organizada e amigável
+- Quando receber links de pastas do Drive no contexto, você DEVE apresentá-los diretamente ao usuário
+- NUNCA diga que não tem acesso a pastas ou links — se os links estiverem no contexto, apresente-os
+- Quando houver PASTAS ENCONTRADAS NO DRIVE no contexto, liste todos os links para o usuário de forma organizada
+- Exemplo de resposta com links: "Encontrei as seguintes pastas com instalações em Scania: 📁 Scania R450: [link] 📁 Scania S500: [link]" 
 
 PRODUTOS: Ar-Condicionado 100% Elétrico, Geladeira Portátil e Gerador Digital 24V.
 
@@ -231,7 +234,18 @@ ${dadosDrive}
       return res.status(response.status).json({ error: data.error?.message || 'Erro na API' });
     }
 
-    const reply = data.choices?.[0]?.message?.content || 'Sem resposta.';
+    let reply = data.choices?.[0]?.message?.content || 'Sem resposta.';
+
+    // Se encontrou pastas no Drive, injeta os links direto na resposta
+    if (buscaDrive && dadosDrive && dadosDrive.includes('http')) {
+      const linhas = dadosDrive.split('\n').filter(l => l.includes('http'));
+      const linksFormatados = linhas.map(l => {
+        const partes = l.replace('- ', '').split(': ');
+        return `📁 **${partes[0]}**: ${partes[1]}`;
+      }).join('\n');
+      reply = `Encontrei as seguintes pastas no Drive:\n\n${linksFormatados}\n\nQualquer outra dúvida é só chamar! 😊`;
+    }
+
     res.json({ reply });
 
   } catch (err) {
