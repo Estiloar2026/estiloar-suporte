@@ -230,9 +230,12 @@ app.post('/api/chat', async (req, res) => {
     const marcasVeiculos = ['scania', 'volvo', 'mercedes', 'iveco', 'man', 'daf', 'ford', 'volkswagen', 'vw', 'hyundai', 'fiat', ...Object.keys(MODELOS_MARCAS)];
     const buscaDrive = palavrasDepoimento.some(p => ultimaMensagem.includes(p)) || marcasVeiculos.some(m => ultimaMensagem.includes(m));
 
-    // Detecta busca de assistência técnica
-    const palavrasAssistencia = ['assistência', 'assistencia', 'tecnica', 'técnica', 'autorizada', 'manutenção', 'manutencao', 'mais perto', 'mais próximo', 'proxim'];
-    const buscaAssistencia = palavrasAssistencia.some(p => ultimaMensagem.includes(p));
+    // Detecta busca de assistência técnica — precisa de contexto de localização ou assistência
+    const palavrasAssistencia = ['assistência técnica', 'assistencia tecnica', 'autorizada', 'mais perto', 'mais próximo', 'proxim', 'onde tem', 'ponto de serviço', 'ponto de servico'];
+    const palavrasLocalizacao = ['cidade', 'estado', 'bairro', 'km', 'quilometro', ' em ', ' de ', ' perto', ' próximo'];
+    const buscaAssistencia = palavrasAssistencia.some(p => ultimaMensagem.includes(p)) ||
+      (['assistencia', 'assistência', 'tecnica', 'técnica'].some(p => ultimaMensagem.includes(p)) &&
+       palavrasLocalizacao.some(p => ultimaMensagem.includes(p)));
 
     // Busca Drive
     if (buscaDrive) {
@@ -250,12 +253,18 @@ app.post('/api/chat', async (req, res) => {
 
     // Busca assistência técnica
     if (buscaAssistencia) {
-      const cidadeMatch = ultimaMensagem.match(/(?:em|de|perto de|próximo a|próximo de)\s+([a-záàãâéêíóôõúç\s]+?)(?:\?|$|,)/i);
-      const cidade = cidadeMatch ? cidadeMatch[1].trim() : '';
+      // Extrai cidade da mensagem de forma mais ampla
+      const cidadeMatch = ultimaMensagem.match(/(?:em|de|perto de|próximo a|próximo de|para|na cidade de|no município de)\s+([a-záàãâéêíóôõúç\s]+?)(?:\?|$|,|\.)/i);
+      const cidade = cidadeMatch ? cidadeMatch[1].trim() : ultimaMensagem.replace(/assistência|assistencia|técnica|tecnica|autorizada|mais perto|mais próximo|próximo|tem|qual|onde|fica|há|preciso/gi, '').trim();
       const pontos = await buscarAssistencia(cidade);
       if (pontos && pontos.length > 0) {
-        const lista = pontos.map((p, i) => `📍 **${i+1}. ${p.nome}**${p.descricao ? '\n' + p.descricao.substring(0, 200) : ''}`).join('\n\n');
-        return res.json({ reply: `Encontrei os pontos de assistência técnica mais próximos:\n\n${lista}\n\nQualquer dúvida é só chamar! 😊` });
+        const lista = pontos.map((p, i) => {
+          let info = `📍 **${i+1}. ${p.nome}**`;
+          if (p.distanciaTexto) info += ` — aproximadamente ${p.distanciaTexto}`;
+          if (p.descricao) info += `\n${p.descricao.substring(0, 300)}`;
+          return info;
+        }).join('\n\n');
+        return res.json({ reply: `Encontrei os 2 pontos de assistência técnica mais próximos:\n\n${lista}\n\nQualquer dúvida é só chamar! 😊` });
       } else {
         return res.json({ reply: `Não encontrei pontos de assistência técnica para essa localidade. Por favor ligue para **(34) 3293-8000** para mais informações. 😊` });
       }
