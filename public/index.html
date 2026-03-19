@@ -445,13 +445,7 @@ function moverCarrossel(btn, direcao) {
   dots.forEach((d, i) => d.classList.toggle('active', i === atual));
 }
 
-// Auto-play carrossel
-document.querySelectorAll('.carrossel[data-auto="true"]').forEach(carrossel => {
-  setInterval(() => {
-    const btn = carrossel.querySelector('.carrossel-btn.next');
-    if (btn) moverCarrossel(btn, 1);
-  }, 4000);
-});
+// Auto-play removido — carrossel só avança ao clicar
 
 // CHAT
 let isLoading = false;
