@@ -66,7 +66,6 @@ Tensão mínima para partida: 17,5V
 Luzes: verde normal=ok, vermelho 2x=curto, vermelho 7x=bateria descarregada, óleo acesa=adicionar óleo
 Manutenção: verificar óleo e combustível sempre. Trocar óleo a cada 50h.
 Motor não arranca: verificar combustível, óleo, filtro e vela de ignição.
-Garantia: seguir manual de instalação.
 `;
 
 app.post('/api/chat', async (req, res) => {
@@ -76,50 +75,31 @@ app.post('/api/chat', async (req, res) => {
   }
 
   try {
-    // Monta histórico no formato Gemini
-    const contents = [];
-
-    // Primeira mensagem sempre é o contexto do sistema
-    contents.push({
-      role: 'user',
-      parts: [{ text: `Você deve seguir estritamente estas instruções:\n\n${MANUAL_CONTEXT}\n\nConfirme que entendeu.` }]
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        max_tokens: 800,
+        temperature: 0.7,
+        messages: [
+          { role: 'system', content: MANUAL_CONTEXT },
+          ...messages
+        ]
+      })
     });
-    contents.push({
-      role: 'model',
-      parts: [{ text: 'Entendido! Sou o Pedro do suporte da Estilo AR. Pode perguntar!' }]
-    });
-
-    // Adiciona histórico da conversa
-    for (const msg of messages) {
-      contents.push({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
-      });
-    }
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents,
-          generationConfig: {
-            maxOutputTokens: 800,
-            temperature: 0.7
-          }
-        })
-      }
-    );
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Gemini error:', JSON.stringify(data));
-      return res.status(response.status).json({ error: data.error?.message || 'Erro na API Gemini' });
+      console.error('Groq error:', JSON.stringify(data));
+      return res.status(response.status).json({ error: data.error?.message || 'Erro na API Groq' });
     }
 
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sem resposta.';
+    const reply = data.choices?.[0]?.message?.content || 'Sem resposta.';
     res.json({ reply });
 
   } catch (err) {
