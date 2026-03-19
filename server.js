@@ -230,12 +230,9 @@ app.post('/api/chat', async (req, res) => {
     const marcasVeiculos = ['scania', 'volvo', 'mercedes', 'iveco', 'man', 'daf', 'ford', 'volkswagen', 'vw', 'hyundai', 'fiat', ...Object.keys(MODELOS_MARCAS)];
     const buscaDrive = palavrasDepoimento.some(p => ultimaMensagem.includes(p)) || marcasVeiculos.some(m => ultimaMensagem.includes(m));
 
-    // Detecta busca de assistência técnica — precisa de contexto de localização ou assistência
-    const palavrasAssistencia = ['assistência técnica', 'assistencia tecnica', 'autorizada', 'mais perto', 'mais próximo', 'proxim', 'onde tem', 'ponto de serviço', 'ponto de servico'];
-    const palavrasLocalizacao = ['cidade', 'estado', 'bairro', 'km', 'quilometro', ' em ', ' de ', ' perto', ' próximo'];
-    const buscaAssistencia = palavrasAssistencia.some(p => ultimaMensagem.includes(p)) ||
-      (['assistencia', 'assistência', 'tecnica', 'técnica'].some(p => ultimaMensagem.includes(p)) &&
-       palavrasLocalizacao.some(p => ultimaMensagem.includes(p)));
+    // Detecta busca de assistência técnica — só ativa com palavras específicas de assistência
+    const palavrasAssistencia = ['assistência técnica', 'assistencia tecnica', 'ponto autorizado', 'autorizada', 'mais perto', 'mais próximo', 'ponto de serviço', 'ponto de servico', 'onde conserto', 'onde reparo', 'quem conserta', 'quem repara'];
+    const buscaAssistencia = palavrasAssistencia.some(p => ultimaMensagem.includes(p));
 
     // Busca Drive
     if (buscaDrive) {
