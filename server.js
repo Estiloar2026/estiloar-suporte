@@ -19,22 +19,22 @@ const IMAGENS_TECNICAS = {
     'https://estiloar-suporte.onrender.com/ar-tecnico-3.png'
   ],
   'ecocompact': [
-    'https://estiloar-suporte.onrender.com/ecocompact-tecnico-1.png',
-    'https://estiloar-suporte.onrender.com/ecocompact-tecnico-2.png',
-    'https://estiloar-suporte.onrender.com/ecocompact-tecnico-3.png',
-    'https://estiloar-suporte.onrender.com/ecocompact-tecnico-4.png'
+    'https://estiloar-suporte.onrender.com/ecocompact-tecnico-1.jpg',
+    'https://estiloar-suporte.onrender.com/ecocompact-tecnico-2.jpg',
+    'https://estiloar-suporte.onrender.com/ecocompact-tecnico-3.jpg',
+    'https://estiloar-suporte.onrender.com/ecocompact-tecnico-4.jpg'
   ],
   'geladeira-35l': [
-    'https://estiloar-suporte.onrender.com/geladeira-35l-tecnico-1.png',
-    'https://estiloar-suporte.onrender.com/geladeira-35l-tecnico-2.png'
+    'https://estiloar-suporte.onrender.com/geladeira-35l-tecnico-1.jpg',
+    'https://estiloar-suporte.onrender.com/geladeira-35l-tecnico-2.jpg'
   ],
   'geladeira-45l': [
-    'https://estiloar-suporte.onrender.com/geladeira-45l-tecnico-1.png',
-    'https://estiloar-suporte.onrender.com/geladeira-45l-tecnico-2.png'
+    'https://estiloar-suporte.onrender.com/geladeira-45l-tecnico-1.jpg',
+    'https://estiloar-suporte.onrender.com/geladeira-45l-tecnico-2.jpg'
   ],
   'geladeira-55l': [
-    'https://estiloar-suporte.onrender.com/geladeira-55l-tecnico-1.png',
-    'https://estiloar-suporte.onrender.com/geladeira-55l-tecnico-2.png'
+    'https://estiloar-suporte.onrender.com/geladeira-55l-tecnico-1.jpg',
+    'https://estiloar-suporte.onrender.com/geladeira-55l-tecnico-2.jpg'
   ],
   'gerador': [
     'https://estiloar-suporte.onrender.com/gerador-tecnico-1.png'
