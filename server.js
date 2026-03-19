@@ -283,9 +283,14 @@ app.get('/admin/atualizar-indice', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-const MANUAL_CONTEXT = `
+
+// ============================================================
+// BANCO DE CONHECIMENTO — separado por seções
+// ============================================================
+
+const CONTEXTO_BASE = `
 Você é o Pedro, assistente de suporte de vendas da Estilo AR.
-Você é um ser humano. Nunca diga que é IA ou robô. Se perguntarem se é humano ou robô, diga que é o Pedro do time de suporte da Estilo AR.
+Você é um ser humano. Nunca diga que é IA ou robô. Se perguntarem, diga que é o Pedro do time de suporte da Estilo AR.
 
 JEITO DE SER:
 - Simpático, acolhedor e paciente como um bom atendente brasileiro
@@ -297,534 +302,298 @@ JEITO DE SER:
 - Para problemas graves sugere ligar: (34) 3293-8000
 - Sempre responde em português brasileiro
 
-EMPRESA: Estilo AR — Distribuindo Qualidade
-- Telefone: (34) 3293-8000
-- Horário: Segunda a sexta, 08h às 18h
-- Site: www.estiloar.com.br
-- Endereço: Av. Engenheiro Diniz, 848 - Martins, Uberlândia - MG
+EMPRESA: Estilo AR | Tel: (34) 3293-8000 | Seg-Sex 08h-18h | www.estiloar.com.br | Uberlândia-MG
 
 REGRAS CRÍTICAS:
 - NUNCA invente informações, preços, depoimentos ou dados técnicos
-- NUNCA busque informações em sites externos ou outras fontes
+- NUNCA busque informações em sites externos
 - NUNCA mencione outras marcas ou concorrentes
-- Use APENAS as informações dos manuais e dados fornecidos neste contexto
+- Use APENAS as informações fornecidas neste contexto
 - Se não souber, diga honestamente e sugira ligar para (34) 3293-8000
-- Sobre depoimentos: apresente APENAS os links das pastas fornecidos
 - Sobre preços: use APENAS os dados da planilha fornecida
-- Sobre assistência técnica: apresente APENAS os pontos fornecidos
 
-========================================
-PRODUTO 1 - AR-CONDICIONADO 100% ELÉTRICO
-========================================
-(Manual em atualização — para dúvidas técnicas sobre este produto sugira ligar para (34) 3293-8000)
+PRODUTOS DA ESTILO AR: Ar-Condicionado 100% Elétrico, Ar-Condicionado Eco Compact, Geladeira Portátil (35L/45L/55L) e Gerador Digital 24V.
+`;
 
-========================================
-PRODUTO 2 - AR-CONDICIONADO ECO COMPACT
-========================================
-(Manual em breve — para dúvidas técnicas sobre este produto sugira ligar para (34) 3293-8000)
+const SECOES = {
 
-========================================
-PRODUTO 3 - GELADEIRA PORTÁTIL
-========================================
-Marca: Estilo AR | Modelos disponíveis: 35L, 45L e 55L
+  ar_eletrico: `
+PRODUTO: AR-CONDICIONADO 100% ELÉTRICO
+(Manual em atualização — para dúvidas técnicas sugira ligar para (34) 3293-8000)
+`,
 
-CARACTERÍSTICAS GERAIS:
-- Módulo e compressor de conversão DC de alta eficiência e economia de energia
-- Camada isolante sem flúor com bom desempenho térmico e baixo consumo
-- Fonte de alimentação: DC 12V/24V ou AC 100~240V (usar adaptador especial para AC)
-- Resfriamento rápido até -20°C/-4°F (temperatura ambiente de teste: 25°C/77°F)
-- Sistema inteligente de proteção de bateria
-- Display digital com temperatura dupla e controle único
-- Design: fivela de porta, ranhura para copo, direção de porta ajustável nos dois sentidos, alça
-- Caixa esquerda e caixa direita com temperatura independente
-- O lado com o compressor é a caixa direita; o outro lado é a caixa esquerda
+  eco_compact: `
+PRODUTO: AR-CONDICIONADO ECO COMPACT
+(Manual em breve — para dúvidas técnicas sugira ligar para (34) 3293-8000)
+`,
 
-PARÂMETROS TÉCNICOS:
-- Tensão nominal: DC 12V / 24V
-- Potência nominal: 60W
-- Capacidade: 35L / 45L / 55L
-- Ruído: menor que 45dB
-- Tipo de clima: T/ST/N/SN
-- Faixa de temperatura: -20°C a +20°C (-4°F a 68°F)
+  geladeira_geral: `
+PRODUTO: GELADEIRA PORTÁTIL
+Modelos: 35L, 45L e 55L
+Tensão: DC 12V/24V ou AC 100~240V (usar adaptador especial para AC)
+Resfriamento rápido até -20°C | Potência: 60W | Ruído: menor que 45dB
+Faixa de temperatura: -20°C a +20°C
+Display digital com temperatura dupla | Duas zonas independentes (esquerda e direita)
+O lado com o compressor é a caixa direita
+Garantia: 3 meses
+`,
 
-DIMENSÕES E PESO:
+  geladeira_dimensoes: `
+DIMENSÕES E PESO DA GELADEIRA:
 - Modelo 35L: 647 x 400 x 441mm | Peso: 16,14 kg
 - Modelo 45L: 647 x 400 x 506mm | Peso: 16,5 kg
 - Modelo 55L: 647 x 400 x 571mm | Peso: 17,2 kg
+`,
 
-PRECAUÇÕES DE SEGURANÇA:
-- Não usar se visivelmente danificado
-- Não bloquear aberturas com pinos, cabos etc.
-- Não expor à chuva ou encharcar em água
-- Não colocar perto de chamas ou fontes de calor; evitar luz solar direta
-- Não armazenar substâncias inflamáveis ou explosivas
-- Cabo de alimentação deve estar seco e não danificado
-- Não conectar vários plugues ao mesmo tempo
-- Após desembalar, aguardar 6 horas antes de ligar
-- Inclinação máxima para uso prolongado: menor que 5° | para uso curto: menor que 45°
-- Ventilação ao redor: traseira maior ou igual a 20cm | lateral maior ou igual a 10cm
-- Colocar de forma estável no chão ou no carro
-- Não virar a geladeira quando o tanque interno estiver cheio de água
+  geladeira_operacao: `
+COMO USAR A GELADEIRA:
+- Ligar/desligar: pressionar rapidamente o botão liga/desliga
+- Config temperatura caixa esquerda: pressionar + e botão config por 3 segundos
+- Config temperatura caixa direita: pressionar - e botão config por 3 segundos
+- Não é possível desligar as duas caixas ao mesmo tempo
+- Alternar entre caixas: pressionar botão de configuração
+- Se nenhuma operação em 4 segundos: sai do modo de configuração automaticamente
+- Modos: HH (resfriamento rápido, padrão) e ECO (economia)
+- Para alternar modos: pressionar brevemente o botão de configuração
+- Proteção bateria: segurar botão config por 3 segundos, selecionar Baixo/Médio/Alto
+- Padrão fábrica proteção: Alto
+- Conversão Celsius/Fahrenheit: segurar 3 segundos no status desabilitado até E1, navegar até E5
+- Restaurar fábrica: desligada, segurar 3 segundos até E1, pressionar + e - juntos por 3 segundos
+`,
+
+  geladeira_bateria: `
+PROTEÇÃO DE BATERIA DA GELADEIRA:
+Recomendação: Alto quando no veículo | Médio/Baixo com bateria externa
+DC 12V - Baixo: inicia 8,5V / sai 10,9V | Médio: inicia 10,1V / sai 11,4V | Alto: inicia 11,1V / sai 12,4V
+DC 24V - Baixo: inicia 21,3V / sai 21,7V | Médio: inicia 22,3V / sai 22,7V | Alto: inicia 24,3V / sai 24,7V
+`,
+
+  geladeira_temperatura: `
+TEMPERATURAS RECOMENDADAS:
+Bebidas: 5°C | Frutas: 5~8°C | Verduras: 3~10°C | Comida preparada: 4°C
+Vinho: 10°C | Gelados: -10°C | Carne: -18°C
+`,
+
+  geladeira_erros: `
+ERROS DA GELADEIRA:
+F1 - Baixa tensão: desligar interruptor de proteção. Bateria: H=alta, M=média, L=baixa
+F2 - Sobrecarga ventilador: desligar 5 min e religar. Se persistir: pós-venda
+F3 - Compressor protegendo: desligar 5 min e religar. Se persistir: pós-venda
+F4 - Velocidade compressor baixa/carga grande: desligar 5 min e religar. Se persistir: pós-venda
+F5 - Temperatura alta no compressor: local ventilado, desligar 5 min. Se persistir: pós-venda
+F6 - Controlador sem parâmetros: desligar 5 min e religar. Se persistir: pós-venda
+F7/F8 - Sensor temperatura anormal: contatar pós-venda
+`,
+
+  geladeira_problemas: `
+PROBLEMAS COMUNS DA GELADEIRA:
+Não funciona: verificar botão liga/desliga, plugue, fusível e fonte de alimentação
+Temperatura muito alta: não abrir porta com frequência, não colocar alimentos quentes
+Alimentos congelando: temperatura muito baixa, aumentar a temperatura
+Som de água correndo: condensação natural — NORMAL
+Gotas de água na porta: condensação natural — NORMAL
+Compressor mais alto ao iniciar: estabiliza depois — NORMAL
+`,
+
+  geladeira_manutencao: `
+LIMPEZA E MANUTENÇÃO DA GELADEIRA:
+- Desconectar o plugue antes de limpar
+- Limpar com pano macio úmido, secar depois
+- Não usar limpador abrasivo
+DESCONGELAR: desligar, retirar itens, abrir tampa, aguardar degelo, drenar água, secar
+ARMAZENAMENTO LONGO: desligar, esvaziar, limpar, local seco e ventilado, deixar tampa levemente aberta
+`,
+
+  geladeira_seguranca: `
+PRECAUÇÕES DA GELADEIRA:
+- Não usar se danificado | Não expor à chuva ou água | Não colocar perto de chamas ou calor
+- Após desembalar: aguardar 6 horas antes de ligar
+- Inclinação máxima uso prolongado: menor que 5° | uso curto: menor que 45°
+- Ventilação: traseira ≥20cm | lateral ≥10cm
 - Crianças devem operar sob supervisão
 - Instalação e manutenção só por pessoal qualificado
-- Desconectar da rede antes de limpar ou fazer manutenção
-- Não usar métodos mecânicos para acelerar o descongelamento
+`,
 
-COMPONENTES (Diagrama):
-- Fivela de porta, Juntas, Caixa esquerda, Caixa direita, Painel de controle, Alça, Entrada de alimentação, Compartimento compressor
-
-CONVERSÃO DE DIREÇÃO DAS PORTAS:
-- O sentido de abertura pode ser alterado
-- Processo: abrir porta a 90 graus, tirar um lado, retirar o outro lado, separar o eixo da caixa, reinstalar no lado oposto
-
-FUNÇÕES E OPERAÇÕES:
-- Inicialização: ao ligar, a campainha soa um bipe longo, display acende totalmente por 1 segundo e entra em operação normal
-- Ligar/desligar: pressionar rapidamente o botão liga/desliga
-- Configuração temperatura caixa esquerda: pressionar + e botão config simultaneamente por 3 segundos
-- Configuração temperatura caixa direita: pressionar - e botão config simultaneamente por 3 segundos
-- IMPORTANTE: não é possível desligar as duas caixas ao mesmo tempo
-- Alternar entre caixas: pressionar o botão de configuração
-- Faixa de ajuste de temperatura: -20°C a +20°C
-- Se nenhuma operação for realizada em 4 segundos, o display para de piscar e sai do estado de configuração
-- A temperatura exibida após sair das configurações é a temperatura ambiente atual
-- Se a configuração for grande, demorará um pouco para atingir a temperatura definida
-
-MODOS DE RESFRIAMENTO:
-- HH (resfriamento rápido): padrão de fábrica — máxima performance
-- ECO (economia de energia): menor consumo
-- Para alternar: pressionar brevemente o botão de configuração
-
-PROTEÇÃO DA BATERIA:
-- Configurar: com energia ligada, pressionar e segurar botão de configuração por 3 segundos, tela piscará
-- Pressionar botão de configuração para selecionar nível: Baixo, Médio ou Alto
-- Padrão de fábrica: Alto
-- Recomendação: Alto quando conectado ao veículo | Médio ou Baixo com bateria externa ou reserva
-
-TABELA DE PROTEÇÃO DE BATERIA:
-DC 12V:
-- Baixo: iniciar proteção 8,5V | proteção de saída 10,9V
-- Médio: iniciar proteção 10,1V | proteção de saída 11,4V
-- Alto: iniciar proteção 11,1V | proteção de saída 12,4V
-DC 24V:
-- Baixo: iniciar proteção 21,3V | proteção de saída 21,7V
-- Médio: iniciar proteção 22,3V | proteção de saída 22,7V
-- Alto: iniciar proteção 24,3V | proteção de saída 24,7V
-
-CONVERSÃO DE UNIDADES DE TEMPERATURA:
-- Pressionar e segurar por 3 segundos no status desabilitado → E1 será exibido
-- Pressionar novamente → sequência E1, E2... até E5 → tela pisca
-- Pressionar + ou - para alternar entre Celsius (°C) e Fahrenheit (°F)
-
-RESTAURAR CONFIGURAÇÕES DE FÁBRICA:
-- Com máquina desligada, pressionar e segurar por 3 segundos → exibe E1
-- Pressionar e segurar os botões + e - ao mesmo tempo por 3 segundos até display mostrar conclusão
-- ATENÇÃO: exceto configurações E5, outras são apenas para manutenção do fabricante
-
-TEMPERATURAS RECOMENDADAS POR ALIMENTO:
-- Bebidas: 5°C
-- Frutas: 5~8°C
-- Verduras: 3~10°C
-- Comida preparada: 4°C
-- Vinho: 10°C
-- Gelados: -10°C
-- Carne: -18°C
-
-LIMPEZA:
-- Desconectar o plugue antes de limpar
-- Retirar sujeira e escorrer água pelo orifício de drenagem
-- Limpar superfícies internas e externas com pano macio úmido
-- Secar após limpar
-- Não usar limpador abrasivo
-
-DESCONGELAR:
-- Desligar a máquina e retirar o cabo
-- Retirar itens guardados
-- Abrir a tampa e aguardar o gelo derreter
-- Remover o plugue da geladeira, drenar a água pelo orifício de drenagem
-- Secar com pano macio
-
-ARMAZENAMENTO (quando não for usar por longo período):
-- Desligar e desconectar da tomada
-- Retirar os itens
-- Limpar a água com pano macio
-- Colocar em local seco e ventilado
-- Abrir um pouco a tampa para evitar odores
-
-ERROS E SOLUÇÕES:
-F1 - Proteção de baixa tensão:
-- Código de proteção de baixa tensão
-- Desligar o interruptor de proteção
-- Temperatura da bateria: H (alta), M (média), L (baixa)
-
-F2 - Proteção contra sobrecarga do ventilador:
-- Desligar e aguardar 5 minutos antes de ligar novamente
-- Se persistir: entrar em contato com o pós-venda
-
-F3 - Compressor com proteção frequente:
-- Desligar e aguardar 5 minutos antes de ligar novamente
-- Se persistir: entrar em contato com o pós-venda
-
-F4 - Velocidade do compressor muito baixa ou carga muito grande:
-- Desligar a máquina e aguardar 5 minutos
-- Ligar novamente
-- Se persistir: entrar em contato com o pós-venda
-
-F5 - Temperatura alta no módulo compressor:
-- Colocar o refrigerador em local ventilado
-- Desligar e deixar descansar por 5 minutos
-- Ligar novamente
-- Se persistir: entrar em contato com o pós-venda
-
-F6 - Controlador não consegue verificar os parâmetros:
-- Desligar a energia e aguardar 5 minutos
-- Ligar novamente
-- Se persistir: entrar em contato com o pós-venda
-
-F7 ou F8 - Cabeça sensora de temperatura com proteção anormal:
-- Entrar em contato com o pessoal de pós-venda
-
-PROBLEMAS COMUNS:
-Geladeira não está funcionando:
-- Verificar se o botão liga/desliga no painel está ligado
-- Verificar se o plugue está em bom contato
-- Verificar se o fusível está queimado
-- Verificar se a fonte de alimentação está com defeito
-- Ligar e desligar frequentemente causa atraso no arranque do compressor
-
-Temperatura da geladeira muito alta:
-- Abrir e fechar frequentemente a porta aumenta a temperatura
-- Não armazenar grande quantidade de alimentos quentes
-- Verificar se a geladeira está fora de uso há muito tempo
-
-Alimentos congelando no refrigerador:
-- Configuração de temperatura muito baixa — aumentar a temperatura
-
-Som de água correndo por dentro da caixa:
-- Quando a umidade do ar entra em contato com a caixa de baixa temperatura ela se liquefaz e condensa em gotículas — fenômeno NORMAL
-
-Gotas de água ao redor da concha ou rachaduras na porta:
-- Condensação natural — fenômeno NORMAL
-
-Compressor soa mais alto ao iniciar:
-- Quando arranca, o som fica ligeiramente mais alto — depois estabiliza — NORMAL
-
-PÓS-VENDA E GARANTIA (Geladeira):
-- Garantia: 3 meses a partir da data de compra
-- Não cobre: danos provocados pelo homem, força maior (terremoto, incêndio), não seguir o manual, desmontagem sem permissão
-
-========================================
-PRODUTO 4 - GERADOR DIGITAL 24V
-========================================
+  gerador_geral: `
+PRODUTO: GERADOR DIGITAL 24V
 Modelos: LE-3000i e LE-3000i Pro
-Aplicável aos dois modelos
+Tensão nominal DC: 28V (±1V) | Potência de saída: até 1.800W
+Combustível: gasolina sem chumbo (tanque 4L)
+Óleo: SJ10W-40 padrão API tipo SE (capacidade 0,4L)
+Motor: monocilíndrico, 4 tempos, arrefecimento por ar forçado
+Voltagem mínima para partida: 17,5V
+Garantia: 3 meses
+`,
 
-ATENÇÃO CRÍTICA DE SEGURANÇA:
-- NUNCA usar em ambientes fechados: gás de exaustão contém monóxido de carbono, pode causar perda de consciência ou morte
+  gerador_seguranca: `
+SEGURANÇA DO GERADOR:
+- NUNCA usar em ambientes fechados: monóxido de carbono pode causar morte
 - Não usar em ambiente úmido
 - Manter combustível a pelo menos 1m de distância
+- Parar o motor ANTES de reabastecer
 - Não fumar durante o reabastecimento
-- Parar o motor antes de reabastecer
-- Não derramar combustível ao reabastecer
 - Gerador NÃO vem com óleo da fábrica: NUNCA ligar sem colocar óleo primeiro
-- Não colocar junto com outros itens ao transportar (vazamento de óleo pode danificar o motor)
-- Manter orifícios de ventilação limpos e livres de detritos, lama e água
+- Durante carregamento: não fumar, não conectar/desconectar da bateria
+`,
 
-COMPONENTES PRINCIPAIS:
-- Alça de transporte
-- Tampa do tanque de combustível
-- Painel de controle
-- Persianas
-- Coletor de faíscas
-
-PAINEL DE CONTROLE:
-- Troca de óleo
-- Luz indicadora de óleo
-- Indicador de status
-- Combinação de interruptores (Ligar / Desligar / Automático)
-- Conexão de fio negativo
-- Conexão de fio positivo
-- IMPORTANTE: não conectar os polos positivo e negativo ao contrário!
-
-VERSÃO BLUETOOTH:
-- Combinação de interruptores
-- Conexão de fio negativo e positivo
-- Visualização LED
-
-ESPECIFICAÇÕES TÉCNICAS:
-- Tensão nominal DC: 28V (±1V, ajustável conforme necessidade do cliente)
-- Potência de saída: até 1.800W (≤1.800W)
-- Combustível: gasolina sem chumbo
-- Capacidade do tanque: 4L
-- Óleo do motor: SJ10W-40 (padrão API tipo SE ou superior)
-- Capacidade de óleo: 0,4L
-- Tipo de motor: monocilíndrico, 4 tempos, arrefecimento por ar forçado, válvula suspensa
-- Altitude máxima de operação: conforme certificado
-- Temperatura ambiente máxima: conforme certificado
-
-COMBUSTÍVEL:
-- Usar APENAS gasolina sem chumbo
-- Gasolina com chumbo danifica seriamente as partes internas do motor
-- Capacidade do tanque: 4L — encher até a linha vermelha do indicador de nível
-- Não encher demais — o óleo transbordará quando o tanque esquentar
-- Após reabastecer: fechar bem a tampa e limpar resíduos de gasolina com pano macio
-
-ÓLEO DO MOTOR:
-- Óleo recomendado: SJ10W-40
-- Grau recomendado: padrão API tipo SE ou superior
-- Capacidade: 0,4L
-- Gerador NÃO vem com óleo — adicionar antes do primeiro uso
-- Para adicionar: colocar em superfície nivelada, soltar parafusos, remover tampa externa, abrir tampa de abastecimento, encher até o limite superior
-- Em áreas de baixa temperatura no inverno: usar óleo de baixa temperatura
-
-INICIALIZAÇÃO:
-- Conectar a bateria
-- Verificar se a linha de conexão de saída está solta ou danificada
-- Para iniciar imediatamente: pressionar o interruptor para a posição "Ligar"
-- Modo automático: máquina inicia automaticamente quando voltagem da bateria cair abaixo de 23V, 24V ou 25V (configurável)
-- Voltagem mínima para partida: 17,5V — abaixo disso o gerador não inicia
-
-DESLIGAMENTO:
-- Para parar imediatamente: pressionar interruptor para "Desligar"
-- No modo automático: para automaticamente quando a potência do gerador for inferior a 800W
-
-CARREGAMENTO DA BATERIA:
-- Tensão CC nominal: 28V (±1V)
-- Fio vermelho → terminal positivo (+) da bateria
-- Fio preto → terminal negativo (-) da bateria
-- Ligar o gerador
+  gerador_operacao: `
+COMO USAR O GERADOR:
+- Ligar imediatamente: interruptor para "Ligar"
+- Modo automático: liga quando bateria cai abaixo de 23V/24V/25V (configurável)
+- Desligar: interruptor para "Desligar"
+- No modo automático: para quando geração cai abaixo de 800W
+- Fio vermelho → terminal positivo (+) | Fio preto → terminal negativo (-)
 - NUNCA inverter os polos
-- O cabo deve estar firmemente conectado para evitar que solte pela vibração
-- Os fios positivo e negativo devem passar pelo fusível
-- Durante o carregamento: não fumar, não conectar/desconectar da bateria (faíscas podem inflamar o gás)
-- Eletrólito da bateria contém ácido sulfúrico — evitar contato com pele, olhos e roupa
+- Conexão Bluetooth: ligar Bluetooth do telefone e autorizar permissões
+`,
 
-ÂMBITO DE APLICAÇÃO:
-- Potência de saída máxima: ≤1.800W
-- Tensão nominal de saída DC: 28V (±1V)
-
-CONDIÇÕES ATMOSFÉRICAS PADRÃO DE OPERAÇÃO:
-- Temperatura ambiente: 25°C
-- Pressão atmosférica: 100kPa
-- Umidade relativa: 30%
-- A saída diminui em temperaturas, umidade e altitudes acima do padrão
-
-INDICADORES DE STATUS — LUZES DE FALHA:
-Luz vermelha pisca 2 vezes: anomalia de curto-circuito
-- Remover fios trifásicos do controlador, deixar no ar, ligar novamente
-- Se persistir: substituir controlador
-- Verificar vazamento entre fios e carcaça do motor e ponte retificadora
-
-Luz vermelha pisca 3 vezes: anormalidade na linha de fase
-- Remover fios trifásicos com energia desligada
-- Verificar curto-circuito na ponte retificadora
-- Limpar manchas superficiais, reteste
-- Se persistir: substituir controlador
-
-4 vermelhos 3 verdes: anomalias de inicialização
-- Verificar se fusível de 25A está desconectado
-- Confirmar se modelos do motor e controlador correspondem
-- Verificar se motor emite som mas não gira
-- Verificar se rotor gira normalmente
-
-Luz vermelha pisca 5 vezes: sobretensão de inicialização
-- Tensão da bateria maior que 31V (valor padrão de proteção de alta tensão)
-- Verificar se tensão atual da bateria está muito alta
-
-Luz vermelha pisca 6 vezes: detecção de velocidade
-- Motor teoricamente parado — verificar se o motor para
-- Se motor funcionando: confirmar se fio de extinção está em contato normal
-- Se motor parado: verificar se ponte retificadora corresponde
-
-Luz vermelha pisca 7 vezes: subtensão da bateria
-- Bateria completamente descarregada ou danificada
-- Verificar se alguma bateria tem voltagem menor que 8V
-- Ligar manualmente para carregar a bateria
-- Conectar carregador antes de usar
-
-2 vermelhos 1 verde: verificar fiação
-- Confirmar se pinos de instalação do fio trifásico estão em contato normal
-- Testar ponte retificadora
-
-3 vermelhos 2 verdes: detectando grandes correntes
-- Verificar contato dos terminais trifásicos
-- Verificar se rotor gira normalmente
-- Verificar interrupção no circuito entre fios trifásicos
-- Verificar curto-circuito entre linha de fase e carcaça
-
-5 vermelhos 1 verde: detecção de sobretensão na geração
-- Medir voltagem da bateria
-- Verificar fio do motor de passo
-- Verificar cabos do acelerador e motor de passo da porta de ar
-- Verificar fio de extinção e chicotes positivo e negativo
-
-6 vermelhos 1 verde: motor não liga normalmente
-- Se tempo de funcionamento menor que 3s: mover tampa de alta pressão do carburador
-- Se tempo menor que 10s: verificar circuito de óleo, carburador, motor de passo, vela, fio de extinção
-- Se maior que 10s: verificar circuito de óleo e limpar carburador
-
-7 vermelhos 1 verde: detecção de subtensão na geração
-- Verificar sobrecarga — reiniciar após desligar
-- Verificar curto-circuito na linha trifásica
-- Verificar cabo de alimentação solto
-- Verificar bateria completamente danificada (voltagem menor que 5V = substituir)
-
-Luz do painel apagada: mau contato
-- Desconectar fonte, remover 4 parafusos do painel
-- Verificar se chicote elétrico do controlador está em bom contato
-- Verificar se entrada de energia está normal
-
-3 vermelhos 4 verdes: anormalidade na comunicação interna (versão Bluetooth)
-- Controle remoto pode iniciar e parar mas app não consegue
-- Desligar por 10 segundos e ligar novamente
-- Se persistir: substituir controlador
-
-Luz do óleo sempre acesa / 3 vermelhos 3 verdes: óleo insuficiente
-- Adicionar óleo do motor
-- Em baixas temperaturas: usar óleo de baixa temperatura
-
-3 vermelhos 5 verdes: alarme de vazamento de gasolina (versão Bluetooth)
-- Verificar se recipiente de vazamento de óleo está vazando
-- Verificar vazamentos no carburador
-
-INDICADORES DE STATUS — LUZES NORMAIS:
-Luz verde piscando normal: interruptor em ignição desligada ou posição manual
-Luz verde piscando 3 vezes: modo automático — partida e parada automáticas
-Luz verde piscando 2 vezes: condições de parada automática atendidas
+  gerador_luzes: `
+LUZES INDICADORAS DO GERADOR:
+Verde normal: operação normal
+Verde 3x: modo automático ativo
+Verde 2x: condições de parada automática atendidas
 1 vermelho 2 verdes: modo manual
-Luz verde piscando rapidamente: estágio de aprendizagem do controle remoto
-Luz verde sempre acesa: status de conexão Bluetooth
-Luz vermelha e verde ao mesmo tempo: apagamento remoto (duração 12s)
+Vermelho 2x: curto-circuito → verificar fios trifásicos, substituir controlador se persistir
+Vermelho 3x: anormalidade linha de fase → verificar fios e ponte retificadora
+4 vermelhos 3 verdes: anomalia inicialização → verificar fusível 25A e se motor gira
+Vermelho 5x: sobretensão → bateria acima de 31V
+Vermelho 6x: detecção velocidade → verificar fio de extinção
+Vermelho 7x: subtensão bateria → bateria descarregada (abaixo de 8V) ou danificada
+2 vermelhos 1 verde: verificar fiação
+3 vermelhos 2 verdes: corrente alta → verificar terminais e rotor
+5 vermelhos 1 verde: sobretensão na geração → medir voltagem, verificar motor de passo
+6 vermelhos 1 verde: motor não liga → verificar carburador, vela, fio de extinção
+7 vermelhos 1 verde: subtensão na geração → verificar sobrecarga e fios
+Luz óleo acesa: óleo insuficiente → adicionar imediatamente
+3 vermelhos 3 verdes: óleo insuficiente (Bluetooth)
+3 vermelhos 5 verdes: alarme vazamento gasolina (Bluetooth)
+`,
 
-LUZ INDICADORA DE ÓLEO:
-- Quando o óleo cair abaixo da linha de segurança: motor desliga automaticamente e luz acende
-- Motor só pode ser ligado novamente após encher o óleo até o nível recomendado
-- Se indicador piscar por alguns segundos: capacidade de óleo insuficiente — adicionar óleo e reiniciar
+  gerador_manutencao: `
+MANUTENÇÃO DO GERADOR:
+Sempre: verificar combustível e óleo antes de usar
+Mensal/20h: verificar e adicionar óleo | limpar filtro de ar
+Trimestral/50h: substituir óleo | limpar vela de ignição
+100h: ajustar válvulas | limpar depósito de combustível
+Em altas temperaturas/cargas: trocar óleo a cada 25h
+Em ambientes poeirentos: limpar filtro de ar a cada 10h
 
-COMBINAÇÃO DE INTERRUPTORES:
-1 - Ligar
-2 - Desligar
-3 - Automático
+SUBSTITUIÇÃO DO ÓLEO: aquecer motor, desligar, inclinar para drenar, recolocar na horizontal, adicionar 0,4L de SJ10W-40
+FILTRO DE AR: remover, limpar com solvente, secar, adicionar óleo, espremer excesso, reinstalar
+`,
 
-FUNÇÕES COMUNS:
-Conexão Bluetooth: ligar o Bluetooth do telefone e autorizar as permissões
-Emparelhamento do controle remoto:
-- Alternar interruptor entre parada e início automático 4 vezes
-- Quando ver luz verde piscando rapidamente, pressionar botão no controle remoto até motor dar partida
-- Soltar e pressionar novamente para desligar — emparelhamento feito
-- Se falhar: substituir controle remoto e repetir
+  gerador_problemas: `
+MOTOR DO GERADOR NÃO ARRANCA:
+1. Sem combustível → reabastecer
+2. Filtro entupido → limpar filtro de combustível
+3. Carburador entupido → limpar carburador
+4. Óleo baixo → adicionar óleo
+5. Vela com carbono ou umidade → limpar e secar a vela
+6. Problema no sistema de ignição → contatar fabricante
 
-Modo puxar:
-- Após girar interruptor para posição inicial e pressionar controle remoto, luzes ficam 1 vermelho 2 verdes
-- Consertar motor e puxar a trava com força para fazer girar
+ARMAZENAMENTO: até 1 mês=nenhuma prep | 1-2 meses=trocar gasolina | 2 meses-1 ano=drenar carburador também | mais de 1 ano=tudo + drenar internamente
+`,
 
-INTERFACE DO APLICATIVO (versão Bluetooth):
-- Painel de instrumentos de saída de tensão
-- Velocidade atual
-- Exibição de potência
-- Botão de marcha automática
-- Botão Iniciar/Parar
-- Configurações de parâmetros
-- Posição de autoextinção
-- Regulação de tensão de auto-partida: 23V, 24V ou 25V
-- Ajuste do tempo de atraso de partida automática
-- 8 marchas configuráveis
-- Início e parada programados
-- Modo de trabalho
-- Desligar controle remoto
-- Ativação do tanque de combustível auxiliar
+};
 
-MANUTENÇÃO — CRONOGRAMA:
-Sempre (antes de cada uso):
-- Verificar nível de combustível no tanque
-- Verificar nível de óleo do motor
-- Verificar se há vazamentos de óleo
+// Seleciona as seções relevantes para a pergunta
+function selecionarContexto(mensagem) {
+  const m = mensagem.toLowerCase();
+  const secoes = [CONTEXTO_BASE];
 
-Uma vez ao mês ou 20 horas de utilização:
-- Verificar e adicionar óleo se necessário
-- Examinar e limpar filtro de ar
+  // Geladeira
+  if (m.includes('geladeira') || m.includes('frigobar') || m.includes('refrigerador') ||
+      m.match(/\b(35|45|55)l?\b/)) {
 
-A cada 3 meses ou 50 horas:
-- Substituir óleo do motor
-- Substituir óleo de engrenagem (se existir)
-- Limpar filtro de ar
-- Limpar vela de ignição
+    secoes.push(SECOES.geladeira_geral);
 
-100 horas de utilização:
-- Verificar e ajustar velocidade de ralenti
-- Verificar e ajustar folga da válvula
-- Limpar depósito de combustível e filtro
-- Verificar tubo de combustível (substituir a cada 2 anos se necessário)
-- Remover depósitos de carvão do cabeçote e pistão (a cada 125h para deslocamento menor que 225cc)
+    if (m.match(/\b(35|45|55)\b/) || m.includes('peso') || m.includes('dimens') || m.includes('medida') || m.includes('tamanho'))
+      secoes.push(SECOES.geladeira_dimensoes);
 
-OBSERVAÇÃO: Se trabalhar frequentemente em altas temperaturas ou cargas elevadas, trocar óleo a cada 25 horas. Em ambientes poeirentos, limpar filtro de ar a cada 10 horas.
+    if (m.includes('f1') || m.includes('f2') || m.includes('f3') || m.includes('f4') ||
+        m.includes('f5') || m.includes('f6') || m.includes('f7') || m.includes('f8') ||
+        m.includes('erro') || m.includes('falha') || m.includes('código'))
+      secoes.push(SECOES.geladeira_erros);
 
-SUBSTITUIÇÃO DO ÓLEO:
-1. Ligar por alguns minutos para aquecer o óleo
-2. Desligar o motor
-3. Remover parafusos e tampa externa
-4. Retirar tampa do óleo do motor
-5. Inclinar o gerador e verter o óleo em depósito adequado
-6. Voltar à posição horizontal
-7. Reabastecer até a posição adequada com SJ10W-40 (0,4L)
-8. Não inclinar ao adicionar óleo para não adicionar em excesso
-9. Limpar a tampa, apertar a vareta, fechar a porta e apertar os parafusos
+    if (m.includes('não funciona') || m.includes('nao funciona') || m.includes('problema') ||
+        m.includes('som') || m.includes('água') || m.includes('gota') || m.includes('congelando'))
+      secoes.push(SECOES.geladeira_problemas);
 
-INSPEÇÃO DA VELA DE IGNIÇÃO:
-1. Retirar tampa decorativa e tampa da vela
-2. Inserir chave de fendas na luva, girar no sentido anti-horário e retirar a vela
-3. Verificar desbotamento e remover depósitos de carvão
-4. Verificar modelo e folga da vela
-5. Apertar com torque de 12,5 N.m (ou 1/4 a 1/2 volta após sentir que está apertada)
+    if (m.includes('bateria') || m.includes('tensão') || m.includes('voltagem') || m.includes('proteção'))
+      secoes.push(SECOES.geladeira_bateria);
 
-FILTRO DE AR (limpeza):
-1. Retirar parafusos e tampa exterior
-2. Retirar parafuso e tampa do filtro de ar
-3. Remover elemento filtrante de espuma
-4. Limpar com solvente e secar
-5. Adicionar óleo de motor ao elemento e espremer o excesso
-6. Não torcer com força
-7. Reinstalar garantindo contato próximo com o filtro
-8. Não ligar sem o filtro de ar instalado
+    if (m.includes('temperatura') || m.includes('carne') || m.includes('fruta') || m.includes('bebida'))
+      secoes.push(SECOES.geladeira_temperatura);
 
-FILTRO DE COMBUSTÍVEL (limpeza):
-1. Remover tampa do depósito e o filtro
-2. Limpar com gasolina
-3. Secar e reinstalar
-4. Reinstalar a tampa
+    if (m.includes('como usar') || m.includes('ligar') || m.includes('desligar') || m.includes('configurar') ||
+        m.includes('modo') || m.includes('eco') || m.includes('hh') || m.includes('celsius') || m.includes('fahrenheit'))
+      secoes.push(SECOES.geladeira_operacao);
 
-AJUSTE DO CARBURADOR:
-- Deve ser realizado por revendedor com conhecimento profissional
-- Não realizar sem ferramentas e equipamentos adequados
+    if (m.includes('limpar') || m.includes('limpeza') || m.includes('desgel') || m.includes('guardar') || m.includes('armazenar'))
+      secoes.push(SECOES.geladeira_manutencao);
 
-SOLUÇÃO DE PROBLEMAS — MOTOR NÃO ARRANCA:
-1. Sem gasolina na câmara:
-   - Não há combustível no depósito → reabastecer
-   - Filtro de combustível entupido → limpar filtro
-   - Carburador entupido → limpar carburador
-2. Sistema de óleo insuficiente:
-   - Nível de óleo baixo → adicionar óleo do motor
-3. Sistema elétrico:
-   - Vela com depósitos de carvão ou umidade → limpar e secar
-   - Problemas no sistema de ignição → contatar fabricante
+    if (m.includes('segurança') || m.includes('cuidado') || m.includes('atenção') || m.includes('perigo'))
+      secoes.push(SECOES.geladeira_seguranca);
 
-ARMAZENAMENTO DO GERADOR:
-Dentro de 1 mês: nenhuma preparação necessária
-1 a 2 meses: drenar gasolina original e adicionar gasolina nova
-2 meses a 1 ano: drenar gasolina, drenar gasolina do copo do carburador, drenar copo de sedimentação
-Mais de 1 ano: tudo acima + drenar gasolina internamente e adicionar nova antes de usar
+    // Se pergunta genérica sem contexto específico
+    if (secoes.length === 2) {
+      secoes.push(SECOES.geladeira_operacao);
+      secoes.push(SECOES.geladeira_dimensoes);
+    }
+  }
 
-PARA REINICIALIZAR APÓS ARMAZENAMENTO:
-- Desapertar parafuso de drenagem do óleo do carburador
-- Colocar combustível do carburador em depósito especial
-- Apertar o parafuso de drenagem
-- Após retirar do depósito, colocar gasolina original em recipiente adequado e adicionar gasolina nova antes de começar
+  // Gerador
+  else if (m.includes('gerador') || m.includes('le-3000') || m.includes('le3000') || m.includes('combustível') || m.includes('combustivel')) {
 
-PÓS-VENDA E GARANTIA (Gerador):
-- Seguir rigorosamente o manual de instalação
-- Instalação incorreta: responsabilidade do usuário
-- Transformações não autorizadas: responsabilidade do usuário
-- Substituição por peças não originais pode causar danos e problemas de segurança
-`;
+    secoes.push(SECOES.gerador_geral);
+
+    if (m.includes('luz') || m.includes('pisca') || m.includes('vermelho') || m.includes('verde') ||
+        m.includes('indicador') || m.includes('painel') || m.includes('erro') || m.includes('falha'))
+      secoes.push(SECOES.gerador_luzes);
+
+    if (m.includes('não arranca') || m.includes('nao arranca') || m.includes('não liga') ||
+        m.includes('nao liga') || m.includes('problema') || m.includes('armazenamento'))
+      secoes.push(SECOES.gerador_problemas);
+
+    if (m.includes('óleo') || m.includes('oleo') || m.includes('manutenção') || m.includes('manutencao') ||
+        m.includes('filtro') || m.includes('vela') || m.includes('trocar'))
+      secoes.push(SECOES.gerador_manutencao);
+
+    if (m.includes('como usar') || m.includes('ligar') || m.includes('desligar') || m.includes('automático') ||
+        m.includes('bateria') || m.includes('carregar') || m.includes('bluetooth'))
+      secoes.push(SECOES.gerador_operacao);
+
+    if (m.includes('segurança') || m.includes('perigo') || m.includes('cuidado') || m.includes('fechado'))
+      secoes.push(SECOES.gerador_seguranca);
+
+    // Se pergunta genérica
+    if (secoes.length === 2) {
+      secoes.push(SECOES.gerador_operacao);
+      secoes.push(SECOES.gerador_seguranca);
+    }
+  }
+
+  // Ar-condicionado
+  else if (m.includes('ar') || m.includes('condicionado') || m.includes('elétrico') || m.includes('eletrico') ||
+           m.includes('eco compact') || m.includes('ecocompact')) {
+
+    if (m.includes('eco') || m.includes('compact'))
+      secoes.push(SECOES.eco_compact);
+    else
+      secoes.push(SECOES.ar_eletrico);
+  }
+
+  // Pergunta genérica — inclui contexto básico de todos os produtos
+  else {
+    secoes.push(SECOES.ar_eletrico);
+    secoes.push(SECOES.geladeira_geral);
+    secoes.push(SECOES.gerador_geral);
+  }
+
+  return secoes.join('\n');
+}
+
+
 
 app.post('/api/chat', async (req, res) => {
   const { messages } = req.body;
@@ -899,9 +668,10 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
-    // Busca planilha e chama modelo
+    // Seleciona só o contexto relevante para a pergunta
     const dadosPlanilha = await buscarDadosPlanilha();
-    const contexto = MANUAL_CONTEXT + `\n========\nDADOS DA PLANILHA (preços/promoções/pagamento):\n${dadosPlanilha || 'Indisponível — sugira ligar para (34) 3293-8000'}`;
+    const contextoRelevante = selecionarContexto(ultimaMensagem);
+    const contexto = contextoRelevante + `\n========\nDADOS DA PLANILHA (preços/promoções/pagamento):\n${dadosPlanilha || 'Indisponível — sugira ligar para (34) 3293-8000'}`;
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
