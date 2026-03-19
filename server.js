@@ -8,6 +8,7 @@ app.use(express.static('public'));
 
 const SHEET_ID = '1WWGc7tcK4Y6QJnScCv_TtU5GBk3qYPzmj4APhXAdibw';
 const DRIVE_FOLDER_ID = '14FD9T-XyxS9-9r-03si0Amrswcn_pzBR';
+const MAPS_ID = '1VC-bF8fpFq_1unO7CLbIbeBl_1QOz1I';
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'estiloar-admin-2025';
 
 // Índice de pastas em memória
@@ -16,40 +17,26 @@ let ultimaAtualizacao = null;
 
 // Mapeamento de modelos para marcas
 const MODELOS_MARCAS = {
-  // Hyundai
-  'hr': 'hyundai', 'hd': 'hyundai', 'hr 160': 'hyundai',
-  // Scania
+  'hr': 'hyundai', 'hd': 'hyundai',
   'r450': 'scania', 'r500': 'scania', 's500': 'scania', 'p360': 'scania', 'g420': 'scania',
-  // Volvo
   'fh': 'volvo', 'fm': 'volvo', 'fmx': 'volvo', 'vm': 'volvo',
-  // Mercedes
   'actros': 'mercedes', 'axor': 'mercedes', 'atego': 'mercedes', 'accelo': 'mercedes',
-  // Iveco
-  'tector': 'iveco', 'stralis': 'iveco', 'cursor': 'iveco',
-  // MAN
+  'tector': 'iveco', 'stralis': 'iveco',
   'tgx': 'man', 'tgs': 'man', 'tgm': 'man',
-  // Ford
-  'cargo': 'ford', 'f-max': 'ford',
-  // DAF
-  'xf': 'daf', 'cf': 'daf',
-  // Volkswagen
-  'constellation': 'volkswagen', 'delivery': 'volkswagen', 'worker': 'volkswagen',
-  // Fiat
+  'cargo': 'ford',
+  'constellation': 'volkswagen', 'delivery': 'volkswagen',
   'ducato': 'fiat',
 };
 
-// Busca token de acesso ao Google Drive
+// Token Google Drive
 async function getAccessToken() {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
   const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
   const now = Math.floor(Date.now() / 1000);
   const payload = Buffer.from(JSON.stringify({
-    iss: email,
-    scope: 'https://www.googleapis.com/auth/drive.readonly',
-    aud: 'https://oauth2.googleapis.com/token',
-    exp: now + 3600,
-    iat: now
+    iss: email, scope: 'https://www.googleapis.com/auth/drive.readonly',
+    aud: 'https://oauth2.googleapis.com/token', exp: now + 3600, iat: now
   })).toString('base64url');
   const { createSign } = await import('crypto');
   const sign = createSign('RSA-SHA256');
@@ -65,94 +52,92 @@ async function getAccessToken() {
   return data.access_token;
 }
 
-// Busca subpastas de uma pasta
+// Busca subpastas
 async function buscarSubpastas(token, pastaId) {
   const url = `https://www.googleapis.com/drive/v3/files?q='${pastaId}'+in+parents+and+mimeType='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name)&pageSize=1000`;
-  const response = await fetch(url, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
+  const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
   const data = await response.json();
   return data.files || [];
 }
 
-// Constrói índice completo de todas as pastas (3 níveis)
+// Constrói índice
 async function construirIndice() {
-  console.log('Iniciando construção do índice...');
+  console.log('Construindo índice do Drive...');
   const token = await getAccessToken();
   const novoIndice = [];
-
-  // Nível 1: Marcas
   const marcas = await buscarSubpastas(token, DRIVE_FOLDER_ID);
-  console.log(`Encontradas ${marcas.length} marcas`);
-
   for (const marca of marcas) {
-    // Nível 2: Modelos dentro de cada marca
     const modelos = await buscarSubpastas(token, marca.id);
-    console.log(`Marca ${marca.name}: ${modelos.length} modelos`);
-
-    for (const modelo of modelos) {
-      novoIndice.push({
-        marca: marca.name.toLowerCase(),
-        marcaNome: marca.name,
-        modelo: modelo.name.toLowerCase(),
-        modeloNome: modelo.name,
-        id: modelo.id,
-        link: `https://drive.google.com/drive/folders/${modelo.id}`
-      });
-    }
-
-    // Se não tiver subpastas, adiciona a própria marca
     if (modelos.length === 0) {
-      novoIndice.push({
-        marca: marca.name.toLowerCase(),
-        marcaNome: marca.name,
-        modelo: marca.name.toLowerCase(),
-        modeloNome: marca.name,
-        id: marca.id,
-        link: `https://drive.google.com/drive/folders/${marca.id}`
-      });
+      novoIndice.push({ marca: marca.name.toLowerCase(), marcaNome: marca.name, modelo: marca.name.toLowerCase(), modeloNome: marca.name, id: marca.id, link: `https://drive.google.com/drive/folders/${marca.id}` });
+    } else {
+      for (const modelo of modelos) {
+        novoIndice.push({ marca: marca.name.toLowerCase(), marcaNome: marca.name, modelo: modelo.name.toLowerCase(), modeloNome: modelo.name, id: modelo.id, link: `https://drive.google.com/drive/folders/${modelo.id}` });
+      }
     }
   }
-
   indiceDrive = novoIndice;
   ultimaAtualizacao = new Date();
-  console.log(`Índice construído com ${novoIndice.length} pastas`);
+  console.log(`Índice: ${novoIndice.length} pastas`);
   return novoIndice.length;
 }
 
 // Busca no índice
 function buscarNoIndice(query) {
   if (indiceDrive.length === 0) return null;
-
   const q = query.toLowerCase();
-
-  // Verifica se é um modelo conhecido e pega a marca
   let marcaBusca = '';
   for (const [modelo, marca] of Object.entries(MODELOS_MARCAS)) {
-    if (q.includes(modelo)) {
-      marcaBusca = marca;
-      break;
-    }
+    if (q.includes(modelo)) { marcaBusca = marca; break; }
   }
-
-  // Filtra por marca e/ou modelo — só retorna se tiver match real
   const resultados = indiceDrive.filter(item => {
-    // Se achou a marca pelo mapeamento, filtra só por essa marca
-    if (marcaBusca) {
-      return item.marca.includes(marcaBusca);
-    }
-    // Senão, busca palavra exata na marca ou modelo
+    if (marcaBusca) return item.marca.includes(marcaBusca);
     const palavras = q.split(' ').filter(p => p.length > 2);
-    return palavras.some(p =>
-      item.marca.includes(p) || item.modelo.includes(p)
-    );
+    return palavras.some(p => item.marca.includes(p) || item.modelo.includes(p));
   });
-
-  // Só retorna se tiver match real — nunca retorna aleatório
   return resultados.length > 0 ? resultados : null;
 }
 
-// Busca dados da planilha
+// Busca pontos de assistência no mapa KML
+async function buscarAssistencia(cidade) {
+  try {
+    const url = `https://www.google.com/maps/d/kml?mid=${MAPS_ID}&forcekml=1`;
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const kml = await response.text();
+
+    // Extrai placemarks do KML
+    const placemarks = [];
+    const regex = /<Placemark>([\s\S]*?)<\/Placemark>/g;
+    let match;
+    while ((match = regex.exec(kml)) !== null) {
+      const content = match[1];
+      const nome = (content.match(/<name>(.*?)<\/name>/) || [])[1] || '';
+      const desc = (content.match(/<description>([\s\S]*?)<\/description>/) || [])[1] || '';
+      const coords = (content.match(/<coordinates>(.*?)<\/coordinates>/) || [])[1] || '';
+      if (nome && coords) {
+        const [lng, lat] = coords.trim().split(',').map(Number);
+        placemarks.push({ nome: nome.trim(), descricao: desc.replace(/<[^>]*>/g, ' ').trim(), lat, lng });
+      }
+    }
+
+    if (placemarks.length === 0) return null;
+
+    // Calcula distância simples por nome de cidade
+    const cidadeLower = cidade.toLowerCase();
+    const comDistancia = placemarks.map(p => {
+      const score = (p.nome.toLowerCase().includes(cidadeLower) || p.descricao.toLowerCase().includes(cidadeLower)) ? 0 : 1;
+      return { ...p, score };
+    }).sort((a, b) => a.score - b.score);
+
+    return comDistancia.slice(0, 2);
+  } catch (err) {
+    console.error('Erro KML:', err);
+    return null;
+  }
+}
+
+// Busca planilha
 async function buscarDadosPlanilha() {
   try {
     const abas = ['Ar-Condicionado', 'Geladeira Port%C3%A1til', 'Gerador Digital 24V', 'Promo%C3%A7%C3%B5es Ativas', 'Formas de Pagamento'];
@@ -160,216 +145,154 @@ async function buscarDadosPlanilha() {
     for (const aba of abas) {
       const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${aba}`;
       const response = await fetch(url);
-      if (response.ok) {
-        const texto = await response.text();
-        dados += `\n=== ${decodeURIComponent(aba)} ===\n${texto}\n`;
-      }
+      if (response.ok) dados += `\n=== ${decodeURIComponent(aba)} ===\n${await response.text()}\n`;
     }
     return dados;
-  } catch (err) {
-    console.error('Erro planilha:', err);
-    return '';
-  }
+  } catch (err) { return ''; }
 }
 
-// Rota admin para atualizar índice
-app.get('/admin/atualizar-indice', async (req, res) => {
-  const token = req.query.token;
-  if (token !== ADMIN_TOKEN) {
-    return res.status(401).json({ error: 'Não autorizado' });
-  }
-  try {
-    const total = await construirIndice();
-    res.json({
-      sucesso: true,
-      mensagem: `Índice atualizado com sucesso!`,
-      totalPastas: total,
-      atualizadoEm: ultimaAtualizacao
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+// Login
+app.post('/api/login', (req, res) => {
+  const { senha } = req.body;
+  if (senha === process.env.SENHA_ACESSO) {
+    res.json({ ok: true });
+  } else {
+    res.json({ ok: false });
   }
 });
 
-// Rota para ver status do índice
-app.get('/admin/status', async (req, res) => {
-  const token = req.query.token;
-  if (token !== ADMIN_TOKEN) {
-    return res.status(401).json({ error: 'Não autorizado' });
-  }
-  res.json({
-    totalPastas: indiceDrive.length,
-    ultimaAtualizacao,
-    amostra: indiceDrive.slice(0, 5)
-  });
+// Admin
+app.get('/admin/atualizar-indice', async (req, res) => {
+  if (req.query.token !== ADMIN_TOKEN) return res.status(401).json({ error: 'Não autorizado' });
+  try {
+    const total = await construirIndice();
+    res.json({ sucesso: true, totalPastas: total, atualizadoEm: ultimaAtualizacao });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 const MANUAL_CONTEXT = `
-Você é o Pedro, assistente técnico da Estilo AR — empresa brasileira que distribui equipamentos de qualidade para veículos e uso geral.
+Você é o Pedro, assistente de suporte de vendas da Estilo AR.
+Você é um ser humano. Nunca diga que é IA ou robô.
 
-Você é um ser humano trabalhando no suporte da Estilo AR. Nunca diga que é uma IA, robô ou assistente virtual. Se perguntarem se você é humano ou robô, diga que é o Pedro, do time de suporte da Estilo AR.
-
-SEU JEITO DE SER:
-- Simpático, acolhedor e paciente como um bom atendente brasileiro
-- Fala de forma natural e coloquial mas profissional
-- Usa "você", "tá", "beleza", "ótimo", "claro", "pode deixar"
-- Demonstra empatia antes de dar a solução quando alguém tem um problema
-- Faz perguntas para entender melhor quando necessário
-- Quando resolver um problema celebra: "Que ótimo! Fico feliz que deu certo!"
-- Se a pergunta não for sobre os produtos, responde de forma simpática e redireciona
+JEITO DE SER:
+- Simpático, coloquial mas profissional
+- Responde em português brasileiro
 - Usa emojis com moderação
-- Para problemas graves, sugere ligar para o suporte: (34) 3293-8000
-- Sempre responde em português brasileiro
+- Para problemas graves sugere: (34) 3293-8000
 
-EMPRESA:
-- Nome: Estilo AR
-- Site: www.estiloar.com.br
-- Telefone: (34) 3293-8000
-- Horário: Segunda a sexta, 08h às 18h
-- Endereço: Av. Engenheiro Diniz, 848 - Martins, Uberlândia - MG
+EMPRESA: Estilo AR | Tel: (34) 3293-8000 | Seg-Sex 08h-18h | www.estiloar.com.br | Uberlândia-MG
 
-REGRAS IMPORTANTES:
-- NUNCA invente preços ou valores — use APENAS os dados da planilha fornecida
-- NUNCA invente depoimentos, avaliações ou comentários de clientes
-- NUNCA mencione preços ou informações de outras marcas ou concorrentes
-- NUNCA acesse informações de sites externos ou outras fontes
-- Sobre depoimentos e instalações: responda APENAS com os links das pastas fornecidos
-- Se não houver links disponíveis diga: "No momento não encontrei. Ligue para (34) 3293-8000."
-- Se não souber responder algo, sugira ligar para (34) 3293-8000
-- Responda APENAS com base nas informações do manual e da planilha fornecida
+REGRAS CRÍTICAS:
+- NUNCA invente informações, preços, depoimentos ou dados técnicos
+- NUNCA busque informações em sites externos ou outras fontes
+- NUNCA mencione outras marcas ou concorrentes
+- Use APENAS as informações dos manuais, planilha e dados fornecidos neste contexto
+- Se não souber, diga honestamente e sugira ligar para (34) 3293-8000
+- Sobre depoimentos: apresente APENAS os links das pastas fornecidos
+- Sobre preços: use APENAS os dados da planilha fornecida
+- Sobre assistência técnica: apresente APENAS os pontos fornecidos no contexto
 
-PRODUTOS: Ar-Condicionado 100% Elétrico, Geladeira Portátil e Gerador Digital 24V.
+PRODUTOS: Ar-Condicionado 100% Elétrico, Ar-Condicionado Eco Compact, Geladeira Portátil e Gerador Digital 24V.
 
 PRODUTO 1 - AR-CONDICIONADO 100% ELÉTRICO:
-Modelos: 24V (COD. 740.240 EA) e 12V (COD. 740.241 EA)
-Garantia: 3 meses. Guardar embalagem por 30 dias.
-Modos: TURBO (máximo), AUTOMÁTICO (regula sozinho), ECO (economiza bateria), VENTILAÇÃO (só ventila)
-Temperatura ajustável: 5°C a 32°C
-Proteção baixa tensão: padrão 21,5V (24V) / 10,5V (12V). Código LU = bateria baixa.
-12V: 7.000 BTUs, bateria mín 150Ah, alternador 90A
-24V: 7.750 BTUs, bateria mín 100Ah, alternador 70A
-Erros: E2=dissipação, E3=bloqueio, E4=baixa tensão, E6=ventilador, E7=fase compressor, E8=temperatura, E9/PER=pressão, OPE=sensor aberto, Shr=sensor curto, AC=resfriamento, CS=congelamento, LU=baixa tensão
-Ar não gela: verificar pressão (baixa 0,2-0,4mpa / alta 10-15mpa).
-Instalação: teto solar, borrachão vedação, 4 porcas M10, fio vermelho=positivo, preto=negativo.
-Manutenção: a cada 3 meses verificar conexões. Não instalar em tetos maiores que 30 graus.
+(Manual em atualização — para dúvidas técnicas sugira ligar para (34) 3293-8000)
 
-PRODUTO 2 - GELADEIRA PORTÁTIL:
-Modelos: 35L, 45L, 55L
-Tensão: DC 12V/24V ou AC 100-240V
+PRODUTO 2 - AR-CONDICIONADO ECO COMPACT:
+(Manual em breve — para dúvidas técnicas sugira ligar para (34) 3293-8000)
+
+PRODUTO 3 - GELADEIRA PORTÁTIL:
+Modelos: 35L, 45L, 55L | Tensão: DC 12V/24V ou AC 100-240V
 Temperatura: -20°C a +20°C | Potência: 60W
-Proteção bateria: Baixo/Médio/Alto
+Proteção bateria: Baixo/Médio/Alto (segurar botão config 3 segundos)
 Modos: HH (resfriamento rápido) e ECO (economia)
+Temperaturas recomendadas: bebidas 5°C, frutas 5-8°C, verduras 3-10°C, carne -18°C
 Erros: F1=baixa tensão, F2=ventilador, F3=compressor, F4=velocidade baixa, F5=temperatura alta, F6=controlador, F7/F8=sensor
 Garantia: 3 meses.
 
-PRODUTO 3 - GERADOR DIGITAL 24V:
-Modelos: LE-3000i e LE-3000i Pro
-Tensão: 28V DC | Potência: até 1.800W
+PRODUTO 4 - GERADOR DIGITAL 24V:
+Modelos: LE-3000i e LE-3000i Pro | Tensão: 28V DC | Potência: até 1.800W
 Combustível: gasolina sem chumbo (4L) | Óleo: SJ10W-40 (0,4L)
-NUNCA usar em ambientes fechados.
-NUNCA ligar sem colocar óleo primeiro.
-Tensão mínima para partida: 17,5V
+NUNCA usar em ambientes fechados. NUNCA ligar sem óleo.
+Tensão mínima partida: 17,5V
+Luzes: verde=ok, vermelho 2x=curto, vermelho 7x=bateria descarregada, óleo acesa=adicionar óleo
 Garantia: 3 meses.
 `;
 
 app.post('/api/chat', async (req, res) => {
   const { messages } = req.body;
-  if (!messages || !Array.isArray(messages)) {
-    return res.status(400).json({ error: 'Messages inválidas' });
-  }
+  if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: 'Inválido' });
 
   try {
     const ultimaMensagem = messages[messages.length - 1]?.content?.toLowerCase() || '';
 
-    // Verifica se é pergunta sobre depoimentos/instalações
-    const palavrasDepoimento = ['depoimento', 'instalação', 'instalacao', 'cliente', 'referencia', 'referência', 'foto', 'video', 'vídeo', 'quem instalou', 'já instalou', 'ja instalou'];
-    const buscaDrive = palavrasDepoimento.some(p => ultimaMensagem.includes(p)) ||
-      Object.keys(MODELOS_MARCAS).some(m => ultimaMensagem.includes(m)) ||
-      ['scania', 'volvo', 'mercedes', 'iveco', 'man', 'daf', 'ford', 'volkswagen', 'hyundai', 'fiat', 'vw'].some(m => ultimaMensagem.includes(m));
+    // Detecta busca de depoimentos/Drive
+    const palavrasDepoimento = ['depoimento', 'instalação', 'instalacao', 'cliente', 'referencia', 'referência', 'quem instalou', 'ja instalou', 'já instalou'];
+    const marcasVeiculos = ['scania', 'volvo', 'mercedes', 'iveco', 'man', 'daf', 'ford', 'volkswagen', 'vw', 'hyundai', 'fiat', ...Object.keys(MODELOS_MARCAS)];
+    const buscaDrive = palavrasDepoimento.some(p => ultimaMensagem.includes(p)) || marcasVeiculos.some(m => ultimaMensagem.includes(m));
 
-    let respostaDrive = null;
+    // Detecta busca de assistência técnica
+    const palavrasAssistencia = ['assistência', 'assistencia', 'tecnica', 'técnica', 'autorizada', 'manutenção', 'manutencao', 'mais perto', 'mais próximo', 'proxim'];
+    const buscaAssistencia = palavrasAssistencia.some(p => ultimaMensagem.includes(p));
+
+    // Busca Drive
     if (buscaDrive) {
-      // Se índice vazio, tenta construir
       if (indiceDrive.length === 0) {
-        try {
-          await construirIndice();
-        } catch (err) {
-          console.error('Erro ao construir índice:', err);
-        }
+        try { await construirIndice(); } catch (err) { console.error(err); }
       }
-
       const resultados = buscarNoIndice(ultimaMensagem);
       if (resultados && resultados.length > 0) {
-        const linksFormatados = resultados.map(r =>
-          `📁 **${r.marcaNome} — ${r.modeloNome}**: ${r.link}`
-        ).join('\n');
-        respostaDrive = `Encontrei ${resultados.length} pasta(s) no Drive:\n\n${linksFormatados}\n\nQualquer outra dúvida é só chamar! 😊`;
+        const links = resultados.map(r => `📁 **${r.marcaNome} — ${r.modeloNome}**: ${r.link}`).join('\n');
+        return res.json({ reply: `Encontrei ${resultados.length} pasta(s) no Drive:\n\n${links}\n\nQualquer dúvida é só chamar! 😊` });
       } else {
-        respostaDrive = `Não encontrei pastas para essa busca no momento. Para mais informações ligue para **(34) 3293-8000**. 😊`;
+        return res.json({ reply: `Não encontrei pastas para essa busca. Para mais informações ligue para **(34) 3293-8000**. 😊` });
       }
     }
 
-    // Se encontrou no Drive, retorna direto sem chamar o modelo
-    if (respostaDrive) {
-      return res.json({ reply: respostaDrive });
+    // Busca assistência técnica
+    if (buscaAssistencia) {
+      const cidadeMatch = ultimaMensagem.match(/(?:em|de|perto de|próximo a|próximo de)\s+([a-záàãâéêíóôõúç\s]+?)(?:\?|$|,)/i);
+      const cidade = cidadeMatch ? cidadeMatch[1].trim() : '';
+      const pontos = await buscarAssistencia(cidade);
+      if (pontos && pontos.length > 0) {
+        const lista = pontos.map((p, i) => `📍 **${i+1}. ${p.nome}**${p.descricao ? '\n' + p.descricao.substring(0, 200) : ''}`).join('\n\n');
+        return res.json({ reply: `Encontrei os pontos de assistência técnica mais próximos:\n\n${lista}\n\nQualquer dúvida é só chamar! 😊` });
+      } else {
+        return res.json({ reply: `Não encontrei pontos de assistência técnica para essa localidade. Por favor ligue para **(34) 3293-8000** para mais informações. 😊` });
+      }
     }
 
-    // Busca dados da planilha
+    // Busca planilha e chama modelo
     const dadosPlanilha = await buscarDadosPlanilha();
-    const contextoCompleto = MANUAL_CONTEXT + `
-========================================
-DADOS ATUALIZADOS DA PLANILHA:
-========================================
-${dadosPlanilha || 'Planilha indisponível. Se perguntarem sobre preços, sugira ligar para (34) 3293-8000.'}
-`;
+    const contexto = MANUAL_CONTEXT + `\n========\nDADOS DA PLANILHA (preços/promoções/pagamento):\n${dadosPlanilha || 'Indisponível — sugira ligar para (34) 3293-8000'}`;
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
       body: JSON.stringify({
         model: 'llama-3.1-8b-instant',
         max_tokens: 800,
         temperature: 0.7,
-        messages: [
-          { role: 'system', content: contextoCompleto },
-          ...messages
-        ]
+        messages: [{ role: 'system', content: contexto }, ...messages]
       })
     });
 
     const data = await response.json();
-    if (!response.ok) {
-      return res.status(response.status).json({ error: data.error?.message || 'Erro na API' });
-    }
-
-    const reply = data.choices?.[0]?.message?.content || 'Sem resposta.';
-    res.json({ reply });
+    if (!response.ok) return res.status(response.status).json({ error: data.error?.message || 'Erro na API' });
+    res.json({ reply: data.choices?.[0]?.message?.content || 'Sem resposta.' });
 
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Erro interno no servidor.' });
+    console.error(err);
+    res.status(500).json({ error: 'Erro interno.' });
   }
 });
 
-// Atualiza índice automaticamente a cada 24 horas
+// Atualiza índice a cada 24h
 setInterval(async () => {
-  try {
-    await construirIndice();
-  } catch (err) {
-    console.error('Erro na atualização automática:', err);
-  }
+  try { await construirIndice(); } catch (err) { console.error(err); }
 }, 24 * 60 * 60 * 1000);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-  // Constrói índice ao iniciar
-  try {
-    await construirIndice();
-  } catch (err) {
-    console.error('Erro ao construir índice inicial:', err);
-  }
+  console.log(`Servidor na porta ${PORT}`);
+  try { await construirIndice(); } catch (err) { console.error(err); }
 });
