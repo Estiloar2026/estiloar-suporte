@@ -261,7 +261,6 @@ function buscarCoordenadas(nomeCidade, nomeEstado) {
 
 async function buscarAssistenciaTecnica(query) {
   try {
-    // Tenta o nome completo primeiro, depois nome simplificado
     const nomes = [
       'PONTOS%20DE%20ASSIST%C3%8ANCIA%20T%C3%89CNICA%20%E2%80%94%20ESTILO%20AR',
       'Assist%C3%AAncia%20T%C3%A9cnica',
@@ -276,19 +275,12 @@ async function buscarAssistenciaTecnica(query) {
         const texto = await response.text();
         if (texto && texto.length > 10 && !texto.includes('error')) {
           csv = texto;
-          console.log('Aba encontrada:', nome);
           break;
         }
       }
     }
-    if (!csv) {
-      console.error('Nenhuma aba de assistência encontrada');
-      return null;
-    }
-    const response = { ok: true };
-    console.log('CSV assistencia (primeiras linhas):', csv.substring(0, 300));
+    if (!csv) return null;
 
-    // Parser robusto para CSV com campos entre aspas
     function parseCSVLine(linha) {
       const cols = [];
       let current = '';
@@ -304,143 +296,68 @@ async function buscarAssistenciaTecnica(query) {
     }
 
     const todasLinhas = csv.split('\n').filter(l => l.trim());
-    console.log('Total linhas CSV:', todasLinhas.length);
-
-    // Detecta onde começa os dados reais (pula cabeçalhos)
-    // Procura a linha que tem "Nome" ou "nome" ou começa com dado real
     let startIdx = 0;
     for (let i = 0; i < Math.min(todasLinhas.length, 5); i++) {
       const cols = parseCSVLine(todasLinhas[i]);
-      const primeira = (cols[0] || '').replace(/"/g,'').trim().toLowerCase();
-      // Se a linha parecer cabeçalho ou título, pula
+      const primeira = (cols[0] || '').replace(/"/g, '').trim().toLowerCase();
       if (primeira.includes('nome') || primeira.includes('ponto') || primeira.includes('assist') || primeira === '') {
         startIdx = i + 1;
-      } else {
-        break;
-      }
+      } else { break; }
     }
 
-    console.log('Dados começam na linha:', startIdx);
     const linhas = todasLinhas.slice(startIdx).filter(l => l.trim());
-    console.log('Linhas de dados:', linhas.length);
-
     const pontos = linhas.map(linha => {
       const cols = parseCSVLine(linha).map(c => c.replace(/^"|"$/g, '').trim());
-      return {
-        nome: cols[0] || '', cidade: cols[1] || '',
-        estado: cols[2] || '', endereco: cols[3] || '', telefone: cols[4] || ''
-      };
+      return { nome: cols[0]||'', cidade: cols[1]||'', estado: cols[2]||'', endereco: cols[3]||'', telefone: cols[4]||'' };
     }).filter(p => p.nome && p.nome.length > 1 && p.cidade && p.cidade.length > 1);
 
-    console.log('Pontos parseados:', pontos.length, pontos.map(p => p.cidade));
-
-    if (!pontos.length) return { tipo: 'nenhum', pontos: [] };
+    if (!pontos.length) return null;
 
     const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
     const q = norm(query);
 
-    // Mapeamento nome completo → UF (incluindo variações e erros comuns)
     const ESTADOS = {
-      // Acre
-      'acre': 'ac',
-      // Alagoas
-      'alagoas': 'al', 'alagoa': 'al',
-      // Amapá
-      'amapa': 'ap', 'amapá': 'ap',
-      // Amazonas
-      'amazonas': 'am', 'amazona': 'am', 'amazones': 'am',
-      // Bahia
-      'bahia': 'ba', 'baia': 'ba', 'baía': 'ba',
-      // Ceará
-      'ceara': 'ce', 'ceará': 'ce', 'sera': 'ce',
-      // Distrito Federal
-      'distrito federal': 'df', 'distrito': 'df', 'brasilia': 'df', 'brasília': 'df',
-      // Espírito Santo
-      'espirito santo': 'es', 'espírito santo': 'es', 'espirito sant': 'es', 'esp santo': 'es',
-      // Goiás
-      'goias': 'go', 'goiás': 'go', 'goiaz': 'go',
-      // Maranhão
-      'maranhao': 'ma', 'maranhão': 'ma', 'maranhan': 'ma', 'maranho': 'ma',
-      // Mato Grosso do Sul
-      'mato grosso do sul': 'ms', 'mato grosso sul': 'ms', 'mt do sul': 'ms', 'mato groso do sul': 'ms',
-      // Mato Grosso
-      'mato grosso': 'mt', 'mato groso': 'mt', 'matogrosso': 'mt',
-      // Minas Gerais
-      'minas gerais': 'mg', 'minas geras': 'mg', 'minas gerai': 'mg', 'minas gereis': 'mg',
-      'minas gerei': 'mg', 'minas': 'mg', 'minais gerais': 'mg', 'minas gerias': 'mg',
-      // Pará
-      'para': 'pa', 'pará': 'pa',
-      // Paraíba
-      'paraiba': 'pb', 'paraíba': 'pb', 'paraíba': 'pb', 'paraibá': 'pb',
-      // Paraná
-      'parana': 'pr', 'paraná': 'pr', 'parana': 'pr',
-      // Pernambuco
-      'pernambuco': 'pe', 'pernanbuco': 'pe', 'pernabuco': 'pe', 'pernambucu': 'pe',
-      // Piauí
-      'piaui': 'pi', 'piauí': 'pi', 'piaí': 'pi',
-      // Rio de Janeiro
-      'rio de janeiro': 'rj', 'rio janeiro': 'rj', 'rio de janiero': 'rj',
-      'rio de janiro': 'rj', 'rio janiero': 'rj',
-      // Rio Grande do Norte
-      'rio grande do norte': 'rn', 'rio grande norte': 'rn', 'rio gde do norte': 'rn',
-      'rio grande d norte': 'rn', 'rio grnade do norte': 'rn',
-      // Rio Grande do Sul
-      'rio grande do sul': 'rs', 'rio grande sul': 'rs', 'rio gde do sul': 'rs',
-      'rio grande d sul': 'rs', 'rio grnade do sul': 'rs', 'rio grande so sul': 'rs',
-      // Rondônia
-      'rondonia': 'ro', 'rondônia': 'ro', 'rondonía': 'ro',
-      // Roraima
-      'roraima': 'rr', 'roraimá': 'rr',
-      // Santa Catarina
-      'santa catarina': 'sc', 'santa catarin': 'sc', 'sta catarina': 'sc',
-      'santa catarinа': 'sc', 'santa katarina': 'sc',
-      // São Paulo
-      'sao paulo': 'sp', 'são paulo': 'sp', 'sao paul': 'sp', 'são paul': 'sp',
-      'sau paulo': 'sp', 'sam paulo': 'sp', 'saõ paulo': 'sp',
-      // Sergipe
-      'sergipe': 'se', 'sergípe': 'se', 'sergipi': 'se',
-      // Tocantins
-      'tocantins': 'to', 'tocantim': 'to', 'tocantis': 'to', 'tocontins': 'to'
+      'acre':'ac','alagoas':'al','amapa':'ap','amapá':'ap','amazonas':'am',
+      'bahia':'ba','baia':'ba','ceara':'ce','ceará':'ce',
+      'distrito federal':'df','brasilia':'df','brasília':'df',
+      'espirito santo':'es','espírito santo':'es','goias':'go','goiás':'go',
+      'maranhao':'ma','maranhão':'ma','mato grosso do sul':'ms','mato grosso sul':'ms',
+      'mato grosso':'mt','minas gerais':'mg','minas geras':'mg','minas gerai':'mg','minas':'mg',
+      'para':'pa','pará':'pa','paraiba':'pb','paraíba':'pb','parana':'pr','paraná':'pr',
+      'pernambuco':'pe','piaui':'pi','piauí':'pi',
+      'rio de janeiro':'rj','rio janeiro':'rj',
+      'rio grande do norte':'rn','rio grande norte':'rn',
+      'rio grande do sul':'rs','rio grande sul':'rs',
+      'rondonia':'ro','rondônia':'ro','roraima':'rr',
+      'santa catarina':'sc','sta catarina':'sc',
+      'sao paulo':'sp','são paulo':'sp','sao paul':'sp',
+      'sergipe':'se','tocantins':'to'
     };
-    const ufs = Object.values(ESTADOS);
+    const ufs = ['ac','al','ap','am','ba','ce','df','es','go','ma','mt','ms','mg','pa','pb','pr','pe','pi','rj','rn','rs','ro','rr','sc','sp','se','to'];
 
-    // Resolve UF a partir do nome completo ou sigla
     let ufBusca = null;
-    if (ufs.includes(q)) {
-      ufBusca = q;
-    } else if (ESTADOS[q]) {
-      ufBusca = ESTADOS[q];
-    }
-    const ehUF = !!ufBusca;
+    if (ufs.includes(q)) { ufBusca = q; }
+    else if (ESTADOS[q]) { ufBusca = ESTADOS[q]; }
 
-    if (ehUF) {
-      const doEstado = pontos.filter(p => norm(p.estado) === ufBusca);
-      if (doEstado.length > 0) return { tipo: 'exato', pontos: doEstado.slice(0, 2) };
-      // Não tem nesse estado — busca nos mais próximos
-      const maisProximas = duasMaisProximas(pontos, query);
-      if (maisProximas && maisProximas.length > 0) {
-        return { tipo: 'proximos', pontos: maisProximas, cidadeBuscada: query };
-      }
-      return { tipo: 'nenhum', pontos: [] };
+    if (ufBusca) {
+      const resultado = pontos.filter(p => norm(p.estado) === ufBusca);
+      return resultado.length > 0
+        ? { tipo: 'encontrado', pontos: resultado.slice(0, 2), local: ufBusca.toUpperCase() }
+        : { tipo: 'nenhum' };
     }
 
-    // Verifica se existe ponto exatamente nessa cidade
-    const exatos = pontos.filter(p => norm(p.cidade) === q || norm(p.cidade).includes(q) || q.includes(norm(p.cidade)));
-    if (exatos.length > 0) return { tipo: 'exato', pontos: exatos.slice(0, 2) };
+    // Busca por cidade
+    const resultado = pontos.filter(p => norm(p.cidade).includes(q) || q.includes(norm(p.cidade)));
+    return resultado.length > 0
+      ? { tipo: 'encontrado', pontos: resultado.slice(0, 2), local: query }
+      : { tipo: 'nenhum' };
 
-    // Usa coordenadas para buscar as 2 mais próximas
-    const maisProximas = duasMaisProximas(pontos, query);
-    if (maisProximas && maisProximas.length > 0) {
-      return { tipo: 'proximos', pontos: maisProximas, cidadeBuscada: query };
-    }
-
-    // Fallback — retorna todos
-    return { tipo: 'textual', pontos: pontos.slice(0, 2) };
   } catch (err) {
-    console.error('Erro ao buscar assistência:', err);
+    console.error('Erro assistência:', err);
     return null;
   }
 }
+
 
 app.post('/api/login', (req, res) => {
   const { senha } = req.body;
@@ -1038,15 +955,11 @@ app.post('/api/chat', async (req, res) => {
         `📍 **${p.nome}**\n📌 ${p.cidade} - ${p.estado}\n🏠 ${p.endereco}\n📞 ${p.telefone}`
       ).join('\n\n');
 
-      let intro = '';
-      if (resultado.tipo === 'exato') {
-        intro = `Encontrei ${resultado.pontos.length === 1 ? 'este ponto' : 'estes pontos'} de assistência técnica em **${queryLocal}**:`;
-      } else if (resultado.tipo === 'proximos') {
-        intro = `Não temos assistência técnica cadastrada em **${queryLocal}**. ${resultado.pontos.length === 1 ? 'Este é o ponto mais próximo' : 'Estes são os dois pontos mais próximos'}:`;
-      } else {
-        intro = `Estes são os pontos de assistência técnica cadastrados:`;
+      if (resultado.tipo === 'nenhum') {
+        return res.json({ reply: `Não temos assistência técnica cadastrada para essa localidade.` });
       }
 
+      const intro = `Encontrei ${resultado.pontos.length === 1 ? 'este ponto' : 'estes pontos'} de assistência técnica:`;
       return res.json({ reply: `${intro}\n\n${lista}` });
     }
 
