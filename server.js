@@ -676,12 +676,33 @@ app.post('/api/chat', async (req, res) => {
   try {
     const ultimaMensagem = messages[messages.length - 1]?.content?.toLowerCase() || '';
 
-    // Detecta Volvo FH com ano 2016+
+    // Verifica contexto do histórico para FH
+    const mensagemAnterior = messages.length >= 2 ? messages[messages.length - 2]?.content?.toLowerCase() || '' : '';
+    const contextoTemFH = mensagemAnterior.includes('volvo fh') || mensagemAnterior.includes(' fh ') ||
+                          mensagemAnterior.includes(' fh') || mensagemAnterior.endsWith('fh') ||
+                          mensagemAnterior.startsWith('fh ') ||
+                          // Também verifica se a resposta do assistente perguntou sobre FH
+                          (messages.length >= 2 && (messages[messages.length - 2]?.content || '').toLowerCase().includes('volvo fh'));
+
+    // Detecta ano sozinho na resposta quando contexto é FH
+    const apenasAno = ultimaMensagem.match(/^\s*(20\d{2})\s*$/);
+    if (apenasAno && contextoTemFH) {
+      const ano = parseInt(apenasAno[1]);
+      if (ano >= 2016) {
+        return res.json({ reply: `O Volvo FH ${ano} possui teto solar de fábrica, o que torna a instalação mais complexa. Oriente seu cliente a passar por uma análise da nossa equipe técnica antes de fechar. 😊` });
+      } else {
+        return res.json({ reply: `Para o Volvo FH ${ano}, você pode indicar ao cliente o Eco Compact — não precisa cortar o teto. Se preferir o Slim Série 2, será necessário cortar o teto. 😊` });
+      }
+    }
+
+    // Detecta Volvo FH com ano na mesma mensagem
     const fhMatch = ultimaMensagem.match(/fh\s*(20\d{2})/i) || ultimaMensagem.match(/(20\d{2})\s*fh/i);
     if (fhMatch) {
       const ano = parseInt(fhMatch[1]);
       if (ano >= 2016) {
-        return res.json({ reply: `Para o Volvo FH ${ano}, oriente seu cliente que esse modelo possui teto solar de fábrica, o que torna a instalação mais complexa. Recomendo encaminhar para análise da nossa equipe técnica antes de fechar a venda. 😊` });
+        return res.json({ reply: `O Volvo FH ${ano} possui teto solar de fábrica, o que torna a instalação mais complexa. Oriente seu cliente a passar por uma análise da nossa equipe técnica antes de fechar. 😊` });
+      } else {
+        return res.json({ reply: `Para o Volvo FH ${ano}, você pode indicar ao cliente o Eco Compact — não precisa cortar o teto. Se preferir o Slim Série 2, será necessário cortar o teto. 😊` });
       }
     }
 
