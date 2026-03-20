@@ -338,7 +338,7 @@ async function buscarAssistenciaTecnica(query) {
 
     if (ehUF) {
       const doEstado = pontos.filter(p => norm(p.estado) === ufBusca);
-      if (doEstado.length > 0) return { tipo: 'exato', pontos: doEstado };
+      if (doEstado.length > 0) return { tipo: 'exato', pontos: doEstado.slice(0, 2) };
       // Não tem nesse estado — busca nos mais próximos
       const maisProximas = duasMaisProximas(pontos, query);
       if (maisProximas && maisProximas.length > 0) {
@@ -349,7 +349,7 @@ async function buscarAssistenciaTecnica(query) {
 
     // Verifica se existe ponto exatamente nessa cidade
     const exatos = pontos.filter(p => norm(p.cidade) === q || norm(p.cidade).includes(q) || q.includes(norm(p.cidade)));
-    if (exatos.length > 0) return { tipo: 'exato', pontos: exatos };
+    if (exatos.length > 0) return { tipo: 'exato', pontos: exatos.slice(0, 2) };
 
     // Usa coordenadas para buscar as 2 mais próximas
     const maisProximas = duasMaisProximas(pontos, query);
@@ -937,7 +937,13 @@ app.post('/api/chat', async (req, res) => {
         'ola', 'olá', 'quero', 'preciso', 'busco', 'procuro', 'existe', 'existem', 'tem',
         'alguma', 'algum', 'por', 'favor', 'me', 'mostra', 'mostre', 'indica', 'indique'];
       const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-      const palavras = ultimaMensagem.split(/\s+/).filter(p => p.length > 2 && !stopWords.includes(norm(p)));
+      // Preserva siglas de 2 letras (UFs) e filtra stopwords para cidades
+      const todasPalavras = ultimaMensagem.split(/\s+/);
+      const palavras = todasPalavras.filter(p => {
+        const pn = norm(p);
+        if (pn.length === 2) return true; // preserva UFs como SP, MG, RS
+        return pn.length > 2 && !stopWords.includes(pn);
+      });
       const queryLocal = palavras.join(' ').trim() || '';
 
       const resultado = await buscarAssistenciaTecnica(queryLocal);
