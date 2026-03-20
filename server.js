@@ -48,7 +48,9 @@ const IMAGENS_TECNICAS = {
 // Detecta pedido de imagem técnica e qual produto
 function detectarImagemTecnica(mensagem) {
   const m = mensagem.toLowerCase();
-  if (!m.includes('tecni') && !m.includes('medida') && !m.includes('dimensão') && !m.includes('dimensao')) return null;
+  // Não ativa se for busca de assistência técnica
+  if (m.includes('assistencia') || m.includes('assistência') || m.includes('ponto autorizado') || m.includes('autorizada')) return null;
+  if (!m.includes('imagem tecni') && !m.includes('imagem técni') && !m.includes('foto tecni') && !m.includes('medida') && !m.includes('dimensão') && !m.includes('dimensao')) return null;
   if (m.includes('eco') || m.includes('compact')) return 'ecocompact';
   if (m.includes('35') || m.includes('35l')) return 'geladeira-35l';
   if (m.includes('45') || m.includes('45l')) return 'geladeira-45l';
