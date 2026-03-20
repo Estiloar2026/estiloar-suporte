@@ -1050,21 +1050,56 @@ app.post('/api/chat', async (req, res) => {
         'quero uma', 'quero um', 'quero', 'preciso de uma', 'preciso de', 'preciso',
         'me de uma', 'me de um', 'me de', 'me da', 'pode me dar', 'pode me mostrar',
         'gostaria de', 'gostaria', 'queria', 'busco', 'procuro',
-        'tem uma', 'tem um', 'tem', 'existe uma', 'existe', 'existem',
+        'tem uma', 'tem um', 'tem', 'temos uma', 'temos um', 'temos', 'existe uma', 'existe', 'existem',
         'qual a', 'qual o', 'qual', 'oi', 'ola', 'olá',
         'bom dia', 'boa tarde', 'boa noite', 'por favor', 'pfv', 'pf',
         'me', 'uma', 'um', 'para', 'favor'
       ];
+      // Ordena do maior para o menor para remover frases antes de palavras
+      remover.sort((a, b) => b.length - a.length);
       for (const r of remover) {
-        queryLocal = queryLocal.replace(new RegExp('\\b' + normLocal(r) + '\\b', 'gi'), ' ').trim();
+        const rn = normLocal(r);
+        // Tenta remover do início, fim e meio
+        queryLocal = queryLocal.replace(new RegExp('(^|\s)' + rn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(\s|$)', 'gi'), ' ').trim();
       }
-      // Remove preposição só do início da string resultante
+      // Remove preposição só do início
       queryLocal = queryLocal.replace(/^\s*(em|no|na|para|do|da)\s+/i, '').trim();
-      // Remove espaços duplos
-      queryLocal = queryLocal.replace(/\s+/g, ' ').trim();
+      // Remove pontuação e espaços duplos
+      queryLocal = queryLocal.replace(/[?!.,;]/g, '').replace(/\s+/g, ' ').trim();
 
       const queryFinal = queryLocal || '';
 
+
+      // Detecta pergunta sobre quantidade total
+      const perguntaQuantidade = /quant(as|os|o|a)|total|quantidad/i.test(ultimaMensagem);
+      if (perguntaQuantidade) {
+        const todos = await buscarAssistenciaTecnica('todos');
+        const total = todos && todos.pontos ? todos.pontos.length : 0;
+        // Busca total real lendo planilha sem filtro
+        try {
+          const nomes = ['PONTOS%20DE%20ASSIST%C3%8ANCIA%20T%C3%89CNICA%20%E2%80%94%20ESTILO%20AR','Assist%C3%AAncia%20T%C3%A9cnica','Assistencia%20Tecnica','assistencia'];
+          let totalReal = 0;
+          for (const nome of nomes) {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${nome}`;
+            const r = await fetch(url);
+            if (r.ok) {
+              const txt = await r.text();
+              if (txt && txt.length > 10 && !txt.includes('error')) {
+                const ufsV = ['ac','al','ap','am','ba','ce','df','es','go','ma','mt','ms','mg','pa','pb','pr','pe','pi','rj','rn','rs','ro','rr','sc','sp','se','to'];
+                const linhas = txt.split('\n').filter(l => {
+                  const cols = l.split(',');
+                  return cols.length >= 3 && ufsV.includes((cols[2]||'').replace(/"/g,'').trim().toLowerCase());
+                });
+                totalReal = linhas.length;
+                break;
+              }
+            }
+          }
+          return res.json({ reply: `Temos **${totalReal} ponto${totalReal !== 1 ? 's' : ''}** de assistência técnica cadastrados no total.` });
+        } catch(e) {
+          return res.json({ reply: `Não consegui contar os pontos no momento.` });
+        }
+      }
 
       const resultado = await buscarAssistenciaTecnica(queryFinal);
 
