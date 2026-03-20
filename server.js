@@ -676,18 +676,18 @@ app.post('/api/chat', async (req, res) => {
   try {
     const ultimaMensagem = messages[messages.length - 1]?.content?.toLowerCase() || '';
 
-    // Verifica contexto do histórico para FH
-    const mensagemAnterior = messages.length >= 2 ? messages[messages.length - 2]?.content?.toLowerCase() || '' : '';
-    const contextoTemFH = mensagemAnterior.includes('volvo fh') || mensagemAnterior.includes(' fh ') ||
-                          mensagemAnterior.includes(' fh') || mensagemAnterior.endsWith('fh') ||
-                          mensagemAnterior.startsWith('fh ') ||
-                          // Também verifica se a resposta do assistente perguntou sobre FH
-                          (messages.length >= 2 && (messages[messages.length - 2]?.content || '').toLowerCase().includes('volvo fh'));
+    // Verifica se em qualquer parte do histórico da conversa há menção ao FH
+    const historicoCompleto = messages.map(m => (m.content || '').toLowerCase()).join(' ');
+    const contextoTemFH = historicoCompleto.includes('volvo fh') || / fh[ .,!?]/.test(historicoCompleto) ||
+                          historicoCompleto.includes(' fh') || historicoCompleto.endsWith('fh') ||
+                          historicoCompleto.startsWith('fh ');
 
-    // Detecta ano sozinho na resposta quando contexto é FH
-    const apenasAno = ultimaMensagem.match(/^\s*(20\d{2})\s*$/);
-    if (apenasAno && contextoTemFH) {
-      const ano = parseInt(apenasAno[1]);
+    // Detecta mensagem curta contendo um ano (ex: "2019", "e o 2019", "e para o 2019", "e o de 2019?")
+    const anoNaMensagem = ultimaMensagem.match(/(20\d{2})/);
+    const mensagemCurta = anoNaMensagem && ultimaMensagem.trim().length <= 40 &&
+                          /^(e\s*)?(para\s*)?(o\s*)?(de\s*)?(o\s*)?(modelo\s*)?(ano\s*)?[^a-z]*(20\d{2})[^a-z]*$/i.test(ultimaMensagem.trim());
+    if (anoNaMensagem && (mensagemCurta || ultimaMensagem.trim().length <= 8) && contextoTemFH) {
+      const ano = parseInt(anoNaMensagem[1]);
       if (ano >= 2016) {
         return res.json({ reply: `O Volvo FH ${ano} possui teto solar de fábrica, o que torna a instalação mais complexa. Oriente seu cliente a passar por uma análise da nossa equipe técnica antes de fechar. 😊` });
       } else {
