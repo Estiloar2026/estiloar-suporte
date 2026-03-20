@@ -233,12 +233,8 @@ async function buscarAssistenciaTecnica(query) {
     const csv = await response.text();
     console.log('CSV assistencia (primeiras linhas):', csv.substring(0, 300));
 
-    // Pula linha 1 (título) e linha 2 (cabeçalho)
-    const linhas = csv.split('\n').slice(2).filter(l => l.trim());
-    console.log('Linhas encontradas:', linhas.length);
-
-    const pontos = linhas.map(linha => {
-      // Parser robusto para CSV com campos entre aspas
+    // Parser robusto para CSV com campos entre aspas
+    function parseCSVLine(linha) {
       const cols = [];
       let current = '';
       let inQuotes = false;
@@ -249,11 +245,37 @@ async function buscarAssistenciaTecnica(query) {
         else { current += ch; }
       }
       cols.push(current.trim());
+      return cols;
+    }
+
+    const todasLinhas = csv.split('\n').filter(l => l.trim());
+    console.log('Total linhas CSV:', todasLinhas.length);
+
+    // Detecta onde começa os dados reais (pula cabeçalhos)
+    // Procura a linha que tem "Nome" ou "nome" ou começa com dado real
+    let startIdx = 0;
+    for (let i = 0; i < Math.min(todasLinhas.length, 5); i++) {
+      const cols = parseCSVLine(todasLinhas[i]);
+      const primeira = (cols[0] || '').replace(/"/g,'').trim().toLowerCase();
+      // Se a linha parecer cabeçalho ou título, pula
+      if (primeira.includes('nome') || primeira.includes('ponto') || primeira.includes('assist') || primeira === '') {
+        startIdx = i + 1;
+      } else {
+        break;
+      }
+    }
+
+    console.log('Dados começam na linha:', startIdx);
+    const linhas = todasLinhas.slice(startIdx).filter(l => l.trim());
+    console.log('Linhas de dados:', linhas.length);
+
+    const pontos = linhas.map(linha => {
+      const cols = parseCSVLine(linha).map(c => c.replace(/^"|"$/g, '').trim());
       return {
         nome: cols[0] || '', cidade: cols[1] || '',
         estado: cols[2] || '', endereco: cols[3] || '', telefone: cols[4] || ''
       };
-    }).filter(p => p.nome && p.cidade);
+    }).filter(p => p.nome && p.nome.length > 1 && p.cidade && p.cidade.length > 1);
 
     console.log('Pontos parseados:', pontos.length, pontos.map(p => p.cidade));
 
