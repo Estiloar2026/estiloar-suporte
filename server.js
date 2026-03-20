@@ -317,11 +317,177 @@ PRODUTOS DA ESTILO AR: Ar-Condicionado 100% Elétrico, Ar-Condicionado Eco Compa
 
 const SECOES = {
 
-  ar_eletrico: `
-PRODUTO: AR-CONDICIONADO 100% ELÉTRICO
-(Manual em atualização — para dúvidas técnicas sugira ligar para (34) 3293-8000)
+  ar_slim_geral: `
+PRODUTO: AR-CONDICIONADO 100% ELÉTRICO SLIM SÉRIE 2
+Marca: Estilo AR | Modelos: 12V e 24V
+Capacidade: 12V = 9.500 BTUs | 24V = 9.500 BTUs
+Capacidade de Refrigeração: 12V = 2.150W | 24V = 2.560W
+Tensão nominal: DC 12V / DC 24V
+Fluxo de ar evaporador: 400m³/h | Condensador: 2.000m³/h
+Gás refrigerante: R134a | Carga: 460g | Óleo: RH68
+Dimensões: 97 x 85,8 x 15 cm
+Furo instalação: mín 460x400mm / máx 545x937mm
+Garantia: 3 meses — guardar embalagem por 30 dias
+Telefone suporte: (34) 99641-1025 | Seg-Sex 08h-18h
 `,
 
+  ar_slim_consumo: `
+CONSUMO DE ENERGIA — AR SLIM SÉRIE 2:
+Modo Econômico: 12V=240W/20A | 24V=288W/12A
+Modo Automático: 12V=600W/50A | 24V=840W/35A
+Modo Turbo: 12V=720W/60A | 24V=960W/40A
+`,
+
+  ar_slim_operacao: `
+COMO USAR O AR SLIM SÉRIE 2:
+- Ligar/Desligar: pressionar brevemente o botão de energia
+- Velocidade ventilador: 5 velocidades (1-2-3-4-5)
+- Iluminação: pressionar brevemente | segurar = oscilação vertical
+- Modo: alterna Econômico, Automático, Turbo
+- Temperatura: botões + e - | faixa 5°C a 32°C
+- Ver temp entrada: segurar botão temperatura +
+- Ver temp saída: segurar botão temperatura -
+- Proteção baixa tensão: segurar botão velocidade 6 segundos, usar +/-
+- Padrão fábrica: 20,5V (24V) / 10,5V (12V) | Ajustável: 9-28V
+- Código LU: bateria baixa — desligar e ligar para resetar
+MODOS:
+- TURBO: capacidade máxima, consumo máximo
+- AUTOMÁTICO: regula automaticamente conforme temperatura
+- ECO: limita consumo, ideal motor parado
+`,
+
+  ar_slim_erros: `
+ERROS DO AR SLIM SÉRIE 2:
+E2: Dissipação insuficiente → compressor/ventilador com falha
+- Sem energia no fio ventilador: substituir controlador
+- Com energia no ventilador: substituir ventilador
+- Compressor não parte: verificar circuito, parafusos soltos/queimados; se ok substituir controlador; se ainda não partir: compressor queimado
+
+E3: Proteção de bloqueio → compressor travado ou tubulação bloqueada
+- Compressor vibra e não parte: detritos no sistema, substituir compressor e limpar sistema
+- Pressão normal: 10-15mpa | Se >20mpa: condensador bloqueado | Se ~0: válvula de expansão
+
+E4: Baixa voltagem controlador → tensão abaixo de 20,5V (24V) ou 10,5V (12V)
+- Carregar bateria ou aumentar amperagem do alternador
+- Verificar fios soltos ou oxidados nos terminais
+- Se tensão ok e persiste: substituir controlador
+
+E5: Sobrecorrente do controlador → curto interno ou instabilidade de tensão
+- Substituir controlador
+- Verificar conexões soltas no cabo de alimentação
+- Verificar se condensador está obstruído
+
+E6: Sobrecarga do ventilador → pás travadas ou curto interno
+- Verificar se pás giram livremente; se travado substituir ventilador
+- Desconectar plugue do ventilador e reiniciar; se funcionar sem erro: curto no ventilador, substituir
+
+E7: Perda de fase do compressor → chicote, bobina ou controlador com problema
+- Verificar terminais com mau contato ou parafusos soltos
+- Usar multímetro para medir fios do motor trifásico
+- Se circuito aberto: substituir compressor
+- Se fiação ok: substituir controlador
+
+E8: Falha de pressão → vazamento de gás ou interruptor de pressão danificado
+- Sem pressão: verificar vazamento de gás
+- Com gás: verificar se interruptor de pressão está danificado
+- Pressão muito alta: verificar condensador e ventilador
+
+E9: Sobrecorrente do ventilador → escovas desgastadas ou rolamentos travados
+- Desgaste das escovas de carvão: substituir ventilador
+- Rolamentos travados ou ventoinha não gira livremente: substituir ventilador
+
+E10: Falha de pressão → verificar vazamento de gás refrigerante
+
+E11: Sobrecarga → desligar a energia e religar
+
+LU: Baixa tensão → bateria baixa ou placa defeituosa
+- Medir tensão interna; se abaixo do valor de proteção: ajustar configuração
+- Se tensão ok mas não inicia: verificar conexões elétricas
+- Se conexões ok: substituir placa de circuito
+
+SHr: Problema sensor ou painel de controle
+- Trocar terminais branco e preto; se código muda: falha do painel; se mantém: falha do sensor
+
+OPE: Circuito aberto sensor → plugue desconectado ou cabo quebrado
+
+AR NÃO GELA:
+Pressão normal: baixa 0,2-0,4mpa | alta 10-15mpa
+- Alta pressão alta: ventilador com falha ou condensador sujo → limpar e substituir ventilador
+- Alta pressão baixa: falta refrigerante → reabastecer
+- Alta alta E baixa baixa: compressor danificado → substituir
+
+AR NÃO GELA E UNIDADE EXTERNA NÃO FUNCIONA:
+- Verificar se sinal de resfriamento está aceso no painel
+- Configurar temperatura abaixo da temperatura da cabine
+- Verificar circuito aberto no fio verde entre painel e controlador
+- Se tensão no controlador mas unidade não funciona: substituir controlador
+`,
+
+  ar_slim_manutencao: `
+MANUTENÇÃO DO AR SLIM SÉRIE 2:
+- Falha de resfriamento: diferença entrada/saída menor que 5°C por mais de 3 min → desliga compressor e ventilador
+- Temperatura descongelamento: saída menor que 2°C compressor para; maior que 6°C volta ao normal
+- Alternador mínimo 12V: 85-90A
+- Não instalar em tetos inclinados maiores que 30°
+- Tetos irregulares: usar selante de poliuretano
+- A cada 3 meses: inspecionar conexões elétricas, terminais e bornes
+`,
+
+  ar_slim_instalacao: `
+INSTALAÇÃO DO AR SLIM SÉRIE 2:
+1. Remover teto solar e limpar ao redor do buraco
+2. Aplicar borrachão de vedação e cola impermeável nas bordas
+3. Colocar equipamento centralizado acima do teto solar
+4. Encaixar luva de tração e apertar com 4 porcas M10
+5. Colocar placa decorativa e apertar com 4 porcas M10
+6. Encaixar os 4 tampões decorativos
+7. Fio VERMELHO → terminal positivo (+) | Fio PRETO → terminal negativo (-)
+DRENO: atentar para queda natural da mangueira; se não tiver queda natural, deixar sem as mangueiras
+CHICOTE: ligar direto nas baterias, não alterar o chicote
+`,
+
+  instalacao_por_caminhao: `
+GUIA DE INSTALAÇÃO POR MODELO DE CAMINHÃO:
+
+REGRA GERAL:
+- Nem todos os caminhões possuem abertura no teto de fábrica
+- Alguns modelos exigem adaptação (corte no teto)
+- A necessidade de corte depende do modelo do ar e do caminhão
+
+ECO COMPACT — recomendado para cabines MENORES:
+✅ Volvo FH: NÃO precisa cortar o teto
+⚠️ VW Worker: precisa corte de aproximadamente 1,5cm de cada lado
+⚠️ VW Delivery: precisa corte de aproximadamente 1,5cm de cada lado
+
+SLIM e SLIM SÉRIE 2 — recomendados para cabines MAIORES:
+✅ Maioria dos caminhões: NÃO precisa cortar
+⚠️ Volvo FH: PRECISA cortar o teto
+⚠️ VW Worker: PRECISA cortar o teto
+⚠️ VW Delivery: PRECISA cortar o teto
+
+CAMINHÕES PEQUENOS (Hyundai HR e Kia Bongo):
+⚠️ NÃO possuem abertura no teto de fábrica
+⚠️ Para QUALQUER modelo de ar: necessário cortar o teto
+
+CASO ESPECIAL — Volvo FH a partir de 2016:
+⚠️ Possui teto solar de fábrica
+⚠️ Instalação mais complexa
+⚠️ RECOMENDADO: encaminhar para análise especializada antes da venda
+
+REGRAS DE DECISÃO RÁPIDA:
+- Caminhão pequeno (HR/Bongo): sempre cortar, qualquer modelo
+- VW Worker/Delivery: ECO Compact = corte leve | Slim e Slim Série 2 = corte necessário
+- Volvo FH: ECO Compact = sem corte | Slim e Slim Série 2 = corte necessário
+- Volvo FH 2016+: análise especializada recomendada
+- Outros caminhões: normalmente não precisam cortar com Slim/Slim Série 2
+`,
+
+  ar_eletrico: `
+PRODUTO: AR-CONDICIONADO 100% ELÉTRICO SLIM SÉRIE 2
+(Ver seções específicas para erros, operação, instalação e manutenção)
+`,
+
+  eco_compact: `
   eco_compact: `
 PRODUTO: AR-CONDICIONADO ECO COMPACT
 (Manual em breve — para dúvidas técnicas sugira ligar para (34) 3293-8000)
@@ -575,12 +741,42 @@ function selecionarContexto(mensagem) {
 
   // Ar-condicionado
   else if (m.includes('ar') || m.includes('condicionado') || m.includes('elétrico') || m.includes('eletrico') ||
-           m.includes('eco compact') || m.includes('ecocompact')) {
+           m.includes('eco compact') || m.includes('ecocompact') || m.includes('slim') ||
+           m.includes('instalação') || m.includes('instalacao') || m.includes('caminhão') ||
+           m.includes('caminhao') || m.includes('cortar') || m.includes('corte') || m.includes('teto')) {
 
-    if (m.includes('eco') || m.includes('compact'))
+    if (m.includes('eco') && m.includes('compact')) {
       secoes.push(SECOES.eco_compact);
-    else
-      secoes.push(SECOES.ar_eletrico);
+      secoes.push(SECOES.instalacao_por_caminhao);
+    } else if (m.includes('instalar') || m.includes('instalação') || m.includes('instalacao') ||
+               m.includes('corte') || m.includes('cortar') || m.includes('teto') ||
+               m.includes('caminhão') || m.includes('caminhao') || m.includes('volvo') ||
+               m.includes('worker') || m.includes('delivery') || m.includes('bongo') ||
+               m.includes('recomend') || m.includes('indicad') || m.includes('modelo') ||
+               m.includes('qual ar')) {
+      secoes.push(SECOES.ar_slim_geral);
+      secoes.push(SECOES.instalacao_por_caminhao);
+    } else if (m.includes('erro') || m.includes('falha') || m.includes('código') ||
+               m.match(/\be\d+\b/) || m.includes('lu') || m.includes('shr') || m.includes('ope') ||
+               m.includes('não gela') || m.includes('nao gela')) {
+      secoes.push(SECOES.ar_slim_geral);
+      secoes.push(SECOES.ar_slim_erros);
+    } else if (m.includes('consumo') || m.includes('bateria') || m.includes('ampere') ||
+               m.includes('watt') || m.includes('tensão') || m.includes('voltagem')) {
+      secoes.push(SECOES.ar_slim_geral);
+      secoes.push(SECOES.ar_slim_consumo);
+    } else if (m.includes('manut') || m.includes('limpar') || m.includes('inspecionar')) {
+      secoes.push(SECOES.ar_slim_geral);
+      secoes.push(SECOES.ar_slim_manutencao);
+    } else if (m.includes('como usar') || m.includes('ligar') || m.includes('modo') ||
+               m.includes('temperatura') || m.includes('velocidade')) {
+      secoes.push(SECOES.ar_slim_geral);
+      secoes.push(SECOES.ar_slim_operacao);
+    } else {
+      secoes.push(SECOES.ar_slim_geral);
+      secoes.push(SECOES.ar_slim_operacao);
+      secoes.push(SECOES.ar_slim_consumo);
+    }
   }
 
   // Pergunta genérica — inclui contexto básico de todos os produtos
