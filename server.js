@@ -180,7 +180,7 @@ function buscarNoIndice(query) {
 
 async function buscarDadosPlanilha() {
   try {
-    const abas = ['Ar-Condicionado', 'Geladeira Port%C3%A1til', 'Gerador Digital 24V', 'Promo%C3%A7%C3%B5es Ativas', 'Formas de Pagamento'];
+    const abas = ['Ar-Condicionado Slim e S%C3%A9rie 2', 'Ar-Condicionado Eco Compact', 'Geladeira Port%C3%A1til', 'Gerador Digital 24V', 'Promo%C3%A7%C3%B5es Ativas', 'Formas de Pagamento'];
     let dados = '';
     for (const aba of abas) {
       const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${aba}`;
