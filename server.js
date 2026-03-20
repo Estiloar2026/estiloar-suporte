@@ -413,7 +413,7 @@ REGRAS CRÍTICAS:
 - Se não souber ou a informação não estiver explicitamente no contexto fornecido, responda EXATAMENTE: "Não tenho essa informação disponível no momento."
 - NUNCA complete respostas com dados que não estejam explicitamente escritos neste contexto — mesmo que pareça óbvio ou provável
 - Sobre preços: use APENAS os dados da planilha fornecida
-- Quando informar preço de qualquer produto, SEMPRE apresente juntos: preço à vista, preço parcelado e condições de parcelamento, e observações (se houver) — nunca informe só um valor isolado
+- Quando informar preço de qualquer produto, SEMPRE apresente juntos: preço à vista, preço parcelado, condições de parcelamento E observações — mesmo que a observação esteja em branco, verifique a coluna. Nunca informe só um valor isolado
 - NUNCA termine a resposta com sugestão de ligar para o telefone
 - NUNCA termine com frases como "estou aqui para ajudar", "não hesite em perguntar" ou similares
 - NUNCA faça perguntas no final da resposta
@@ -802,7 +802,7 @@ function selecionarContexto(mensagem) {
     m.includes('kia') || m.includes('ford') || m.includes('man') ||
     m.includes('recomend') || m.includes('indicad') || m.includes('qual modelo')
   ) {
-    if (m.includes('eco') && m.includes('compact')) {
+    if (m.includes('eco') || m.includes('compact')) {
       secoes.push(SECOES.eco_compact);
       secoes.push(SECOES.instalacao_por_caminhao);
     } else if (
