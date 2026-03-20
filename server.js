@@ -315,6 +315,8 @@ async function buscarAssistenciaTecnica(query) {
       return { nome: cols[0]||'', cidade: cols[1]||'', estado: cols[2]||'', endereco: cols[3]||'', telefone: cols[4]||'' };
     }).filter(p => p.nome && p.nome.length > 1 && p.cidade && p.cidade.length > 1 && ufsValidas.includes(p.estado.toLowerCase().trim()));
 
+    console.log('Total pontos lidos:', pontos.length);
+    if (pontos.length > 0) console.log('Primeiro ponto:', JSON.stringify(pontos[0]));
     if (!pontos.length) return null;
 
     const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
