@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const { buscarCidade, cidadesMaisProximas } = require('./cidades');
+const CIDADES_BR = require('./cidades');
 
 const app = express();
 app.use(cors());
@@ -189,6 +191,88 @@ async function buscarDadosPlanilha() {
   } catch (err) { return ''; }
 }
 
+// Haversine — distância em km entre dois pontos
+function distanciaKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Normaliza string para comparação
+function norm(str) {
+  return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
+// Busca coordenadas de uma cidade no banco local
+function buscarCoordenadas(nomeCidade, nomeEstado) {
+  const cn = norm(nomeCidade);
+  const en = norm(nomeEstado || '');
+  let melhor = null;
+  for (const c of CIDADES_BR) {
+    const cc = norm(c.cidade);
+    const ce = norm(c.estado);
+    if (cc === cn && (!en || ce === en)) return c;
+    if (cc === cn && !melhor) melhor = c;
+    if (!melhor && (cc.includes(cn) || cn.includes(cc))) melhor = c;
+  }
+  return melhor;
+}
+
+async function buscarAssistenciaTecnica(query) {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Assist%C3%AAncia+T%C3%A9cnica`;
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const csv = await response.text();
+    const linhas = csv.split('\n').slice(2).filter(l => l.trim());
+    const pontos = linhas.map(linha => {
+      const cols = linha.match(/(".*?"|[^,]+)(?=,|$)/g) || [];
+      const limpar = s => (s || '').replace(/^"|"$/g, '').trim();
+      return {
+        nome: limpar(cols[0]), cidade: limpar(cols[1]),
+        estado: limpar(cols[2]), endereco: limpar(cols[3]), telefone: limpar(cols[4])
+      };
+    }).filter(p => p.nome && p.cidade);
+
+    if (!pontos.length) return { tipo: 'nenhum', pontos: [] };
+
+    const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    const q = norm(query);
+
+    // Verifica se existe ponto exatamente nessa cidade
+    const exatos = pontos.filter(p => norm(p.cidade) === q);
+    if (exatos.length > 0) return { tipo: 'exato', pontos: exatos };
+
+    // Tenta usar coordenadas para buscar as 2 mais próximas
+    const cidadeRef = buscarCidade(query);
+    if (cidadeRef) {
+      const pontosComCoord = pontos.map(p => {
+        const coord = buscarCidade(p.cidade);
+        return coord ? { ...p, lat: coord.lat, lng: coord.lng } : null;
+      }).filter(Boolean);
+
+      if (pontosComCoord.length > 0) {
+        const proximos = cidadesMaisProximas(cidadeRef.lat, cidadeRef.lng, pontosComCoord, 2);
+        return { tipo: 'proximos', pontos: proximos, cidadeBuscada: query };
+      }
+    }
+
+    // Fallback textual
+    const encontrados = pontos.filter(p =>
+      norm(p.cidade).includes(q) || q.includes(norm(p.cidade)) ||
+      norm(p.estado).includes(q) || q.includes(norm(p.estado))
+    );
+    return { tipo: 'textual', pontos: encontrados.length > 0 ? encontrados.slice(0,2) : pontos.slice(0,2) };
+  } catch (err) {
+    console.error('Erro ao buscar assistência:', err);
+    return null;
+  }
+}
+
 app.post('/api/login', (req, res) => {
   const { senha } = req.body;
   if (senha === process.env.SENHA_ACESSO) {
@@ -234,7 +318,8 @@ REGRAS CRÍTICAS:
 - NUNCA busque informações em sites externos
 - NUNCA mencione outras marcas ou concorrentes de produtos de ar-condicionado
 - Use APENAS as informações fornecidas neste contexto
-- Se não souber, diga honestamente que não tem essa informação disponível
+- Se não souber ou a informação não estiver explicitamente no contexto fornecido, responda EXATAMENTE: "Não tenho essa informação disponível no momento."
+- NUNCA complete respostas com dados que não estejam explicitamente escritos neste contexto — mesmo que pareça óbvio ou provável
 - Sobre preços: use APENAS os dados da planilha fornecida
 - NUNCA termine a resposta com sugestão de ligar para o telefone
 - NUNCA termine com frases como "estou aqui para ajudar", "não hesite em perguntar" ou similares
@@ -723,6 +808,38 @@ app.post('/api/chat', async (req, res) => {
         const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
         return res.json({ reply: `Aqui estão as imagens técnicas:\n\n${links}` });
       }
+    }
+
+    // Detecta busca de assistência técnica
+    const palavrasAssistencia = ['assistência técnica', 'assistencia tecnica', 'ponto autorizado', 'autorizada', 'onde conserto', 'onde consertar', 'assistência mais perto', 'assistencia mais perto', 'ponto de assistência', 'ponto de assistencia', 'técnico autorizado', 'tecnico autorizado'];
+    const buscaAssistencia = palavrasAssistencia.some(p => ultimaMensagem.includes(p));
+
+    if (buscaAssistencia) {
+      // Tenta extrair cidade ou estado da mensagem
+      const stopWords = ['assistência', 'assistencia', 'técnica', 'tecnica', 'ponto', 'autorizado', 'autorizada', 'onde', 'conserto', 'consertar', 'mais', 'perto', 'próximo', 'proximo', 'em', 'de', 'do', 'da', 'no', 'na', 'para', 'tem', 'qual', 'o', 'a', 'e', 'é'];
+      const palavras = ultimaMensagem.split(/\s+/).filter(p => p.length > 2 && !stopWords.includes(p));
+      const queryLocal = palavras.join(' ') || '';
+
+      const resultado = await buscarAssistenciaTecnica(queryLocal);
+
+      if (!resultado || resultado.pontos.length === 0) {
+        return res.json({ reply: `Não encontrei pontos de assistência técnica para essa localidade. 😊` });
+      }
+
+      const lista = resultado.pontos.map(p =>
+        `📍 **${p.nome}**\n📌 ${p.cidade} - ${p.estado}\n🏠 ${p.endereco}\n📞 ${p.telefone}`
+      ).join('\n\n');
+
+      let intro = '';
+      if (resultado.tipo === 'exato') {
+        intro = `Encontrei ${resultado.pontos.length === 1 ? 'este ponto' : 'estes pontos'} de assistência técnica em **${queryLocal}**:`;
+      } else if (resultado.tipo === 'proximos') {
+        intro = `Não temos assistência técnica cadastrada em **${queryLocal}**. ${resultado.pontos.length === 1 ? 'Este é o ponto mais próximo' : 'Estes são os dois pontos mais próximos'}:`;
+      } else {
+        intro = `Estes são os pontos de assistência técnica cadastrados:`;
+      }
+
+      return res.json({ reply: `${intro}\n\n${lista}` });
     }
 
     // Detecta busca de depoimentos/Drive
