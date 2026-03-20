@@ -1037,37 +1037,26 @@ app.post('/api/chat', async (req, res) => {
         'info', 'informacao', 'informação', 'informacoes', 'informações',
         'dados', 'contato', 'lista', 'listagem'
       ];
-      // Extrai localidade preservando nomes compostos como "Salto de Pirapora"
+      // Extrai localidade — remove tudo exceto o nome da cidade/estado
       const normLocal = s => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-      const ufsValidas2 = ['ac','al','ap','am','ba','ce','df','es','go','ma','mt','ms','mg','pa','pb','pr','pe','pi','rj','rn','rs','ro','rr','sc','sp','se','to'];
 
-      // Remove palavras de pedido, preservando o nome da cidade inteiro
-      let queryLocal = normLocal(ultimaMensagem);
-      const remover = [
-        'assistencia tecnica', 'assistencia', 'assistência', 'assistência técnica',
-        'assitencia', 'asistencia', 'asssitencia', 'assisttencia', 'assistenica', 'assisencia',
-        'tecnica', 'técnica', 'ponto autorizado', 'ponto', 'autorizado', 'autorizada',
-        'quero uma', 'quero um', 'quero', 'preciso de uma', 'preciso de', 'preciso',
-        'me de uma', 'me de um', 'me de', 'me da', 'pode me dar', 'pode me mostrar',
-        'gostaria de', 'gostaria', 'queria', 'busco', 'procuro',
-        'tem uma', 'tem um', 'tem', 'temos uma', 'temos um', 'temos', 'existe uma', 'existe', 'existem',
-        'qual a', 'qual o', 'qual', 'oi', 'ola', 'olá',
-        'bom dia', 'boa tarde', 'boa noite', 'por favor', 'pfv', 'pf',
-        'me', 'uma', 'um', 'para', 'favor'
-      ];
-      // Ordena do maior para o menor para remover frases antes de palavras
-      remover.sort((a, b) => b.length - a.length);
-      for (const r of remover) {
-        const rn = normLocal(r);
-        // Tenta remover do início, fim e meio
-        queryLocal = queryLocal.replace(new RegExp('(^|\s)' + rn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(\s|$)', 'gi'), ' ').trim();
-      }
-      // Remove preposição só do início
-      queryLocal = queryLocal.replace(/^\s*(em|no|na|para|do|da)\s+/i, '').trim();
-      // Remove pontuação e espaços duplos
-      queryLocal = queryLocal.replace(/[?!.,;]/g, '').replace(/\s+/g, ' ').trim();
-
-      const queryFinal = queryLocal || '';
+      // Remove todas as palavras de pedido e assistência, preservando só a localidade
+      let queryFinal = normLocal(ultimaMensagem)
+        // Remove variações de assistência técnica
+        .replace(/ass[a-z]*[ei][a-z]*c[a-z]*/gi, '')
+        .replace(/t[eé]cn[a-z]*/gi, '')
+        .replace(/ponto\s*autor[a-z]*/gi, '')
+        // Remove verbos e palavras de pedido (não remove de/da/do pois podem ser parte do nome da cidade)
+        .replace(/\b(quero|quer|queria|preciso|precisa|gostaria|busco|procuro|temos|tem|existe|existem|possui|possuem|ha|há|pode|poderia|me|um|uma|uns|umas|favor|pfv|pf|oi|ola|qual|quais|onde|algum|alguma)\b/gi, '')
+        // Remove saudações
+        .replace(/\b(bom\s*dia|boa\s*tarde|boa\s*noite|por\s*favor|obrigado|obrigada)\b/gi, '')
+        // Remove pontuação
+        .replace(/[?!.,;:]/g, '')
+        // Remove preposição do início
+        .replace(/^\s*(em|no|na|para|do|da|a|o)\s+/i, '')
+        // Remove espaços duplos
+        .replace(/\s+/g, ' ')
+        .trim();
 
 
       // Detecta pergunta sobre quantidade total
