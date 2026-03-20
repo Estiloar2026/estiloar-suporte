@@ -61,7 +61,7 @@ function detectarImagemTecnica(mensagem) {
     return null;
   }
   if (m.includes('gerador')) return 'gerador';
-  if (m.includes('slim') || m.includes('serie 2') || m.includes('série 2') || (m.includes('ar') && !m.includes('geladeira'))) return 'ar';
+  if (m.includes('slim') || m.includes('serie 2') || m.includes('série 2') || m.includes('condicionado') || (/\bar\b/.test(m) && !m.includes('geladeira'))) return 'ar';
   return null;
 }
 
@@ -412,6 +412,7 @@ EMPRESA: Estilo AR | Tel: (34) 3293-8000 | Seg-Sex 08h-18h | www.estiloar.com.br
 
 REGRAS CRÍTICAS:
 - NUNCA invente informações, preços, depoimentos ou dados técnicos
+- Se não tiver a informação no manual, responda EXATAMENTE: "Não tenho essa informação disponível."
 - NUNCA busque informações em sites externos
 - NUNCA mencione outras marcas ou concorrentes de produtos de ar-condicionado
 - Use APENAS as informações fornecidas neste contexto
@@ -607,6 +608,7 @@ PRODUTOS DE AR-CONDICIONADO ESTILO AR:
   eco_compact: `
 PRODUTO: AR-CONDICIONADO ECO COMPACT
 Modelos: 12V e 24V | Dimensões: 980 x 700 x 150 mm
+Peso: informação não disponível no manual
 Abertura mínima instalação: 600 x 300 mm
 Garantia: 3 meses | Gás: R134a (460g) | Lubrificante: RH68
 Faixa de temperatura: 5°C a 32°C | Classe climática: T1
@@ -954,7 +956,7 @@ app.post('/api/chat', async (req, res) => {
       // Correto
       'assistência técnica', 'assistencia tecnica',
       'assistência em', 'assistencia em',
-      'quero assistencia', 'quero assistência',
+      'quero assistencia', 'quero assistência', 'quero uma assistencia', 'quero uma assistência', 'preciso de assistencia', 'preciso de assistência', 'busco assistencia', 'busco assistência',
       'ponto autorizado', 'ponto de assistência', 'ponto de assistencia',
       'autorizada', 'onde conserto', 'onde consertar',
       'assistência mais perto', 'assistencia mais perto',
