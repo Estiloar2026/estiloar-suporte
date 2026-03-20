@@ -133,51 +133,69 @@ async function construirIndice() {
   return novoIndice.length;
 }
 
+function normIdx(s) {
+  return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
 function buscarNoIndice(query) {
   if (indiceDrive.length === 0) return null;
-  const q = query.toLowerCase();
+  const q = normIdx(query);
 
-  let marcaBusca = '';
-  let modeloBusca = '';
-  for (const [modelo, marca] of Object.entries(MODELOS_MARCAS)) {
-    if (q.includes(modelo)) {
-      marcaBusca = marca;
-      modeloBusca = modelo;
-      break;
-    }
-  }
+  // Remove palavras genéricas para extrair só marca e modelo
+  const stopWords = ['depoimento', 'deposito', 'foto', 'video', 'cliente', 'de', 'do', 'da', 'com', 'para', 'quero', 'ver'];
+  const palavrasQuery = q.split(/\s+/).filter(p => p.length >= 2 && !stopWords.includes(p));
 
+  // Identifica marca
   const marcasDiretas = ['scania', 'volvo', 'mercedes', 'iveco', 'man', 'daf', 'ford', 'volkswagen', 'vw', 'hyundai', 'fiat', 'renault', 'isuzu', 'kia'];
+  let marcaBusca = '';
+  for (const [modelo, marca] of Object.entries(MODELOS_MARCAS)) {
+    if (q.includes(normIdx(modelo))) { marcaBusca = marca; break; }
+  }
   if (!marcaBusca) {
     for (const marca of marcasDiretas) {
-      if (q.includes(marca)) {
-        marcaBusca = marca === 'vw' ? 'volkswagen' : marca;
-        break;
-      }
+      if (q.includes(marca)) { marcaBusca = marca === 'vw' ? 'volkswagen' : marca; break; }
     }
   }
 
+  // Palavras que identificam o modelo (sem a marca e sem stopwords)
+  const palavrasModelo = palavrasQuery.filter(p => !marcasDiretas.includes(p) && p !== marcaBusca);
+
   if (marcaBusca) {
-    if (modeloBusca) {
-      const resultadosEspecificos = indiceDrive.filter(item =>
-        item.marca.includes(marcaBusca) && item.modelo.includes(modeloBusca)
-      );
-      if (resultadosEspecificos.length > 0) return resultadosEspecificos;
+    const pastasMarca = indiceDrive.filter(item => normIdx(item.marca).includes(marcaBusca));
+
+    // Se tem palavras de modelo, tenta match específico
+    if (palavrasModelo.length > 0) {
+
+      // Match exato — todas as palavras do modelo aparecem no nome da pasta
+      const exatos = pastasMarca.filter(item => {
+        const nomeModelo = normIdx(item.modeloNome);
+        return palavrasModelo.every(p => nomeModelo.includes(p));
+      });
+      if (exatos.length > 0) return exatos;
+
+      // Match parcial — pelo menos uma palavra aparece
+      const parciais = pastasMarca.filter(item => {
+        const nomeModelo = normIdx(item.modeloNome);
+        return palavrasModelo.some(p => nomeModelo.includes(p));
+      });
+      if (parciais.length > 0) return parciais;
+
+      // Não achou modelo específico — avisa e retorna todas da marca
+      pastasMarca._aviso = `Não encontrei pasta para "${palavrasModelo.join(' ')}" na ${marcaBusca}. Encontrei estas pastas:`;
+      return pastasMarca.length > 0 ? pastasMarca : null;
     }
-    const resultadosMarca = indiceDrive.filter(item => item.marca.includes(marcaBusca));
-    if (resultadosMarca.length > 0) {
-      resultadosMarca._aviso = modeloBusca ?
-        `Não encontrei pasta específica para "${modeloBusca}", mas encontrei pastas da ${marcaBusca}:` :
-        `Encontrei as seguintes pastas para ${marcaBusca}:`;
-      return resultadosMarca;
+
+    // Sem modelo específico — retorna todas da marca
+    if (pastasMarca.length > 0) {
+      pastasMarca._aviso = `Encontrei as seguintes pastas para ${marcaBusca}:`;
+      return pastasMarca;
     }
     return null;
   }
 
-  const palavras = q.split(' ').filter(p => p.length >= 3);
+  // Sem marca — busca por palavras em qualquer campo
   const resultados = indiceDrive.filter(item =>
-    palavras.some(p => item.marca === p || item.modelo === p ||
-      item.marca.startsWith(p) || item.modelo.startsWith(p))
+    palavrasQuery.some(p => normIdx(item.marca).includes(p) || normIdx(item.modeloNome).includes(p))
   );
   return resultados.length > 0 ? resultados : null;
 }
