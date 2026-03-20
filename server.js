@@ -946,12 +946,13 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
-    // Detecta Volvo FH sem ano — pergunta o ano
+    // Detecta Volvo FH sem ano — pergunta o ano (só se NÃO for pedido de depoimento)
     const mencionaFH = ultimaMensagem.includes('volvo fh') || ultimaMensagem.includes(' fh ') ||
                        ultimaMensagem.includes(' fh') || ultimaMensagem.endsWith('fh') ||
                        ultimaMensagem.startsWith('fh ');
     const temAno = /20\d{2}/.test(ultimaMensagem);
-    if (mencionaFH && !temAno) {
+    const ehDepoimento = ['depoimento', 'foto de cliente', 'video de cliente', 'vídeo de cliente', 'quem instalou', 'ja instalou', 'já instalou', 'cliente que instalou'].some(p => ultimaMensagem.includes(p));
+    if (mencionaFH && !temAno && !ehDepoimento) {
       return res.json({ reply: `Para o Volvo FH, o ano faz diferença na instalação. Qual o ano do caminhão do seu cliente? 😊` });
     }
 
