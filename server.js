@@ -811,14 +811,30 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Detecta busca de assistência técnica
-    const palavrasAssistencia = ['assistência técnica', 'assistencia tecnica', 'ponto autorizado', 'autorizada', 'onde conserto', 'onde consertar', 'assistência mais perto', 'assistencia mais perto', 'ponto de assistência', 'ponto de assistencia', 'técnico autorizado', 'tecnico autorizado'];
+    const palavrasAssistencia = [
+      'assistência técnica', 'assistencia tecnica',
+      'assistência em', 'assistencia em',
+      'quero assistencia', 'quero assistência',
+      'ponto autorizado', 'ponto de assistência', 'ponto de assistencia',
+      'autorizada', 'onde conserto', 'onde consertar',
+      'assistência mais perto', 'assistencia mais perto',
+      'técnico autorizado', 'tecnico autorizado',
+      'tem assistencia', 'tem assistência',
+      'assistencia mais proxima', 'assistência mais próxima',
+      'assistencia proximo', 'assistencia próximo'
+    ];
     const buscaAssistencia = palavrasAssistencia.some(p => ultimaMensagem.includes(p));
 
     if (buscaAssistencia) {
-      // Tenta extrair cidade ou estado da mensagem
-      const stopWords = ['assistência', 'assistencia', 'técnica', 'tecnica', 'ponto', 'autorizado', 'autorizada', 'onde', 'conserto', 'consertar', 'mais', 'perto', 'próximo', 'proximo', 'em', 'de', 'do', 'da', 'no', 'na', 'para', 'tem', 'qual', 'o', 'a', 'e', 'é'];
-      const palavras = ultimaMensagem.split(/\s+/).filter(p => p.length > 2 && !stopWords.includes(p));
-      const queryLocal = palavras.join(' ') || '';
+      // Extrai cidade da mensagem removendo palavras irrelevantes
+      const stopWords = ['assistência', 'assistencia', 'técnica', 'tecnica', 'ponto', 'autorizado',
+        'autorizada', 'onde', 'conserto', 'consertar', 'mais', 'perto', 'próximo', 'proximo',
+        'em', 'de', 'do', 'da', 'no', 'na', 'para', 'tem', 'qual', 'o', 'a', 'e', 'é',
+        'ola', 'olá', 'quero', 'preciso', 'busco', 'procuro', 'existe', 'existem', 'tem',
+        'alguma', 'algum', 'por', 'favor', 'me', 'mostra', 'mostre', 'indica', 'indique'];
+      const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      const palavras = ultimaMensagem.split(/\s+/).filter(p => p.length > 2 && !stopWords.includes(norm(p)));
+      const queryLocal = palavras.join(' ').trim() || '';
 
       const resultado = await buscarAssistenciaTecnica(queryLocal);
 
