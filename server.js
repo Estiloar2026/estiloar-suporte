@@ -488,7 +488,6 @@ PRODUTO: AR-CONDICIONADO 100% ELÉTRICO SLIM SÉRIE 2
 `,
 
   eco_compact: `
-  eco_compact: `
 PRODUTO: AR-CONDICIONADO ECO COMPACT
 (Manual em breve — para dúvidas técnicas sugira ligar para (34) 3293-8000)
 `,
