@@ -144,7 +144,6 @@ function buscarNoIndice(query) {
   if (indiceDrive.length === 0) return null;
   const q = query.toLowerCase();
 
-  // Tenta encontrar modelo específico no mapeamento
   let marcaBusca = '';
   let modeloBusca = '';
   for (const [modelo, marca] of Object.entries(MODELOS_MARCAS)) {
@@ -155,7 +154,6 @@ function buscarNoIndice(query) {
     }
   }
 
-  // Marcas diretas mencionadas na mensagem
   const marcasDiretas = ['scania', 'volvo', 'mercedes', 'iveco', 'man', 'daf', 'ford', 'volkswagen', 'vw', 'hyundai', 'fiat', 'renault', 'isuzu', 'kia'];
   if (!marcaBusca) {
     for (const marca of marcasDiretas) {
@@ -167,20 +165,16 @@ function buscarNoIndice(query) {
   }
 
   if (marcaBusca) {
-    // Se tem modelo específico, tenta filtrar por marca + modelo
     if (modeloBusca) {
       const resultadosEspecificos = indiceDrive.filter(item =>
         item.marca.includes(marcaBusca) &&
         item.modelo.includes(modeloBusca)
       );
-      // Se achou pasta específica do modelo, retorna só ela
       if (resultadosEspecificos.length > 0) return resultadosEspecificos;
     }
 
-    // Se não achou pasta específica do modelo, retorna todas da marca
     const resultadosMarca = indiceDrive.filter(item => item.marca.includes(marcaBusca));
     if (resultadosMarca.length > 0) {
-      // Avisa que não achou pasta específica mas trouxe a marca
       resultadosMarca._aviso = modeloBusca ?
         `Não encontrei pasta específica para "${modeloBusca}", mas encontrei pastas da ${marcaBusca}:` :
         `Encontrei as seguintes pastas para ${marcaBusca}:`;
@@ -189,7 +183,6 @@ function buscarNoIndice(query) {
     return null;
   }
 
-  // Busca por palavras exatas
   const palavras = q.split(' ').filter(p => p.length >= 3);
   const resultados = indiceDrive.filter(item =>
     palavras.some(p => item.marca === p || item.modelo === p ||
@@ -649,7 +642,6 @@ function selecionarContexto(mensagem) {
     if (m.includes('segurança') || m.includes('cuidado') || m.includes('atenção') || m.includes('perigo'))
       secoes.push(SECOES.geladeira_seguranca);
 
-    // Se pergunta genérica sem contexto específico
     if (secoes.length === 2) {
       secoes.push(SECOES.geladeira_operacao);
       secoes.push(SECOES.geladeira_dimensoes);
@@ -680,7 +672,6 @@ function selecionarContexto(mensagem) {
     if (m.includes('segurança') || m.includes('perigo') || m.includes('cuidado') || m.includes('fechado'))
       secoes.push(SECOES.gerador_seguranca);
 
-    // Se pergunta genérica
     if (secoes.length === 2) {
       secoes.push(SECOES.gerador_operacao);
       secoes.push(SECOES.gerador_seguranca);
@@ -727,7 +718,7 @@ function selecionarContexto(mensagem) {
     }
   }
 
-  // Pergunta genérica — inclui contexto básico de todos os produtos
+  // Pergunta genérica
   else {
     secoes.push(SECOES.ar_eletrico);
     secoes.push(SECOES.geladeira_geral);
@@ -736,7 +727,6 @@ function selecionarContexto(mensagem) {
 
   return secoes.join('\n');
 }
-
 
 
 app.post('/api/chat', async (req, res) => {
@@ -756,15 +746,12 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
-    // Detecta busca de depoimentos/Drive — APENAS quando pedir depoimentos explicitamente
+    // Detecta busca de depoimentos/Drive
     const palavrasDepoimento = ['depoimento', 'foto de cliente', 'video de cliente', 'vídeo de cliente', 'quem instalou', 'ja instalou', 'já instalou', 'cliente que instalou', 'referencia de cliente', 'referência de cliente'];
     const buscaDrive = palavrasDepoimento.some(p => ultimaMensagem.includes(p));
 
-
-
     // Busca Drive
     if (buscaDrive) {
-      // Se índice vazio, tenta construir
       if (indiceDrive.length === 0) {
         try {
           await construirIndice();
@@ -774,37 +761,18 @@ app.post('/api/chat', async (req, res) => {
         }
       }
 
-      // Só busca se o índice foi construído com sucesso
       if (indiceDrive.length === 0) {
         return res.json({ reply: `No momento não consigo acessar os depoimentos. Por favor ligue para **(34) 3293-8000**. 😊` });
       }
 
       const resultados = buscarNoIndice(ultimaMensagem);
 
-      // Só retorna se tiver resultados reais no índice
       if (resultados && resultados.length > 0) {
         const aviso = resultados._aviso || `Encontrei ${resultados.length} pasta(s) no Drive:`;
         const links = resultados.map(r => `📁 **${r.marcaNome} — ${r.modeloNome}**: ${r.link}`).join('\n');
         return res.json({ reply: `${aviso}\n\n${links}\n\nQualquer dúvida é só chamar! 😊` });
       } else {
         return res.json({ reply: `Não encontrei depoimentos para essa marca ou modelo. Para mais informações ligue para **(34) 3293-8000**. 😊` });
-      }
-    }
-
-    // Busca assistência técnica
-    if (buscaAssistencia) {
-
-      const pontos = await buscarAssistencia(cidade);
-      if (pontos && pontos.length > 0) {
-        const lista = pontos.map((p, i) => {
-          let info = `📍 **${i+1}. ${p.nome}**`;
-          if (p.distanciaTexto) info += ` — aproximadamente ${p.distanciaTexto}`;
-          if (p.descricao) info += `\n${p.descricao.substring(0, 300)}`;
-          return info;
-        }).join('\n\n');
-        return res.json({ reply: `Encontrei os 2 pontos de assistência técnica mais próximos:\n\n${lista}\n\nQualquer dúvida é só chamar! 😊` });
-      } else {
-        return res.json({ reply: `Não encontrei pontos de assistência técnica para essa localidade. Por favor ligue para **(34) 3293-8000** para mais informações. 😊` });
       }
     }
 
