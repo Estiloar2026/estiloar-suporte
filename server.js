@@ -931,12 +931,13 @@ app.post('/api/chat', async (req, res) => {
 
     if (buscaAssistencia) {
       // Extrai cidade da mensagem removendo palavras irrelevantes
-      const stopWords = ['assistência', 'assistencia', 'técnica', 'tecnica', 'ponto', 'autorizado',
-        'autorizada', 'onde', 'conserto', 'consertar', 'mais', 'perto', 'próximo', 'proximo',
-        'em', 'de', 'do', 'da', 'no', 'na', 'para', 'tem', 'qual', 'o', 'a', 'e', 'é',
-        'ola', 'olá', 'quero', 'preciso', 'busco', 'procuro', 'existe', 'existem', 'tem',
-        'alguma', 'algum', 'por', 'favor', 'me', 'mostra', 'mostre', 'indica', 'indique'];
-      const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      const stopWords = ['assistencia', 'assistência', 'tecnica', 'técnica', 'ponto', 'autorizado',
+        'autorizada', 'onde', 'conserto', 'consertar', 'mais', 'perto', 'proximo', 'próximo',
+        'em', 'de', 'do', 'da', 'no', 'na', 'para', 'tem', 'qual', 'o', 'a', 'e', 'e',
+        'ola', 'ola', 'quero', 'preciso', 'busco', 'procuro', 'existe', 'existem',
+        'alguma', 'algum', 'por', 'favor', 'me', 'mostra', 'mostre', 'indica', 'indique',
+        'asistencia', 'assitencia', 'assistenca', 'tecnico', 'técnico'];
+      const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
       // Preserva siglas de 2 letras (UFs) e filtra stopwords para cidades
       const todasPalavras = ultimaMensagem.split(/\s+/);
       const palavras = todasPalavras.filter(p => {
@@ -946,7 +947,10 @@ app.post('/api/chat', async (req, res) => {
       });
       const queryLocal = palavras.join(' ').trim() || '';
 
-      const resultado = await buscarAssistenciaTecnica(queryLocal);
+      // Se queryLocal ficou vazio, tenta extrair diretamente da mensagem original
+      const queryFinal = queryLocal || ultimaMensagem.replace(/assistencia|assistência|tecnica|técnica|ponto|autorizado|autorizada|onde|conserto|quero|preciso|em|de|do|da|no|na|para|tem/gi, '').trim();
+
+      const resultado = await buscarAssistenciaTecnica(queryFinal);
 
       if (!resultado || resultado.pontos.length === 0) {
         return res.json({ reply: `Não encontrei pontos de assistência técnica para essa localidade. 😊` });
