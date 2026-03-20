@@ -50,9 +50,13 @@ function detectarImagemTecnica(mensagem) {
   if (m.includes('35') || m.includes('35l')) return 'geladeira-35l';
   if (m.includes('45') || m.includes('45l')) return 'geladeira-45l';
   if (m.includes('55') || m.includes('55l')) return 'geladeira-55l';
-  if (m.includes('geladeira') || m.includes('frigobar')) return 'geladeira-35l';
+  if (m.includes('geladeira') || m.includes('frigobar')) {
+    // Só retorna se especificou o modelo correto (35, 45 ou 55)
+    // Se pediu modelo que não existe, retorna null
+    return null;
+  }
   if (m.includes('gerador')) return 'gerador';
-  if (m.includes('ar') || m.includes('condicionado') || m.includes('eletrico') || m.includes('elétrico')) return 'ar';
+  if (m.includes('slim') || m.includes('serie 2') || m.includes('série 2') || (m.includes('ar') && !m.includes('geladeira'))) return 'ar';
   return null;
 }
 
@@ -224,13 +228,31 @@ function buscarCoordenadas(nomeCidade, nomeEstado) {
 
 async function buscarAssistenciaTecnica(query) {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=PONTOS%20DE%20ASSIST%C3%8ANCIA%20T%C3%89CNICA%20%E2%80%94%20ESTILO%20AR`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.error('Erro ao buscar planilha:', response.status);
+    // Tenta o nome completo primeiro, depois nome simplificado
+    const nomes = [
+      'PONTOS%20DE%20ASSIST%C3%8ANCIA%20T%C3%89CNICA%20%E2%80%94%20ESTILO%20AR',
+      'Assist%C3%AAncia%20T%C3%A9cnica',
+      'Assistencia%20Tecnica',
+      'assistencia'
+    ];
+    let csv = null;
+    for (const nome of nomes) {
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${nome}`;
+      const response = await fetch(url);
+      if (response.ok) {
+        const texto = await response.text();
+        if (texto && texto.length > 10 && !texto.includes('error')) {
+          csv = texto;
+          console.log('Aba encontrada:', nome);
+          break;
+        }
+      }
+    }
+    if (!csv) {
+      console.error('Nenhuma aba de assistência encontrada');
       return null;
     }
-    const csv = await response.text();
+    const response = { ok: true };
     console.log('CSV assistencia (primeiras linhas):', csv.substring(0, 300));
 
     // Parser robusto para CSV com campos entre aspas
