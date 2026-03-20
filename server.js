@@ -50,7 +50,12 @@ function detectarImagemTecnica(mensagem) {
   const m = mensagem.toLowerCase();
   // Não ativa se for busca de assistência técnica
   if (m.includes('assistencia') || m.includes('assistência') || m.includes('ponto autorizado') || m.includes('autorizada')) return null;
-  if (!m.includes('imagem tecni') && !m.includes('imagem técni') && !m.includes('foto tecni') && !m.includes('medida') && !m.includes('dimensão') && !m.includes('dimensao')) return null;
+  // Ativa com diversas formas de pedir imagem técnica
+  const querImagem = m.includes('imagem tecni') || m.includes('imagem técni') ||
+    m.includes('foto tecni') || m.includes('foto técni') ||
+    m.includes('medida') || m.includes('dimensão') || m.includes('dimensao') ||
+    (m.includes('tecni') && (m.includes('ar') || m.includes('geladeira') || m.includes('gerador') || m.includes('eco') || m.includes('slim')));
+  if (!querImagem) return null;
   if (m.includes('eco') || m.includes('compact')) return 'ecocompact';
   if (m.includes('35') || m.includes('35l')) return 'geladeira-35l';
   if (m.includes('45') || m.includes('45l')) return 'geladeira-45l';
@@ -941,16 +946,6 @@ app.post('/api/chat', async (req, res) => {
       return res.json({ reply: `Para o Volvo FH, o ano faz diferença na instalação. Qual o ano do caminhão do seu cliente? 😊` });
     }
 
-    // Detecta pedido de imagem técnica
-    const produtoTecnico = detectarImagemTecnica(ultimaMensagem);
-    if (produtoTecnico) {
-      const imagens = IMAGENS_TECNICAS[produtoTecnico];
-      if (imagens && imagens.length > 0) {
-        const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
-        return res.json({ reply: `Aqui estão as imagens técnicas:\n\n${links}` });
-      }
-    }
-
     // Detecta busca de assistência técnica
     const palavrasAssistencia = [
       // Correto
@@ -979,12 +974,31 @@ app.post('/api/chat', async (req, res) => {
 
     if (buscaAssistencia) {
       // Extrai cidade da mensagem removendo palavras irrelevantes
-      const stopWords = ['assistencia', 'assistência', 'tecnica', 'técnica', 'ponto', 'autorizado',
-        'autorizada', 'onde', 'conserto', 'consertar', 'mais', 'perto', 'proximo', 'próximo',
-        'em', 'de', 'do', 'da', 'no', 'na', 'para', 'tem', 'qual', 'o', 'a', 'e',
-        'ola', 'quero', 'preciso', 'busco', 'procuro', 'existe', 'existem',
-        'alguma', 'algum', 'por', 'favor', 'me', 'mostra', 'mostre', 'indica', 'indique',
-        'asistencia', 'assitencia', 'assistenca', 'tecnico', 'técnico'];
+      const stopWords = [
+        // palavras de assistência
+        'assistencia', 'assistência', 'tecnica', 'técnica', 'ponto', 'autorizado', 'autorizada',
+        'asistencia', 'assitencia', 'assistenca', 'tecnico', 'técnico',
+        'conserto', 'consertar', 'onde', 'conseto',
+        // preposições e artigos
+        'em', 'de', 'do', 'da', 'no', 'na', 'para', 'por', 'ao', 'aos', 'as', 'a',
+        'o', 'os', 'e', 'ou', 'um', 'uma', 'uns', 'umas',
+        // pronomes e verbos comuns
+        'me', 'te', 'se', 'nos', 'voce', 'você', 'meu', 'minha', 'seu', 'sua',
+        'tem', 'ter', 'ha', 'há', 'teria', 'seria', 'esta', 'está',
+        // verbos de pedido
+        'quero', 'queria', 'preciso', 'precisaria', 'gostaria', 'busco', 'procuro',
+        'pode', 'dar', 'de', 'falar', 'dizer', 'mostrar', 'mostra', 'mostre',
+        'indicar', 'indica', 'indique', 'encontrar', 'achar', 'ver', 'veja',
+        'buscar', 'procurar', 'pesquisar', 'checar', 'verificar',
+        // palavras genéricas
+        'ola', 'olá', 'oi', 'qual', 'quais', 'alguma', 'algum', 'algumas', 'alguns',
+        'favor', 'por', 'mais', 'perto', 'proximo', 'próximo', 'proxima', 'próxima',
+        'existe', 'existem', 'tem', 'temos', 'possui', 'possuem',
+        'porfavor', 'pfv', 'pf', 'obrigado', 'obrigada',
+        // outras variações
+        'info', 'informacao', 'informação', 'informacoes', 'informações',
+        'dados', 'contato', 'lista', 'listagem'
+      ];
       // Palavras de 2 letras que NÃO são UFs válidas (devem ser removidas)
       const naoUFs = ['em', 'de', 'do', 'da', 'no', 'na', 'ou', 'ao', 'os', 'as', 'me', 'se', 'te'];
       const ufsValidas2 = ['ac','al','ap','am','ba','ce','df','es','go','ma','mt','ms','mg','pa','pb','pr','pe','pi','rj','rn','rs','ro','rr','sc','sp','se','to'];
@@ -1016,6 +1030,17 @@ app.post('/api/chat', async (req, res) => {
 
       const intro = `Encontrei ${resultado.pontos.length === 1 ? 'este ponto' : 'estes pontos'} de assistência técnica:`;
       return res.json({ reply: `${intro}\n\n${lista}` });
+    }
+
+
+    // Detecta pedido de imagem técnica
+    const produtoTecnico = detectarImagemTecnica(ultimaMensagem);
+    if (produtoTecnico) {
+      const imagens = IMAGENS_TECNICAS[produtoTecnico];
+      if (imagens && imagens.length > 0) {
+        const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
+        return res.json({ reply: `Aqui estão as imagens técnicas:\n\n${links}` });
+      }
     }
 
     // Detecta busca de depoimentos/Drive
