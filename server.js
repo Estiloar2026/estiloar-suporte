@@ -1037,24 +1037,34 @@ app.post('/api/chat', async (req, res) => {
         'info', 'informacao', 'informação', 'informacoes', 'informações',
         'dados', 'contato', 'lista', 'listagem'
       ];
-      // Palavras de 2 letras que NÃO são UFs válidas (devem ser removidas)
-      const naoUFs = ['em', 'de', 'do', 'da', 'no', 'na', 'ou', 'ao', 'os', 'as', 'me', 'se', 'te'];
+      // Extrai localidade preservando nomes compostos como "Salto de Pirapora"
+      const normLocal = s => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
       const ufsValidas2 = ['ac','al','ap','am','ba','ce','df','es','go','ma','mt','ms','mg','pa','pb','pr','pe','pi','rj','rn','rs','ro','rr','sc','sp','se','to'];
-      const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-      // Preserva siglas de 2 letras que sejam UFs válidas
-      const todasPalavras = ultimaMensagem.split(/\s+/);
-      const palavras = todasPalavras.filter(p => {
-        const pn = norm(p);
-        if (pn.length === 2) return ufsValidas2.includes(pn) && !naoUFs.includes(pn);
-        return pn.length > 2 && !stopWords.includes(pn);
-      });
-      const queryLocal = palavras.join(' ').trim() || '';
 
-      // Limpa a query removendo palavras irrelevantes
-      const queryFinal = (queryLocal || ultimaMensagem)
-        .replace(/assistencia|assistência|tecnica|técnica|ponto|autorizado|autorizada|onde|conserto|quero|preciso|tem|qual|para|favor/gi, '')
-        .replace(/\b(em|de|do|da|no|na|o|a)\b/gi, '')
-        .trim();
+      // Remove palavras de pedido, preservando o nome da cidade inteiro
+      let queryLocal = normLocal(ultimaMensagem);
+      const remover = [
+        'assistencia tecnica', 'assistencia', 'assistência', 'assistência técnica',
+        'assitencia', 'asistencia', 'asssitencia', 'assisttencia', 'assistenica', 'assisencia',
+        'tecnica', 'técnica', 'ponto autorizado', 'ponto', 'autorizado', 'autorizada',
+        'quero uma', 'quero um', 'quero', 'preciso de uma', 'preciso de', 'preciso',
+        'me de uma', 'me de um', 'me de', 'me da', 'pode me dar', 'pode me mostrar',
+        'gostaria de', 'gostaria', 'queria', 'busco', 'procuro',
+        'tem uma', 'tem um', 'tem', 'existe uma', 'existe', 'existem',
+        'qual a', 'qual o', 'qual', 'oi', 'ola', 'olá',
+        'bom dia', 'boa tarde', 'boa noite', 'por favor', 'pfv', 'pf',
+        'me', 'uma', 'um', 'para', 'favor'
+      ];
+      for (const r of remover) {
+        queryLocal = queryLocal.replace(new RegExp('\\b' + normLocal(r) + '\\b', 'gi'), ' ').trim();
+      }
+      // Remove preposição só do início da string resultante
+      queryLocal = queryLocal.replace(/^\s*(em|no|na|para|do|da)\s+/i, '').trim();
+      // Remove espaços duplos
+      queryLocal = queryLocal.replace(/\s+/g, ' ').trim();
+
+      const queryFinal = queryLocal || '';
+
 
       const resultado = await buscarAssistenciaTecnica(queryFinal);
 
