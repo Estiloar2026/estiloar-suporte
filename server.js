@@ -8,7 +8,6 @@ app.use(express.static('public'));
 
 const SHEET_ID = '1WWGc7tcK4Y6QJnScCv_TtU5GBk3qYPzmj4APhXAdibw';
 const DRIVE_FOLDER_ID = '14FD9T-XyxS9-9r-03si0Amrswcn_pzBR';
-const MAPS_ID = '1VC-bF8fpFq_1unO7CLbIbeBl_1QOz1I';
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'estiloar-admin-2025';
 
 // Mapeamento de imagens técnicas
@@ -61,15 +60,29 @@ let ultimaAtualizacao = null;
 
 // Mapeamento de modelos para marcas
 const MODELOS_MARCAS = {
-  'hr': 'hyundai', 'hd': 'hyundai',
+  // Hyundai
+  'hr': 'hyundai', 'hd': 'hyundai', 'hr 160': 'hyundai',
+  // Scania
   'r450': 'scania', 'r500': 'scania', 's500': 'scania', 'p360': 'scania', 'g420': 'scania',
-  'fh': 'volvo', 'fm': 'volvo', 'fmx': 'volvo', 'vm': 'volvo',
+  'r410': 'scania', 'r480': 'scania', 'p310': 'scania', 'p340': 'scania',
+  // Volvo
+  'fh': 'volvo', 'fm': 'volvo', 'fmx': 'volvo', 'vm': 'volvo', 'fh540': 'volvo',
+  // Mercedes
   'actros': 'mercedes', 'axor': 'mercedes', 'atego': 'mercedes', 'accelo': 'mercedes',
-  'tector': 'iveco', 'stralis': 'iveco',
+  // Iveco
+  'tector': 'iveco', 'stralis': 'iveco', 'daily': 'iveco',
+  // MAN
   'tgx': 'man', 'tgs': 'man', 'tgm': 'man',
-  'cargo': 'ford',
-  'constellation': 'volkswagen', 'delivery': 'volkswagen',
-  'ducato': 'fiat',
+  // Ford
+  'cargo': 'ford', 'transit': 'ford',
+  // Volkswagen
+  'constellation': 'volkswagen', 'delivery': 'volkswagen', 'worker': 'volkswagen',
+  // Fiat
+  'ducato': 'fiat', 'fiorino': 'fiat', 'doblo': 'fiat', 'doblô': 'fiat',
+  // Kia
+  'bongo': 'kia',
+  // Renault
+  'master': 'renault', 'kangoo': 'renault',
 };
 
 // Token Google Drive
@@ -126,33 +139,57 @@ async function construirIndice() {
   return novoIndice.length;
 }
 
-// Busca no índice — só retorna resultados com match real
+// Busca no índice — filtra por marca E modelo quando possível
 function buscarNoIndice(query) {
   if (indiceDrive.length === 0) return null;
   const q = query.toLowerCase();
 
-  // Tenta encontrar marca pelo mapeamento de modelos
+  // Tenta encontrar modelo específico no mapeamento
   let marcaBusca = '';
+  let modeloBusca = '';
   for (const [modelo, marca] of Object.entries(MODELOS_MARCAS)) {
-    if (q.includes(modelo)) { marcaBusca = marca; break; }
-  }
-
-  // Marcas diretas mencionadas na mensagem
-  const marcasDiretas = ['scania', 'volvo', 'mercedes', 'iveco', 'man', 'daf', 'ford', 'volkswagen', 'vw', 'hyundai', 'fiat', 'renault', 'isuzu'];
-  if (!marcaBusca) {
-    for (const marca of marcasDiretas) {
-      if (q.includes(marca)) { marcaBusca = marca === 'vw' ? 'volkswagen' : marca; break; }
+    if (q.includes(modelo)) {
+      marcaBusca = marca;
+      modeloBusca = modelo;
+      break;
     }
   }
 
-  // Se encontrou marca, filtra só por ela
-  if (marcaBusca) {
-    const resultados = indiceDrive.filter(item => item.marca.includes(marcaBusca));
-    return resultados.length > 0 ? resultados : null;
+  // Marcas diretas mencionadas na mensagem
+  const marcasDiretas = ['scania', 'volvo', 'mercedes', 'iveco', 'man', 'daf', 'ford', 'volkswagen', 'vw', 'hyundai', 'fiat', 'renault', 'isuzu', 'kia'];
+  if (!marcaBusca) {
+    for (const marca of marcasDiretas) {
+      if (q.includes(marca)) {
+        marcaBusca = marca === 'vw' ? 'volkswagen' : marca;
+        break;
+      }
+    }
   }
 
-  // Se não encontrou marca específica, busca por palavras com pelo menos 3 letras
-  // mas só se tiver match exato em marca ou modelo
+  if (marcaBusca) {
+    // Se tem modelo específico, tenta filtrar por marca + modelo
+    if (modeloBusca) {
+      const resultadosEspecificos = indiceDrive.filter(item =>
+        item.marca.includes(marcaBusca) &&
+        item.modelo.includes(modeloBusca)
+      );
+      // Se achou pasta específica do modelo, retorna só ela
+      if (resultadosEspecificos.length > 0) return resultadosEspecificos;
+    }
+
+    // Se não achou pasta específica do modelo, retorna todas da marca
+    const resultadosMarca = indiceDrive.filter(item => item.marca.includes(marcaBusca));
+    if (resultadosMarca.length > 0) {
+      // Avisa que não achou pasta específica mas trouxe a marca
+      resultadosMarca._aviso = modeloBusca ?
+        `Não encontrei pasta específica para "${modeloBusca}", mas encontrei pastas da ${marcaBusca}:` :
+        `Encontrei as seguintes pastas para ${marcaBusca}:`;
+      return resultadosMarca;
+    }
+    return null;
+  }
+
+  // Busca por palavras exatas
   const palavras = q.split(' ').filter(p => p.length >= 3);
   const resultados = indiceDrive.filter(item =>
     palavras.some(p => item.marca === p || item.modelo === p ||
@@ -160,94 +197,6 @@ function buscarNoIndice(query) {
   );
 
   return resultados.length > 0 ? resultados : null;
-}
-
-// Calcula distância entre duas coordenadas (Haversine)
-function calcularDistancia(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLng/2) * Math.sin(dLng/2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-// Busca coordenadas de uma cidade via Nominatim
-async function buscarCoordenadas(cidade) {
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cidade + ', Brasil')}&format=json&limit=1`;
-    const response = await fetch(url, { headers: { 'User-Agent': 'EstiloAR-Suporte/1.0' } });
-    const data = await response.json();
-    if (data && data.length > 0) {
-      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-    }
-    return null;
-  } catch (err) {
-    console.error('Erro coordenadas:', err);
-    return null;
-  }
-}
-
-// Busca pontos de assistência no mapa KML
-async function buscarAssistencia(cidade) {
-  try {
-    const url = `https://www.google.com/maps/d/u/0/kml?mid=${MAPS_ID}&forcekml=1&lid=0`;
-    const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-    if (!response.ok) {
-      console.error('KML status:', response.status);
-      return null;
-    }
-    const kml = await response.text();
-    console.log('KML tamanho:', kml.length);
-
-    const placemarks = [];
-    const regex = /<Placemark>([\s\S]*?)<\/Placemark>/g;
-    let match;
-    while ((match = regex.exec(kml)) !== null) {
-      const bloco = match[1];
-      const nome = (bloco.match(/<name>\s*([\s\S]*?)\s*<\/name>/) || [])[1] || '';
-      const desc = (bloco.match(/<description>\s*([\s\S]*?)\s*<\/description>/) || [])[1] || '';
-      const coords = (bloco.match(/<coordinates>\s*([\s\S]*?)\s*<\/coordinates>/) || [])[1] || '';
-      if (coords) {
-        const partes = coords.trim().split(/[,\s]+/);
-        const lng = parseFloat(partes[0]);
-        const lat = parseFloat(partes[1]);
-        if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
-          placemarks.push({
-            nome: nome.trim(),
-            descricao: desc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
-            lat, lng
-          });
-        }
-      }
-    }
-
-    console.log(`KML: ${placemarks.length} pontos encontrados`);
-    if (placemarks.length === 0) return null;
-
-    let coordCidade = null;
-    if (cidade && cidade.length > 2) {
-      coordCidade = await buscarCoordenadas(cidade);
-      console.log(`Coordenadas de "${cidade}":`, coordCidade);
-    }
-
-    if (coordCidade) {
-      const comDistancia = placemarks.map(p => ({
-        ...p,
-        distancia: calcularDistancia(coordCidade.lat, coordCidade.lng, p.lat, p.lng)
-      })).sort((a, b) => a.distancia - b.distancia);
-      return comDistancia.slice(0, 2).map(p => ({
-        ...p,
-        distanciaTexto: `${Math.round(p.distancia)} km`
-      }));
-    }
-
-    return placemarks.slice(0, 2);
-  } catch (err) {
-    console.error('Erro KML:', err);
-    return null;
-  }
 }
 
 // Busca planilha
@@ -807,14 +756,11 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
-    // Detecta busca de depoimentos/Drive
-    const palavrasDepoimento = ['depoimento', 'instalação', 'instalacao', 'cliente', 'referencia', 'referência', 'quem instalou', 'ja instalou', 'já instalou'];
-    const marcasVeiculos = ['scania', 'volvo', 'mercedes', 'iveco', 'man', 'daf', 'ford', 'volkswagen', 'vw', 'hyundai', 'fiat', ...Object.keys(MODELOS_MARCAS)];
-    const buscaDrive = palavrasDepoimento.some(p => ultimaMensagem.includes(p)) || marcasVeiculos.some(m => ultimaMensagem.includes(m));
+    // Detecta busca de depoimentos/Drive — APENAS quando pedir depoimentos explicitamente
+    const palavrasDepoimento = ['depoimento', 'foto de cliente', 'video de cliente', 'vídeo de cliente', 'quem instalou', 'ja instalou', 'já instalou', 'cliente que instalou', 'referencia de cliente', 'referência de cliente'];
+    const buscaDrive = palavrasDepoimento.some(p => ultimaMensagem.includes(p));
 
-    // Detecta busca de assistência técnica — só ativa com palavras específicas de assistência
-    const palavrasAssistencia = ['assistência técnica', 'assistencia tecnica', 'ponto autorizado', 'autorizada', 'mais perto', 'mais próximo', 'ponto de serviço', 'ponto de servico', 'onde conserto', 'onde reparo', 'quem conserta', 'quem repara'];
-    const buscaAssistencia = palavrasAssistencia.some(p => ultimaMensagem.includes(p));
+
 
     // Busca Drive
     if (buscaDrive) {
@@ -837,8 +783,9 @@ app.post('/api/chat', async (req, res) => {
 
       // Só retorna se tiver resultados reais no índice
       if (resultados && resultados.length > 0) {
+        const aviso = resultados._aviso || `Encontrei ${resultados.length} pasta(s) no Drive:`;
         const links = resultados.map(r => `📁 **${r.marcaNome} — ${r.modeloNome}**: ${r.link}`).join('\n');
-        return res.json({ reply: `Encontrei ${resultados.length} pasta(s) no Drive:\n\n${links}\n\nQualquer dúvida é só chamar! 😊` });
+        return res.json({ reply: `${aviso}\n\n${links}\n\nQualquer dúvida é só chamar! 😊` });
       } else {
         return res.json({ reply: `Não encontrei depoimentos para essa marca ou modelo. Para mais informações ligue para **(34) 3293-8000**. 😊` });
       }
@@ -846,9 +793,7 @@ app.post('/api/chat', async (req, res) => {
 
     // Busca assistência técnica
     if (buscaAssistencia) {
-      // Extrai cidade da mensagem de forma mais ampla
-      const cidadeMatch = ultimaMensagem.match(/(?:em|de|perto de|próximo a|próximo de|para|na cidade de|no município de)\s+([a-záàãâéêíóôõúç\s]+?)(?:\?|$|,|\.)/i);
-      const cidade = cidadeMatch ? cidadeMatch[1].trim() : ultimaMensagem.replace(/assistência|assistencia|técnica|tecnica|autorizada|mais perto|mais próximo|próximo|tem|qual|onde|fica|há|preciso/gi, '').trim();
+
       const pontos = await buscarAssistencia(cidade);
       if (pontos && pontos.length > 0) {
         const lista = pontos.map((p, i) => {
