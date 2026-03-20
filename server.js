@@ -358,14 +358,14 @@ async function buscarAssistenciaTecnica(query) {
     if (ufBusca) {
       const resultado = pontos.filter(p => norm(p.estado) === ufBusca);
       return resultado.length > 0
-        ? { tipo: 'encontrado', pontos: resultado.slice(0, 2), local: ufBusca.toUpperCase() }
+        ? { tipo: 'encontrado', pontos: resultado, local: ufBusca.toUpperCase() }
         : { tipo: 'nenhum' };
     }
 
     // Busca por cidade
     const resultado = pontos.filter(p => norm(p.cidade).includes(q) || q.includes(norm(p.cidade)));
     return resultado.length > 0
-      ? { tipo: 'encontrado', pontos: resultado.slice(0, 2), local: query }
+      ? { tipo: 'encontrado', pontos: resultado, local: query }
       : { tipo: 'nenhum' };
 
   } catch (err) {
