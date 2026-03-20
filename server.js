@@ -468,104 +468,100 @@ const SECOES = {
 
   ar_slim_geral: `
 PRODUTO: AR-CONDICIONADO 100% ELÉTRICO SLIM SÉRIE 2
-Marca: Estilo AR | Modelos: 12V e 24V
-Capacidade: 9.500 BTUs
-Capacidade de Refrigeração: 12V = 2.150W | 24V = 2.560W
-Tensão nominal: DC 12V / DC 24V
-Fluxo de ar evaporador: 400m³/h | Condensador: 2.000m³/h
-Gás refrigerante: R134a | Carga: 460g | Óleo: RH68
+Modelos: 12V e 24V | Peso: 40 kg
 Dimensões: 97 x 85,8 x 15 cm
-Furo instalação: mín 460x400mm / máx 545x937mm
-Garantia: 3 meses
+Abertura instalação: mín 460x400mm / máx 545x937mm
+Gás: R134a (460g) | Óleo: RH68 | Classe climática: T1
+Garantia: 3 meses — guardar embalagem por 30 dias
+Suporte: (34) 99641-1025 | Seg-Sex 08h-18h
 `,
 
   ar_slim_consumo: `
-CONSUMO DE ENERGIA — AR SLIM SÉRIE 2:
-Modo Econômico: 12V=240W/20A | 24V=288W/12A
-Modo Automático: 12V=600W/50A | 24V=840W/35A
-Modo Turbo: 12V=720W/60A | 24V=960W/40A
+ESPECIFICAÇÕES E CONSUMO — AR SLIM SÉRIE 2:
+Capacidade de refrigeração: 12V=2.150W | 24V=2.560W
+Capacidade média: 9.500 BTUs
+Fluxo de ar evaporador: 400m³/h | Condensador: 2.000m³/h
+
+Consumo por modo:
+Econômico: 12V=240W/20A | 24V=288W/12A
+Automático: 12V=600W/50A | 24V=840W/35A
+Turbo: 12V=720W/60A | 24V=960W/40A
+
+Recomendação: alternador mínimo 12V = 85 a 90 amperes
 `,
 
   ar_slim_operacao: `
-COMO USAR O AR SLIM SÉRIE 2:
-- Ligar/Desligar: pressionar brevemente o botão de energia
-- Velocidade ventilador: 5 velocidades (1-2-3-4-5)
-- Iluminação: pressionar brevemente | segurar = oscilação vertical
-- Modo: alterna Econômico, Automático, Turbo
-- Temperatura: botões + e - | faixa 5°C a 32°C
-- Ver temp entrada: segurar botão temperatura +
-- Ver temp saída: segurar botão temperatura -
-- Proteção baixa tensão: segurar botão velocidade 6 segundos, usar +/-
-- Padrão fábrica: 20,5V (24V) / 10,5V (12V) | Ajustável: 9-28V
-- Código LU: bateria baixa — desligar e ligar para resetar
+OPERAÇÃO — AR SLIM SÉRIE 2:
+- Ligar/desligar: pressionar botão de energia
+- Velocidade ventilador: 5 níveis (1 a 5)
+- Iluminação: pressão rápida liga/desliga | pressão longa = oscilação vertical
+- Modos: Econômico, Automático, Turbo
+- Temperatura: ajuste de 1°C | faixa 5°C a 32°C
+- Ver temp entrada: segurar botão temperatura | temp saída: segurar novamente
+- Proteção baixa tensão: segurar 6 segundos, ajustar com botão temperatura
+- Padrão: 12V=10,5V | 24V=20,5V | Ajustável: 9V a 28V
+- Quando bateria atingir mínimo: equipamento desliga automaticamente, display mostra LU
+
 MODOS:
-- TURBO: capacidade máxima, consumo máximo
-- AUTOMÁTICO: regula automaticamente conforme temperatura
-- ECO: limita consumo, ideal motor parado
+- TURBO: capacidade máxima, maior consumo
+- AUTOMÁTICO: ajusta automaticamente conforme temperatura configurada
+- ECONÔMICO: reduz consumo, ideal com veículo desligado
+
+CONTROLE REMOTO: ligar/desligar, temperatura, velocidade, modos, oscilação horizontal e vertical, temp entrada, tensão
 `,
 
   ar_slim_erros: `
-ERROS DO AR SLIM SÉRIE 2:
-E2: Dissipação insuficiente → compressor/ventilador com falha
-- Sem energia no fio ventilador: substituir controlador
-- Com energia no ventilador: substituir ventilador
-- Compressor não parte: verificar circuito, parafusos; se ok substituir controlador; se persistir: compressor queimado
-
-E3: Proteção de bloqueio → compressor travado ou tubulação bloqueada
-- Compressor vibra e não parte: detritos no sistema, substituir compressor e limpar sistema
-- Pressão normal: 10-15mpa | Se >20mpa: condensador bloqueado | Se ~0: válvula de expansão
-
-E4: Baixa voltagem controlador → tensão abaixo de 20,5V (24V) ou 10,5V (12V)
-- Carregar bateria ou aumentar amperagem do alternador
-- Verificar fios soltos ou oxidados nos terminais
-- Se tensão ok e persiste: substituir controlador
-
-E5: Sobrecorrente do controlador → curto interno ou instabilidade de tensão
-- Substituir controlador | Verificar conexões soltas | Verificar condensador obstruído
-
-E6: Sobrecarga do ventilador → pás travadas ou curto interno
-- Verificar se pás giram livremente; se travado substituir ventilador
-- Desconectar plugue do ventilador e reiniciar; se funciona sem erro: substituir ventilador
-
-E7: Perda de fase do compressor → chicote, bobina ou controlador com problema
-- Verificar terminais com mau contato ou parafusos soltos
-- Usar multímetro para medir fios do motor trifásico
-- Se circuito aberto: substituir compressor | Se fiação ok: substituir controlador
-
-E8: Falha de pressão → vazamento de gás ou interruptor de pressão danificado
-E9: Sobrecorrente do ventilador → escovas desgastadas ou rolamentos travados
-E10: Falha de pressão → verificar vazamento de gás refrigerante
-E11: Sobrecarga → desligar a energia e religar
-
-LU: Baixa tensão → bateria baixa ou placa defeituosa
-SHr: Problema sensor ou painel de controle
-OPE: Circuito aberto sensor → plugue desconectado ou cabo quebrado
+ERROS — AR SLIM SÉRIE 2:
+E2: Superaquecimento por baixa dissipação → verificar compressor e ventilador
+E3: Bloqueio do sistema → verificar compressor, válvula de expansão e pressão
+E4: Baixa tensão → verificar bateria e conexões
+E5: Sobrecorrente do controlador → verificar controlador e dissipação
+E6: Falha no ventilador → verificar travamento ou substituir
+E7: Falha no compressor (perda de fase) → verificar chicote e compressor
+E8: Problema de pressão → verificar gás e condensador
+E9: Sobrecorrente do ventilador → verificar rolamento ou travamento
+E10: Falha de pressão → verificar sistema de gás
+E11: Sobrecarga → reiniciar sistema
+LU: Baixa tensão → verificar bateria ou placa
+SHr: Falha no sensor ou painel → testar e substituir componente
+OPE: Sensor desconectado ou cabo rompido → verificar conexão
 
 AR NÃO GELA:
-- Alta pressão alta: ventilador com falha ou condensador sujo
+Pressão normal: baixa 0,2-0,4 MPa | alta 10-15 MPa
+- Alta pressão alta: ventilador com falha ou condensador sujo → limpar/substituir
 - Alta pressão baixa: falta refrigerante → reabastecer
-- Alta alta E baixa baixa: compressor danificado → substituir
+- Alta e baixa fora do normal: compressor danificado → substituir
+
+UNIDADE EXTERNA NÃO FUNCIONA:
+- Verificar modo de refrigeração ativo no painel
+- Verificar circuito elétrico (fio verde entre painel e controlador)
+- Verificar controlador
+
+OBSERVAÇÕES:
+- Diferença de temperatura menor que 5°C = falha de refrigeração
+- Temp saída abaixo de 2°C = ativa modo degelo | acima de 6°C = volta ao normal
 `,
 
   ar_slim_manutencao: `
-MANUTENÇÃO DO AR SLIM SÉRIE 2:
-- Alternador mínimo 12V: 85-90A
-- Não instalar em tetos inclinados maiores que 30°
-- Tetos irregulares: usar selante de poliuretano
-- A cada 3 meses: inspecionar conexões elétricas, terminais e bornes
+MANUTENÇÃO — AR SLIM SÉRIE 2:
+A cada 3 meses verificar: conexões elétricas, terminais, cabos, parafusos e oxidação
+Não instalar em inclinação superior a 30 graus
+Tetos irregulares: verificar vedação e usar selante se necessário
+Instalação deve ser feita por profissional qualificado
 `,
 
   ar_slim_instalacao: `
-INSTALAÇÃO DO AR SLIM SÉRIE 2:
-1. Remover teto solar e limpar ao redor do buraco
-2. Aplicar borrachão de vedação e cola impermeável nas bordas
-3. Colocar equipamento centralizado acima do teto solar
-4. Encaixar luva de tração e apertar com 4 porcas M10
-5. Colocar placa decorativa e apertar com 4 porcas M10
+INSTALAÇÃO — AR SLIM SÉRIE 2:
+1. Remover teto solar e limpar área
+2. Aplicar vedação impermeável
+3. Posicionar equipamento centralizado
+4. Fixar com 4 porcas M10
+5. Instalar acabamento decorativo
 6. Fio VERMELHO → positivo (+) | Fio PRETO → negativo (-)
-DRENO: atentar para queda natural da mangueira
-CHICOTE: ligar direto nas baterias, não alterar o chicote
+DRENO: mangueira deve ter queda natural; se não tiver, não usar a mangueira
+CHICOTE: ligar direto na bateria, não modificar chicote original
 `,
+
 
   instalacao_por_caminhao: `
 GUIA DE INSTALAÇÃO POR MODELO DE CAMINHÃO:
@@ -608,9 +604,53 @@ PRODUTOS DE AR-CONDICIONADO ESTILO AR:
 
   eco_compact: `
 PRODUTO: AR-CONDICIONADO ECO COMPACT
-Recomendado para cabines menores.
-(Manual completo em breve)
+Modelos: 12V e 24V | Dimensões: 980 x 700 x 150 mm
+Abertura mínima instalação: 600 x 300 mm
+Garantia: 3 meses | Gás: R134a (460g) | Lubrificante: RH68
+Faixa de temperatura: 5°C a 32°C | Classe climática: T1
+
+ESPECIFICAÇÕES TÉCNICAS:
+Capacidade de refrigeração: 24V=2.000W | 12V=1.800W
+Potência elétrica: 24V=950W | 12V=750W
+Fluxo de ar evaporador: 400m³/h | Condensador: 1.800m³/h
+Inclinação frontal máxima: 20°
+
+OPERAÇÃO:
+- Ligar/desligar: pressionar rapidamente o botão
+- Velocidade: 5 níveis (1 a 5)
+- Iluminação: pressão rápida liga/desliga | pressão longa = oscilação vertical
+- Modos: Econômico, Refrigeração, Refrigeração Forte
+- Temperatura: ajuste de 1°C | faixa 5°C a 32°C
+- Ver temp entrada: segurar botão temperatura | temp saída: segurar novamente
+- Proteção baixa tensão: segurar 6 segundos, ajustar com botão temperatura
+- Padrão: 24V=21,5V | 12V=10,5V
+
+ERROS:
+E2: Proteção de corrente → verificar pressão e ventilador
+E3: Bloqueio → bateria fraca ou pressão alta
+E4: Subtensão → bateria descarregada
+E5: Falha do controlador → reiniciar ou substituir
+E6: Falha ventilador condensador → curto ou mau contato
+E7: Falha do compressor → terminais queimados ou curto
+E8: Proteção temperatura compressor → verificar pressão
+E9: Problema no pressostato → verificar pressão ou interruptor
+LU: Baixa tensão → verificar bateria
+OPE: Sensor aberto → verificar cabos ou conectores
+SHr: Curto no sensor → substituir sensor
+
+INSTALAÇÃO:
+1. Remover claraboia e limpar área
+2. Aplicar vedação impermeável
+3. Posicionar unidade e fixar com 4 porcas M8
+4. Instalar painel decorativo
+5. Fio VERMELHO → positivo (+) | Fio PRETO → negativo (-)
+
+MANUTENÇÃO:
+- Limpeza com água e detergente neutro | pano úmido na carcaça
+- Não usar gasolina, solventes ou lavadora de alta pressão
+- Manter ventilação livre | distância mínima ao redor: 100mm
 `,
+
 
   geladeira_geral: `
 PRODUTO: GELADEIRA PORTÁTIL
@@ -691,7 +731,7 @@ PRECAUÇÕES DA GELADEIRA:
 
   gerador_geral: `
 PRODUTO: GERADOR DIGITAL 24V
-Modelos: LE-3000i e LE-3000i Pro
+Modelos: LE-3000i e LE-3000i Pro | Peso: 20 kg
 Tensão nominal DC: 28V (±1V) | Potência de saída: até 1.800W
 Combustível: gasolina sem chumbo (tanque 4L)
 Óleo: SJ10W-40 padrão API tipo SE (capacidade 0,4L)
