@@ -262,6 +262,91 @@ async function buscarAssistenciaTecnica(query) {
     const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
     const q = norm(query);
 
+    // Mapeamento nome completo → UF (incluindo variações e erros comuns)
+    const ESTADOS = {
+      // Acre
+      'acre': 'ac',
+      // Alagoas
+      'alagoas': 'al', 'alagoa': 'al',
+      // Amapá
+      'amapa': 'ap', 'amapá': 'ap',
+      // Amazonas
+      'amazonas': 'am', 'amazona': 'am', 'amazones': 'am',
+      // Bahia
+      'bahia': 'ba', 'baia': 'ba', 'baía': 'ba',
+      // Ceará
+      'ceara': 'ce', 'ceará': 'ce', 'sera': 'ce',
+      // Distrito Federal
+      'distrito federal': 'df', 'distrito': 'df', 'brasilia': 'df', 'brasília': 'df',
+      // Espírito Santo
+      'espirito santo': 'es', 'espírito santo': 'es', 'espirito sant': 'es', 'esp santo': 'es',
+      // Goiás
+      'goias': 'go', 'goiás': 'go', 'goiaz': 'go',
+      // Maranhão
+      'maranhao': 'ma', 'maranhão': 'ma', 'maranhan': 'ma', 'maranho': 'ma',
+      // Mato Grosso do Sul
+      'mato grosso do sul': 'ms', 'mato grosso sul': 'ms', 'mt do sul': 'ms', 'mato groso do sul': 'ms',
+      // Mato Grosso
+      'mato grosso': 'mt', 'mato groso': 'mt', 'matogrosso': 'mt',
+      // Minas Gerais
+      'minas gerais': 'mg', 'minas geras': 'mg', 'minas gerai': 'mg', 'minas gereis': 'mg',
+      'minas gerei': 'mg', 'minas': 'mg', 'minais gerais': 'mg', 'minas gerias': 'mg',
+      // Pará
+      'para': 'pa', 'pará': 'pa',
+      // Paraíba
+      'paraiba': 'pb', 'paraíba': 'pb', 'paraíba': 'pb', 'paraibá': 'pb',
+      // Paraná
+      'parana': 'pr', 'paraná': 'pr', 'parana': 'pr',
+      // Pernambuco
+      'pernambuco': 'pe', 'pernanbuco': 'pe', 'pernabuco': 'pe', 'pernambucu': 'pe',
+      // Piauí
+      'piaui': 'pi', 'piauí': 'pi', 'piaí': 'pi',
+      // Rio de Janeiro
+      'rio de janeiro': 'rj', 'rio janeiro': 'rj', 'rio de janiero': 'rj',
+      'rio de janiro': 'rj', 'rio janiero': 'rj',
+      // Rio Grande do Norte
+      'rio grande do norte': 'rn', 'rio grande norte': 'rn', 'rio gde do norte': 'rn',
+      'rio grande d norte': 'rn', 'rio grnade do norte': 'rn',
+      // Rio Grande do Sul
+      'rio grande do sul': 'rs', 'rio grande sul': 'rs', 'rio gde do sul': 'rs',
+      'rio grande d sul': 'rs', 'rio grnade do sul': 'rs', 'rio grande so sul': 'rs',
+      // Rondônia
+      'rondonia': 'ro', 'rondônia': 'ro', 'rondonía': 'ro',
+      // Roraima
+      'roraima': 'rr', 'roraimá': 'rr',
+      // Santa Catarina
+      'santa catarina': 'sc', 'santa catarin': 'sc', 'sta catarina': 'sc',
+      'santa catarinа': 'sc', 'santa katarina': 'sc',
+      // São Paulo
+      'sao paulo': 'sp', 'são paulo': 'sp', 'sao paul': 'sp', 'são paul': 'sp',
+      'sau paulo': 'sp', 'sam paulo': 'sp', 'saõ paulo': 'sp',
+      // Sergipe
+      'sergipe': 'se', 'sergípe': 'se', 'sergipi': 'se',
+      // Tocantins
+      'tocantins': 'to', 'tocantim': 'to', 'tocantis': 'to', 'tocontins': 'to'
+    };
+    const ufs = Object.values(ESTADOS);
+
+    // Resolve UF a partir do nome completo ou sigla
+    let ufBusca = null;
+    if (ufs.includes(q)) {
+      ufBusca = q;
+    } else if (ESTADOS[q]) {
+      ufBusca = ESTADOS[q];
+    }
+    const ehUF = !!ufBusca;
+
+    if (ehUF) {
+      const doEstado = pontos.filter(p => norm(p.estado) === ufBusca);
+      if (doEstado.length > 0) return { tipo: 'exato', pontos: doEstado };
+      // Não tem nesse estado — busca nos mais próximos
+      const maisProximas = duasMaisProximas(pontos, query);
+      if (maisProximas && maisProximas.length > 0) {
+        return { tipo: 'proximos', pontos: maisProximas, cidadeBuscada: query };
+      }
+      return { tipo: 'nenhum', pontos: [] };
+    }
+
     // Verifica se existe ponto exatamente nessa cidade
     const exatos = pontos.filter(p => norm(p.cidade) === q || norm(p.cidade).includes(q) || q.includes(norm(p.cidade)));
     if (exatos.length > 0) return { tipo: 'exato', pontos: exatos };
@@ -819,6 +904,7 @@ app.post('/api/chat', async (req, res) => {
 
     // Detecta busca de assistência técnica
     const palavrasAssistencia = [
+      // Correto
       'assistência técnica', 'assistencia tecnica',
       'assistência em', 'assistencia em',
       'quero assistencia', 'quero assistência',
@@ -828,7 +914,17 @@ app.post('/api/chat', async (req, res) => {
       'técnico autorizado', 'tecnico autorizado',
       'tem assistencia', 'tem assistência',
       'assistencia mais proxima', 'assistência mais próxima',
-      'assistencia proximo', 'assistencia próximo'
+      'assistencia proximo', 'assistencia próximo',
+      // Erros comuns de digitação
+      'asistencia', 'asistência', 'assistenca', 'assistanca',
+      'asistencia tecnica', 'asistência técnica',
+      'assistencia tecnica', 'assistência tecnica',
+      'assitencia', 'assitência', 'asistenci',
+      'assistecia', 'assistenci', 'assistencai',
+      'tecnico autorizado', 'tecnico autorizdo',
+      'ponto autorzado', 'ponto autorizdo',
+      'onde conseto', 'onde conserto', 'consertar',
+      'assistenci em', 'asistencia em', 'assitencia em'
     ];
     const buscaAssistencia = palavrasAssistencia.some(p => ultimaMensagem.includes(p));
 
