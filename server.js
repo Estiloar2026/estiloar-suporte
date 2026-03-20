@@ -904,7 +904,40 @@ app.post('/api/chat', async (req, res) => {
   if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: 'Inválido' });
 
   try {
-    const ultimaMensagem = messages[messages.length - 1]?.content?.toLowerCase() || '';
+    const mensagemOriginal = messages[messages.length - 1]?.content || '';
+
+    // Normaliza erros comuns de digitação antes de processar
+    function normalizarMensagem(msg) {
+      return msg.toLowerCase()
+        // Assistência técnica
+        .replace(/ass+is+t[eêe]n+c[aio]+s?/gi, 'assistencia')
+        .replace(/asist[eê]ncia/gi, 'assistencia')
+        .replace(/assist[eê]ncia/gi, 'assistencia')
+        // Depoimento
+        .replace(/dep[ou]iment[oa]s?/gi, 'depoimento')
+        .replace(/dep[ou]iment[oa]s?/gi, 'depoimento')
+        // Geladeira
+        .replace(/gelad[ei]+ra/gi, 'geladeira')
+        .replace(/gelade[iy]ra/gi, 'geladeira')
+        // Gerador
+        .replace(/gerad[ou]r/gi, 'gerador')
+        // Ar condicionado
+        .replace(/ar\s*cond[iy]c[iy]on[ae]do/gi, 'ar condicionado')
+        // Imagem técnica
+        .replace(/im[ae]g[ei]ns?\s+t[eé]cn[iy]c[ao]s?/gi, 'imagem tecnica')
+        .replace(/t[eé]cn[iy]c[ao]s?/gi, 'tecnica')
+        // Slim série
+        .replace(/sl[iy]m/gi, 'slim')
+        .replace(/s[eé]r[iy][eé]/gi, 'serie')
+        // Eco compact
+        .replace(/[eé]co\s*comp[ae]ct/gi, 'eco compact')
+        // Volvo FH
+        .replace(/fh/gi, 'fh')
+        // Erros gerais de acentuação
+        .normalize('NFD').replace(/[̀-ͯ]/g, '');
+    }
+
+    const ultimaMensagem = normalizarMensagem(mensagemOriginal);
 
     // Verifica se em qualquer parte do histórico da conversa há menção ao FH
     const historicoCompleto = messages.map(m => (m.content || '').toLowerCase()).join(' ');
@@ -965,12 +998,17 @@ app.post('/api/chat', async (req, res) => {
       'assistencia tecnica', 'assistência tecnica',
       'assitencia', 'assitência', 'asistenci',
       'assistecia', 'assistenci', 'assistencai',
+      'asssitencia', 'asssistencia', 'assisttencia', 'assistenica', 'assitencia', 'assisencia',
       'tecnico autorizado', 'tecnico autorizdo',
       'ponto autorzado', 'ponto autorizdo',
       'onde conseto', 'onde conserto', 'consertar',
       'assistenci em', 'asistencia em', 'assitencia em'
     ];
-    const buscaAssistencia = palavrasAssistencia.some(p => ultimaMensagem.includes(p));
+    // Detecção robusta — inclui variações com erros de digitação via regex
+    const buscaAssistencia = palavrasAssistencia.some(p => ultimaMensagem.includes(p)) ||
+      /ass[i|í]s?t[eê]n?c[i|í]a/i.test(ultimaMensagem) ||
+      /as+is+t[eê]/i.test(ultimaMensagem) ||
+      /ponto\s+auto/i.test(ultimaMensagem);
 
     if (buscaAssistencia) {
       // Extrai cidade da mensagem removendo palavras irrelevantes
@@ -1021,14 +1059,14 @@ app.post('/api/chat', async (req, res) => {
       const resultado = await buscarAssistenciaTecnica(queryFinal);
 
       if (!resultado || resultado.tipo === 'nenhum' || !resultado.pontos || resultado.pontos.length === 0) {
-        return res.json({ reply: `Não temos assistência técnica cadastrada para essa localidade.` });
+        return res.json({ reply: `Entendi que você está buscando assistência técnica em **${queryFinal}**. Não temos nenhum ponto cadastrado para essa localidade.` });
       }
 
       const lista = resultado.pontos.map(p =>
         `📍 **${p.nome}**\n📌 ${p.cidade} - ${p.estado}\n🏠 ${p.endereco}\n📞 ${p.telefone}`
       ).join('\n\n');
 
-      const intro = `Encontrei ${resultado.pontos.length === 1 ? 'este ponto' : 'estes pontos'} de assistência técnica:`;
+      const intro = `Entendi que você está buscando assistência técnica em **${queryFinal}**. Encontrei ${resultado.pontos.length === 1 ? 'este ponto' : 'estes pontos'}:`;
       return res.json({ reply: `${intro}\n\n${lista}` });
     }
 
@@ -1038,8 +1076,11 @@ app.post('/api/chat', async (req, res) => {
     if (produtoTecnico) {
       const imagens = IMAGENS_TECNICAS[produtoTecnico];
       if (imagens && imagens.length > 0) {
+        const nomeProduto = produtoTecnico.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
         const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
-        return res.json({ reply: `Aqui estão as imagens técnicas:\n\n${links}` });
+        return res.json({ reply: `Entendi que você quer as imagens técnicas de **${nomeProduto}**. Aqui estão:\n\n${links}` });
+      } else {
+        return res.json({ reply: `Entendi que você quer imagens técnicas, mas não encontrei imagens para esse produto.` });
       }
     }
 
