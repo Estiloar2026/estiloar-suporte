@@ -224,19 +224,38 @@ function buscarCoordenadas(nomeCidade, nomeEstado) {
 
 async function buscarAssistenciaTecnica(query) {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Assist%C3%AAncia+T%C3%A9cnica`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=PONTOS%20DE%20ASSIST%C3%8ANCIA%20T%C3%89CNICA%20%E2%80%94%20ESTILO%20AR`;
     const response = await fetch(url);
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.error('Erro ao buscar planilha:', response.status);
+      return null;
+    }
     const csv = await response.text();
+    console.log('CSV assistencia (primeiras linhas):', csv.substring(0, 300));
+
+    // Pula linha 1 (título) e linha 2 (cabeçalho)
     const linhas = csv.split('\n').slice(2).filter(l => l.trim());
+    console.log('Linhas encontradas:', linhas.length);
+
     const pontos = linhas.map(linha => {
-      const cols = linha.match(/(".*?"|[^,]+)(?=,|$)/g) || [];
-      const limpar = s => (s || '').replace(/^"|"$/g, '').trim();
+      // Parser robusto para CSV com campos entre aspas
+      const cols = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < linha.length; i++) {
+        const ch = linha[i];
+        if (ch === '"') { inQuotes = !inQuotes; }
+        else if (ch === ',' && !inQuotes) { cols.push(current.trim()); current = ''; }
+        else { current += ch; }
+      }
+      cols.push(current.trim());
       return {
-        nome: limpar(cols[0]), cidade: limpar(cols[1]),
-        estado: limpar(cols[2]), endereco: limpar(cols[3]), telefone: limpar(cols[4])
+        nome: cols[0] || '', cidade: cols[1] || '',
+        estado: cols[2] || '', endereco: cols[3] || '', telefone: cols[4] || ''
       };
     }).filter(p => p.nome && p.cidade);
+
+    console.log('Pontos parseados:', pontos.length, pontos.map(p => p.cidade));
 
     if (!pontos.length) return { tipo: 'nenhum', pontos: [] };
 
@@ -244,29 +263,17 @@ async function buscarAssistenciaTecnica(query) {
     const q = norm(query);
 
     // Verifica se existe ponto exatamente nessa cidade
-    const exatos = pontos.filter(p => norm(p.cidade) === q);
+    const exatos = pontos.filter(p => norm(p.cidade) === q || norm(p.cidade).includes(q) || q.includes(norm(p.cidade)));
     if (exatos.length > 0) return { tipo: 'exato', pontos: exatos };
 
-    // Tenta usar coordenadas para buscar as 2 mais próximas
-    const cidadeRef = buscarCidade(query);
-    if (cidadeRef) {
-      const pontosComCoord = pontos.map(p => {
-        const coord = buscarCidade(p.cidade);
-        return coord ? { ...p, lat: coord.lat, lng: coord.lng } : null;
-      }).filter(Boolean);
-
-      if (pontosComCoord.length > 0) {
-        const proximos = cidadesMaisProximas(cidadeRef.lat, cidadeRef.lng, pontosComCoord, 2);
-        return { tipo: 'proximos', pontos: proximos, cidadeBuscada: query };
-      }
+    // Usa coordenadas para buscar as 2 mais próximas
+    const maisProximas = duasMaisProximas(pontos, query);
+    if (maisProximas && maisProximas.length > 0) {
+      return { tipo: 'proximos', pontos: maisProximas, cidadeBuscada: query };
     }
 
-    // Fallback textual
-    const encontrados = pontos.filter(p =>
-      norm(p.cidade).includes(q) || q.includes(norm(p.cidade)) ||
-      norm(p.estado).includes(q) || q.includes(norm(p.estado))
-    );
-    return { tipo: 'textual', pontos: encontrados.length > 0 ? encontrados.slice(0,2) : pontos.slice(0,2) };
+    // Fallback — retorna todos
+    return { tipo: 'textual', pontos: pontos.slice(0, 2) };
   } catch (err) {
     console.error('Erro ao buscar assistência:', err);
     return null;
