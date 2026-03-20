@@ -296,20 +296,24 @@ async function buscarAssistenciaTecnica(query) {
     }
 
     const todasLinhas = csv.split('\n').filter(l => l.trim());
+
+    // Busca a primeira linha que tenha dados reais (UF de 2 letras na coluna 3)
+    const ufsValidas = ['ac','al','ap','am','ba','ce','df','es','go','ma','mt','ms','mg','pa','pb','pr','pe','pi','rj','rn','rs','ro','rr','sc','sp','se','to'];
     let startIdx = 0;
-    for (let i = 0; i < Math.min(todasLinhas.length, 5); i++) {
-      const cols = parseCSVLine(todasLinhas[i]);
-      const primeira = (cols[0] || '').replace(/"/g, '').trim().toLowerCase();
-      if (primeira.includes('nome') || primeira.includes('ponto') || primeira.includes('assist') || primeira === '') {
-        startIdx = i + 1;
-      } else { break; }
+    for (let i = 0; i < Math.min(todasLinhas.length, 10); i++) {
+      const cols = parseCSVLine(todasLinhas[i]).map(c => c.replace(/^"|"$/g, '').trim());
+      const uf = (cols[2] || '').toLowerCase().trim();
+      if (ufsValidas.includes(uf)) {
+        startIdx = i;
+        break;
+      }
     }
 
     const linhas = todasLinhas.slice(startIdx).filter(l => l.trim());
     const pontos = linhas.map(linha => {
       const cols = parseCSVLine(linha).map(c => c.replace(/^"|"$/g, '').trim());
       return { nome: cols[0]||'', cidade: cols[1]||'', estado: cols[2]||'', endereco: cols[3]||'', telefone: cols[4]||'' };
-    }).filter(p => p.nome && p.nome.length > 1 && p.cidade && p.cidade.length > 1);
+    }).filter(p => p.nome && p.nome.length > 1 && p.cidade && p.cidade.length > 1 && ufsValidas.includes(p.estado.toLowerCase().trim()));
 
     if (!pontos.length) return null;
 
@@ -947,17 +951,13 @@ app.post('/api/chat', async (req, res) => {
 
       const resultado = await buscarAssistenciaTecnica(queryFinal);
 
-      if (!resultado || resultado.pontos.length === 0) {
-        return res.json({ reply: `Não encontrei pontos de assistência técnica para essa localidade. 😊` });
+      if (!resultado || resultado.tipo === 'nenhum' || !resultado.pontos || resultado.pontos.length === 0) {
+        return res.json({ reply: `Não temos assistência técnica cadastrada para essa localidade.` });
       }
 
       const lista = resultado.pontos.map(p =>
         `📍 **${p.nome}**\n📌 ${p.cidade} - ${p.estado}\n🏠 ${p.endereco}\n📞 ${p.telefone}`
       ).join('\n\n');
-
-      if (resultado.tipo === 'nenhum') {
-        return res.json({ reply: `Não temos assistência técnica cadastrada para essa localidade.` });
-      }
 
       const intro = `Encontrei ${resultado.pontos.length === 1 ? 'este ponto' : 'estes pontos'} de assistência técnica:`;
       return res.json({ reply: `${intro}\n\n${lista}` });
