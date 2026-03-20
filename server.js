@@ -937,22 +937,28 @@ app.post('/api/chat', async (req, res) => {
       // Extrai cidade da mensagem removendo palavras irrelevantes
       const stopWords = ['assistencia', 'assistência', 'tecnica', 'técnica', 'ponto', 'autorizado',
         'autorizada', 'onde', 'conserto', 'consertar', 'mais', 'perto', 'proximo', 'próximo',
-        'em', 'de', 'do', 'da', 'no', 'na', 'para', 'tem', 'qual', 'o', 'a', 'e', 'e',
-        'ola', 'ola', 'quero', 'preciso', 'busco', 'procuro', 'existe', 'existem',
+        'em', 'de', 'do', 'da', 'no', 'na', 'para', 'tem', 'qual', 'o', 'a', 'e',
+        'ola', 'quero', 'preciso', 'busco', 'procuro', 'existe', 'existem',
         'alguma', 'algum', 'por', 'favor', 'me', 'mostra', 'mostre', 'indica', 'indique',
         'asistencia', 'assitencia', 'assistenca', 'tecnico', 'técnico'];
+      // Palavras de 2 letras que NÃO são UFs válidas (devem ser removidas)
+      const naoUFs = ['em', 'de', 'do', 'da', 'no', 'na', 'ou', 'ao', 'os', 'as', 'me', 'se', 'te'];
+      const ufsValidas2 = ['ac','al','ap','am','ba','ce','df','es','go','ma','mt','ms','mg','pa','pb','pr','pe','pi','rj','rn','rs','ro','rr','sc','sp','se','to'];
       const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-      // Preserva siglas de 2 letras (UFs) e filtra stopwords para cidades
+      // Preserva siglas de 2 letras que sejam UFs válidas
       const todasPalavras = ultimaMensagem.split(/\s+/);
       const palavras = todasPalavras.filter(p => {
         const pn = norm(p);
-        if (pn.length === 2) return true; // preserva UFs como SP, MG, RS
+        if (pn.length === 2) return ufsValidas2.includes(pn) && !naoUFs.includes(pn);
         return pn.length > 2 && !stopWords.includes(pn);
       });
       const queryLocal = palavras.join(' ').trim() || '';
 
-      // Se queryLocal ficou vazio, tenta extrair diretamente da mensagem original
-      const queryFinal = queryLocal || ultimaMensagem.replace(/assistencia|assistência|tecnica|técnica|ponto|autorizado|autorizada|onde|conserto|quero|preciso|em|de|do|da|no|na|para|tem/gi, '').trim();
+      // Limpa a query removendo palavras irrelevantes
+      const queryFinal = (queryLocal || ultimaMensagem)
+        .replace(/assistencia|assistência|tecnica|técnica|ponto|autorizado|autorizada|onde|conserto|quero|preciso|tem|qual|para|favor/gi, '')
+        .replace(/\b(em|de|do|da|no|na|o|a)\b/gi, '')
+        .trim();
 
       const resultado = await buscarAssistenciaTecnica(queryFinal);
 
