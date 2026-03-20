@@ -1,7 +1,10 @@
 const express = require('express');
 const cors = require('cors');
-const { buscarCidade, cidadesMaisProximas } = require('./cidades');
-const CIDADES_BR = require('./cidades');
+const cidadesModule = require('./cidades');
+const buscarCidade = cidadesModule.buscarCidade || (() => null);
+const cidadesMaisProximas = cidadesModule.cidadesMaisProximas || (() => []);
+const duasMaisProximas = cidadesModule.duasMaisProximas || cidadesModule.cidadesMaisProximas || (() => []);
+const CIDADES_BR_MODULE = cidadesModule.CIDADES_BR || cidadesModule.default || cidadesModule;
 
 const app = express();
 app.use(cors());
@@ -167,16 +170,28 @@ function buscarNoIndice(query) {
     if (palavrasModelo.length > 0) {
 
       // Match exato — todas as palavras do modelo aparecem no nome da pasta
+      // Usa boundary para números (ex: "260" não deve dar match em "270")
       const exatos = pastasMarca.filter(item => {
         const nomeModelo = normIdx(item.modeloNome);
-        return palavrasModelo.every(p => nomeModelo.includes(p));
+        return palavrasModelo.every(p => {
+          // Para números, exige match exato (não parcial)
+          if (/^\d+$/.test(p)) {
+            return new RegExp('(^|[^\d])' + p + '([^\d]|$)').test(nomeModelo);
+          }
+          return nomeModelo.includes(p);
+        });
       });
       if (exatos.length > 0) return exatos;
 
-      // Match parcial — pelo menos uma palavra aparece
+      // Match parcial — pelo menos uma palavra aparece (com boundary para números)
       const parciais = pastasMarca.filter(item => {
         const nomeModelo = normIdx(item.modeloNome);
-        return palavrasModelo.some(p => nomeModelo.includes(p));
+        return palavrasModelo.some(p => {
+          if (/^\d+$/.test(p)) {
+            return new RegExp('(^|[^\d])' + p + '([^\d]|$)').test(nomeModelo);
+          }
+          return nomeModelo.includes(p);
+        });
       });
       if (parciais.length > 0) return parciais;
 
@@ -880,7 +895,7 @@ function selecionarContexto(mensagem) {
     ) {
       secoes.push(SECOES.ar_slim_geral);
       secoes.push(SECOES.instalacao_por_caminhao);
-    } else if (m.includes('erro') || m.includes('falha') || m.match(/\be\d+\b/) || m.includes('lu') || m.includes('shr') || m.includes('ope') || m.includes('não gela') || m.includes('nao gela')) {
+    } else if (m.includes('erro') || m.includes('falha') || /e\d+/.test(m) || m.includes(' e2') || m.includes(' e3') || m.includes(' e4') || m.includes(' e5') || m.includes(' e6') || m.includes(' e7') || m.includes(' e8') || m.includes(' e9') || m.includes(' e10') || m.includes(' e11') || m.includes('lu') || m.includes('shr') || m.includes('ope') || m.includes('não gela') || m.includes('nao gela') || m.includes('nao esta gelando') || m.includes('não está gelando')) {
       secoes.push(SECOES.ar_slim_geral);
       secoes.push(SECOES.ar_slim_erros);
     } else if (m.includes('consumo') || m.includes('bateria') || m.includes('ampere') || m.includes('watt')) {
