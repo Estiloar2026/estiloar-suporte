@@ -237,24 +237,33 @@
     line-height: 1.6; margin-bottom: 14px;
   }
 
-  .guia-exemplos { display: flex; flex-direction: column; gap: 6px; }
-
-  .guia-btn {
-    background: rgba(77,184,232,0.1);
-    border: 1px solid rgba(77,184,232,0.25);
-    color: var(--sky); font-size: 11.5px; font-weight: 500;
-    padding: 7px 12px; border-radius: 8px;
-    cursor: pointer; text-align: left;
-    font-family: 'Inter', sans-serif;
-    transition: all 0.15s; line-height: 1.4;
+  .guia-exemplo-box {
+    margin-top: 14px;
+    background: rgba(77,184,232,0.08);
+    border-left: 3px solid var(--sky);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 12px;
   }
 
-  .guia-btn:hover {
-    background: var(--sky); color: var(--navy);
-    border-color: var(--sky); font-weight: 700;
+  .guia-label {
+    display: block;
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
   }
 
-  .guia-btn::before { content: '→ '; opacity: 0.6; }
+  .guia-exemplo {
+    font-size: 12px;
+    color: var(--sky);
+    font-style: italic;
+  }
+
+  .guia-card strong {
+    color: var(--sky);
+    font-weight: 600;
+  }
 
   @media(max-width:900px) { .guia-grid { grid-template-columns: 1fr 1fr; } }
   @media(max-width:600px) { .guia-grid { grid-template-columns: 1fr; } }
@@ -444,68 +453,62 @@
     <div class="guia-grid">
 
       <div class="guia-card">
-        <div class="guia-card-icon">🌡️</div>
-        <div class="guia-card-titulo">Recomendação de Produto</div>
-        <div class="guia-card-desc">Quer saber qual modelo de ar é ideal para um caminhão específico?</div>
-        <div class="guia-exemplos">
-          <button class="guia-btn" onclick="enviarGuia(this)">Qual ar para Volvo FH?</button>
-          <button class="guia-btn" onclick="enviarGuia(this)">Qual ar para Hyundai HR?</button>
-          <button class="guia-btn" onclick="enviarGuia(this)">Qual ar para Scania R450?</button>
+        <div class="guia-card-icon">🚛</div>
+        <div class="guia-card-titulo">Modelo e Instalação</div>
+        <div class="guia-card-desc">Para saber qual modelo de ar é recomendado para um caminhão e se precisa cortar o teto, mencione a <strong>marca e o modelo do caminhão</strong> na sua mensagem.</div>
+        <div class="guia-exemplo-box">
+          <span class="guia-label">Exemplo:</span>
+          <span class="guia-exemplo">"Qual ar para [marca] [modelo]?"</span>
         </div>
       </div>
 
       <div class="guia-card">
         <div class="guia-card-icon">💰</div>
         <div class="guia-card-titulo">Preços e Promoções</div>
-        <div class="guia-card-desc">Para consultar preços, promoções e formas de pagamento atualizadas.</div>
-        <div class="guia-exemplos">
-          <button class="guia-btn" onclick="enviarGuia(this)">Qual o preço do ar slim série 2?</button>
-          <button class="guia-btn" onclick="enviarGuia(this)">Tem alguma promoção ativa?</button>
-          <button class="guia-btn" onclick="enviarGuia(this)">Quais as formas de pagamento?</button>
+        <div class="guia-card-desc">Para consultar preços, promoções ativas ou formas de pagamento, mencione o <strong>nome do produto</strong> e o que deseja saber.</div>
+        <div class="guia-exemplo-box">
+          <span class="guia-label">Exemplo:</span>
+          <span class="guia-exemplo">"Qual o preço do [produto]?"</span>
         </div>
       </div>
 
       <div class="guia-card">
         <div class="guia-card-icon">📁</div>
         <div class="guia-card-titulo">Depoimentos de Clientes</div>
-        <div class="guia-card-desc">Para buscar fotos e vídeos de clientes que já instalaram nossos produtos.</div>
-        <div class="guia-exemplos">
-          <button class="guia-btn" onclick="enviarGuia(this)">Depoimento de cliente com Scania</button>
-          <button class="guia-btn" onclick="enviarGuia(this)">Foto de cliente com Volvo FH</button>
-          <button class="guia-btn" onclick="enviarGuia(this)">Vídeo de cliente com Mercedes</button>
+        <div class="guia-card-desc">Para buscar fotos ou vídeos de clientes que já instalaram, use a palavra <strong>"depoimento"</strong> junto com a marca do caminhão.</div>
+        <div class="guia-exemplo-box">
+          <span class="guia-label">Exemplo:</span>
+          <span class="guia-exemplo">"Depoimento de cliente com [marca]"</span>
         </div>
       </div>
 
       <div class="guia-card">
         <div class="guia-card-icon">🔧</div>
         <div class="guia-card-titulo">Erros e Falhas</div>
-        <div class="guia-card-desc">Para identificar e resolver erros que aparecem no painel do produto.</div>
-        <div class="guia-exemplos">
-          <button class="guia-btn" onclick="enviarGuia(this)">O que significa erro E3 no ar?</button>
-          <button class="guia-btn" onclick="enviarGuia(this)">Apareceu LU no painel do ar</button>
-          <button class="guia-btn" onclick="enviarGuia(this)">Código F2 na geladeira</button>
+        <div class="guia-card-desc">Para identificar um erro, informe o <strong>código exato que apareceu no painel</strong> e o nome do produto.</div>
+        <div class="guia-exemplo-box">
+          <span class="guia-label">Exemplo:</span>
+          <span class="guia-exemplo">"Apareceu [código] no [produto]"</span>
         </div>
       </div>
 
       <div class="guia-card">
         <div class="guia-card-icon">📐</div>
         <div class="guia-card-titulo">Imagens Técnicas</div>
-        <div class="guia-card-desc">Para acessar imagens com medidas e especificações técnicas dos produtos.</div>
-        <div class="guia-exemplos">
-          <button class="guia-btn" onclick="enviarGuia(this)">Imagem técnica do ar slim série 2</button>
-          <button class="guia-btn" onclick="enviarGuia(this)">Imagem técnica da geladeira 45L</button>
-          <button class="guia-btn" onclick="enviarGuia(this)">Imagem técnica do gerador</button>
+        <div class="guia-card-desc">Para acessar imagens com medidas e especificações, use as palavras <strong>"imagem técnica"</strong> seguido do produto e modelo.</div>
+        <div class="guia-exemplo-box">
+          <span class="guia-label">Exemplo:</span>
+          <span class="guia-exemplo">"Imagem técnica do [produto] [modelo]"</span>
         </div>
       </div>
 
       <div class="guia-card">
-        <div class="guia-card-icon">🚛</div>
-        <div class="guia-card-titulo">Instalação por Caminhão</div>
-        <div class="guia-card-desc">Descubra qual modelo instalar e se precisa cortar o teto para cada caminhão.</div>
-        <div class="guia-exemplos">
-          <button class="guia-btn" onclick="enviarGuia(this)">Qual ar instalar no Volvo FH?</button>
-          <button class="guia-btn" onclick="enviarGuia(this)">Precisa cortar o teto do HR?</button>
-          <button class="guia-btn" onclick="enviarGuia(this)">Como instalar no VW Worker?</button>
+        <div class="guia-card-icon">📋</div>
+        <div class="guia-card-titulo">Informações Técnicas</div>
+        <div class="guia-card-desc">Para saber consumo, dimensões, peso, BTUs ou qualquer dado técnico, mencione o <strong>produto, o modelo e o que quer saber</strong>.</div>
+        <div class="guia-exemplo-box">
+          <span class="guia-label">Exemplo:</span>
+          <span class="guia-exemplo">"Qual o peso da geladeira [modelo]?"</span>
         </div>
       </div>
 
