@@ -60,28 +60,18 @@ let ultimaAtualizacao = null;
 
 // Mapeamento de modelos para marcas
 const MODELOS_MARCAS = {
-  // Hyundai
   'hr': 'hyundai', 'hd': 'hyundai', 'hr 160': 'hyundai',
-  // Scania
   'r450': 'scania', 'r500': 'scania', 's500': 'scania', 'p360': 'scania', 'g420': 'scania',
   'r410': 'scania', 'r480': 'scania', 'p310': 'scania', 'p340': 'scania',
-  // Volvo
   'fh': 'volvo', 'fm': 'volvo', 'fmx': 'volvo', 'vm': 'volvo', 'fh540': 'volvo',
-  // Mercedes
   'actros': 'mercedes', 'axor': 'mercedes', 'atego': 'mercedes', 'accelo': 'mercedes',
-  // Iveco
+  '1620': 'mercedes', '1933': 'mercedes', '2544': 'mercedes', '2646': 'mercedes',
   'tector': 'iveco', 'stralis': 'iveco', 'daily': 'iveco',
-  // MAN
   'tgx': 'man', 'tgs': 'man', 'tgm': 'man',
-  // Ford
   'cargo': 'ford', 'transit': 'ford',
-  // Volkswagen
   'constellation': 'volkswagen', 'delivery': 'volkswagen', 'worker': 'volkswagen',
-  // Fiat
   'ducato': 'fiat', 'fiorino': 'fiat', 'doblo': 'fiat', 'doblô': 'fiat',
-  // Kia
   'bongo': 'kia',
-  // Renault
   'master': 'renault', 'kangoo': 'renault',
 };
 
@@ -109,7 +99,6 @@ async function getAccessToken() {
   return data.access_token;
 }
 
-// Busca subpastas
 async function buscarSubpastas(token, pastaId) {
   const url = `https://www.googleapis.com/drive/v3/files?q='${pastaId}'+in+parents+and+mimeType='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name)&pageSize=1000`;
   const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -117,7 +106,6 @@ async function buscarSubpastas(token, pastaId) {
   return data.files || [];
 }
 
-// Constrói índice
 async function construirIndice() {
   console.log('Construindo índice do Drive...');
   const token = await getAccessToken();
@@ -139,7 +127,6 @@ async function construirIndice() {
   return novoIndice.length;
 }
 
-// Busca no índice — filtra por marca E modelo quando possível
 function buscarNoIndice(query) {
   if (indiceDrive.length === 0) return null;
   const q = query.toLowerCase();
@@ -167,12 +154,10 @@ function buscarNoIndice(query) {
   if (marcaBusca) {
     if (modeloBusca) {
       const resultadosEspecificos = indiceDrive.filter(item =>
-        item.marca.includes(marcaBusca) &&
-        item.modelo.includes(modeloBusca)
+        item.marca.includes(marcaBusca) && item.modelo.includes(modeloBusca)
       );
       if (resultadosEspecificos.length > 0) return resultadosEspecificos;
     }
-
     const resultadosMarca = indiceDrive.filter(item => item.marca.includes(marcaBusca));
     if (resultadosMarca.length > 0) {
       resultadosMarca._aviso = modeloBusca ?
@@ -188,11 +173,9 @@ function buscarNoIndice(query) {
     palavras.some(p => item.marca === p || item.modelo === p ||
       item.marca.startsWith(p) || item.modelo.startsWith(p))
   );
-
   return resultados.length > 0 ? resultados : null;
 }
 
-// Busca planilha
 async function buscarDadosPlanilha() {
   try {
     const abas = ['Ar-Condicionado', 'Geladeira Port%C3%A1til', 'Gerador Digital 24V', 'Promo%C3%A7%C3%B5es Ativas', 'Formas de Pagamento'];
@@ -206,7 +189,6 @@ async function buscarDadosPlanilha() {
   } catch (err) { return ''; }
 }
 
-// Login
 app.post('/api/login', (req, res) => {
   const { senha } = req.body;
   if (senha === process.env.SENHA_ACESSO) {
@@ -216,7 +198,6 @@ app.post('/api/login', (req, res) => {
   }
 });
 
-// Admin
 app.get('/admin/atualizar-indice', async (req, res) => {
   if (req.query.token !== ADMIN_TOKEN) return res.status(401).json({ error: 'Não autorizado' });
   try {
@@ -225,9 +206,8 @@ app.get('/admin/atualizar-indice', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-
 // ============================================================
-// BANCO DE CONHECIMENTO — separado por seções
+// BANCO DE CONHECIMENTO
 // ============================================================
 
 const CONTEXTO_BASE = `
@@ -241,20 +221,24 @@ JEITO DE SER:
 - Demonstra empatia antes de dar a solução
 - Celebra quando resolve: "Que ótimo! Fico feliz que deu certo!"
 - Usa emojis com moderação
-- Para problemas graves sugere ligar: (34) 3293-8000
 - Sempre responde em português brasileiro
 
 EMPRESA: Estilo AR | Tel: (34) 3293-8000 | Seg-Sex 08h-18h | www.estiloar.com.br | Uberlândia-MG
 
 REGRAS CRÍTICAS:
 - NUNCA invente informações, preços, depoimentos ou dados técnicos
-- NUNCA busque informações em sites externos
-- NUNCA mencione outras marcas ou concorrentes
-- Use APENAS as informações fornecidas neste contexto
-- Se não souber, diga honestamente e sugira ligar para (34) 3293-8000
+- NUNCA busque informações em sites externos, EXCETO para confirmar nome/existência de modelos de caminhão quando necessário
+- NUNCA mencione outras marcas ou concorrentes de produtos de ar-condicionado
+- Use APENAS as informações fornecidas neste contexto para responder sobre produtos e instalação
+- Se não souber, diga honestamente que não tem essa informação disponível
 - Sobre preços: use APENAS os dados da planilha fornecida
+- NUNCA termine a resposta com sugestão de ligar para o telefone — a equipe já sabe o contato
 
-PRODUTOS DA ESTILO AR: Ar-Condicionado 100% Elétrico, Ar-Condicionado Eco Compact, Geladeira Portátil (35L/45L/55L) e Gerador Digital 24V.
+REGRA PARA RECOMENDAÇÃO DE AR POR CAMINHÃO:
+- Os caminhões listados no guia de instalação têm regras específicas — siga EXATAMENTE o que está no guia
+- Para qualquer caminhão NÃO listado: recomende o Ar Slim Série 2 como padrão, sem inventar detalhes de instalação
+- NUNCA associe modelos a marcas erradas (ex: FH é Volvo, não Mercedes — 1620 é Mercedes, não Volvo)
+- Se não reconhecer o modelo, recomende o Ar Slim Série 2 e informe que a equipe técnica pode avaliar a instalação
 `;
 
 const SECOES = {
@@ -262,15 +246,14 @@ const SECOES = {
   ar_slim_geral: `
 PRODUTO: AR-CONDICIONADO 100% ELÉTRICO SLIM SÉRIE 2
 Marca: Estilo AR | Modelos: 12V e 24V
-Capacidade: 12V = 9.500 BTUs | 24V = 9.500 BTUs
+Capacidade: 9.500 BTUs
 Capacidade de Refrigeração: 12V = 2.150W | 24V = 2.560W
 Tensão nominal: DC 12V / DC 24V
 Fluxo de ar evaporador: 400m³/h | Condensador: 2.000m³/h
 Gás refrigerante: R134a | Carga: 460g | Óleo: RH68
 Dimensões: 97 x 85,8 x 15 cm
 Furo instalação: mín 460x400mm / máx 545x937mm
-Garantia: 3 meses — guardar embalagem por 30 dias
-Telefone suporte: (34) 99641-1025 | Seg-Sex 08h-18h
+Garantia: 3 meses
 `,
 
   ar_slim_consumo: `
@@ -303,7 +286,7 @@ ERROS DO AR SLIM SÉRIE 2:
 E2: Dissipação insuficiente → compressor/ventilador com falha
 - Sem energia no fio ventilador: substituir controlador
 - Com energia no ventilador: substituir ventilador
-- Compressor não parte: verificar circuito, parafusos soltos/queimados; se ok substituir controlador; se ainda não partir: compressor queimado
+- Compressor não parte: verificar circuito, parafusos; se ok substituir controlador; se persistir: compressor queimado
 
 E3: Proteção de bloqueio → compressor travado ou tubulação bloqueada
 - Compressor vibra e não parte: detritos no sistema, substituir compressor e limpar sistema
@@ -315,60 +298,34 @@ E4: Baixa voltagem controlador → tensão abaixo de 20,5V (24V) ou 10,5V (12V)
 - Se tensão ok e persiste: substituir controlador
 
 E5: Sobrecorrente do controlador → curto interno ou instabilidade de tensão
-- Substituir controlador
-- Verificar conexões soltas no cabo de alimentação
-- Verificar se condensador está obstruído
+- Substituir controlador | Verificar conexões soltas | Verificar condensador obstruído
 
 E6: Sobrecarga do ventilador → pás travadas ou curto interno
 - Verificar se pás giram livremente; se travado substituir ventilador
-- Desconectar plugue do ventilador e reiniciar; se funcionar sem erro: curto no ventilador, substituir
+- Desconectar plugue do ventilador e reiniciar; se funciona sem erro: substituir ventilador
 
 E7: Perda de fase do compressor → chicote, bobina ou controlador com problema
 - Verificar terminais com mau contato ou parafusos soltos
 - Usar multímetro para medir fios do motor trifásico
-- Se circuito aberto: substituir compressor
-- Se fiação ok: substituir controlador
+- Se circuito aberto: substituir compressor | Se fiação ok: substituir controlador
 
 E8: Falha de pressão → vazamento de gás ou interruptor de pressão danificado
-- Sem pressão: verificar vazamento de gás
-- Com gás: verificar se interruptor de pressão está danificado
-- Pressão muito alta: verificar condensador e ventilador
-
 E9: Sobrecorrente do ventilador → escovas desgastadas ou rolamentos travados
-- Desgaste das escovas de carvão: substituir ventilador
-- Rolamentos travados ou ventoinha não gira livremente: substituir ventilador
-
 E10: Falha de pressão → verificar vazamento de gás refrigerante
-
 E11: Sobrecarga → desligar a energia e religar
 
 LU: Baixa tensão → bateria baixa ou placa defeituosa
-- Medir tensão interna; se abaixo do valor de proteção: ajustar configuração
-- Se tensão ok mas não inicia: verificar conexões elétricas
-- Se conexões ok: substituir placa de circuito
-
 SHr: Problema sensor ou painel de controle
-- Trocar terminais branco e preto; se código muda: falha do painel; se mantém: falha do sensor
-
 OPE: Circuito aberto sensor → plugue desconectado ou cabo quebrado
 
 AR NÃO GELA:
-Pressão normal: baixa 0,2-0,4mpa | alta 10-15mpa
-- Alta pressão alta: ventilador com falha ou condensador sujo → limpar e substituir ventilador
+- Alta pressão alta: ventilador com falha ou condensador sujo
 - Alta pressão baixa: falta refrigerante → reabastecer
 - Alta alta E baixa baixa: compressor danificado → substituir
-
-AR NÃO GELA E UNIDADE EXTERNA NÃO FUNCIONA:
-- Verificar se sinal de resfriamento está aceso no painel
-- Configurar temperatura abaixo da temperatura da cabine
-- Verificar circuito aberto no fio verde entre painel e controlador
-- Se tensão no controlador mas unidade não funciona: substituir controlador
 `,
 
   ar_slim_manutencao: `
 MANUTENÇÃO DO AR SLIM SÉRIE 2:
-- Falha de resfriamento: diferença entrada/saída menor que 5°C por mais de 3 min → desliga compressor e ventilador
-- Temperatura descongelamento: saída menor que 2°C compressor para; maior que 6°C volta ao normal
 - Alternador mínimo 12V: 85-90A
 - Não instalar em tetos inclinados maiores que 30°
 - Tetos irregulares: usar selante de poliuretano
@@ -382,66 +339,63 @@ INSTALAÇÃO DO AR SLIM SÉRIE 2:
 3. Colocar equipamento centralizado acima do teto solar
 4. Encaixar luva de tração e apertar com 4 porcas M10
 5. Colocar placa decorativa e apertar com 4 porcas M10
-6. Encaixar os 4 tampões decorativos
-7. Fio VERMELHO → terminal positivo (+) | Fio PRETO → terminal negativo (-)
-DRENO: atentar para queda natural da mangueira; se não tiver queda natural, deixar sem as mangueiras
+6. Fio VERMELHO → positivo (+) | Fio PRETO → negativo (-)
+DRENO: atentar para queda natural da mangueira
 CHICOTE: ligar direto nas baterias, não alterar o chicote
 `,
 
   instalacao_por_caminhao: `
 GUIA DE INSTALAÇÃO POR MODELO DE CAMINHÃO:
 
-REGRA GERAL:
-- Nem todos os caminhões possuem abertura no teto de fábrica
-- Alguns modelos exigem adaptação (corte no teto)
-- A necessidade de corte depende do modelo do ar e do caminhão
+ATENÇÃO: Responda APENAS com base nas informações abaixo.
+Para caminhões não listados aqui: recomende sempre o Ar Slim Série 2, sem inventar detalhes de instalação.
 
 ECO COMPACT — recomendado para cabines MENORES:
 ✅ Volvo FH: NÃO precisa cortar o teto
 ⚠️ VW Worker: precisa corte de aproximadamente 1,5cm de cada lado
 ⚠️ VW Delivery: precisa corte de aproximadamente 1,5cm de cada lado
 
-SLIM e SLIM SÉRIE 2 — recomendados para cabines MAIORES:
+SLIM e SLIM SÉRIE 2 — recomendados para cabines MAIORES e maioria dos caminhões:
 ✅ Maioria dos caminhões: NÃO precisa cortar
 ⚠️ Volvo FH: PRECISA cortar o teto
 ⚠️ VW Worker: PRECISA cortar o teto
 ⚠️ VW Delivery: PRECISA cortar o teto
 
-CAMINHÕES PEQUENOS (Hyundai HR e Kia Bongo):
+CAMINHÕES PEQUENOS — Hyundai HR e Kia Bongo:
 ⚠️ NÃO possuem abertura no teto de fábrica
-⚠️ Para QUALQUER modelo de ar: necessário cortar o teto
+⚠️ Qualquer modelo de ar: necessário cortar o teto
 
 CASO ESPECIAL — Volvo FH a partir de 2016:
-⚠️ Possui teto solar de fábrica
-⚠️ Instalação mais complexa
-⚠️ RECOMENDADO: encaminhar para análise especializada antes da venda
+⚠️ Possui teto solar de fábrica — instalação mais complexa
+⚠️ Encaminhar para análise especializada antes da venda
 
-REGRAS DE DECISÃO RÁPIDA:
-- Caminhão pequeno (HR/Bongo): sempre cortar, qualquer modelo
-- VW Worker/Delivery: ECO Compact = corte leve | Slim e Slim Série 2 = corte necessário
-- Volvo FH: ECO Compact = sem corte | Slim e Slim Série 2 = corte necessário
-- Volvo FH 2016+: análise especializada recomendada
-- Outros caminhões: normalmente não precisam cortar com Slim/Slim Série 2
+REGRAS DE DECISÃO:
+- HR / Bongo → sempre cortar, qualquer modelo
+- VW Worker / Delivery → ECO Compact: corte leve | Slim Série 2: corte necessário
+- Volvo FH (até 2015) → ECO Compact: sem corte | Slim Série 2: corte necessário
+- Volvo FH 2016+ → análise especializada
+- Qualquer outro caminhão não listado → Ar Slim Série 2 recomendado, equipe técnica avalia instalação
 `,
 
   ar_eletrico: `
-PRODUTO: AR-CONDICIONADO 100% ELÉTRICO SLIM SÉRIE 2
-(Ver seções específicas para erros, operação, instalação e manutenção)
+PRODUTOS DE AR-CONDICIONADO ESTILO AR:
+- Ar-Condicionado Slim Série 2 (12V e 24V) — para cabines maiores e maioria dos caminhões
+- Ar-Condicionado Eco Compact — para cabines menores
 `,
 
   eco_compact: `
 PRODUTO: AR-CONDICIONADO ECO COMPACT
-(Manual em breve — para dúvidas técnicas sugira ligar para (34) 3293-8000)
+Recomendado para cabines menores.
+(Manual completo em breve)
 `,
 
   geladeira_geral: `
 PRODUTO: GELADEIRA PORTÁTIL
 Modelos: 35L, 45L e 55L
-Tensão: DC 12V/24V ou AC 100~240V (usar adaptador especial para AC)
-Resfriamento rápido até -20°C | Potência: 60W | Ruído: menor que 45dB
+Tensão: DC 12V/24V ou AC 100~240V
+Resfriamento até -20°C | Potência: 60W | Ruído: <45dB
 Faixa de temperatura: -20°C a +20°C
-Display digital com temperatura dupla | Duas zonas independentes (esquerda e direita)
-O lado com o compressor é a caixa direita
+Display digital | Duas zonas independentes (esquerda e direita)
 Garantia: 3 meses
 `,
 
@@ -458,19 +412,14 @@ COMO USAR A GELADEIRA:
 - Config temperatura caixa esquerda: pressionar + e botão config por 3 segundos
 - Config temperatura caixa direita: pressionar - e botão config por 3 segundos
 - Não é possível desligar as duas caixas ao mesmo tempo
-- Alternar entre caixas: pressionar botão de configuração
-- Se nenhuma operação em 4 segundos: sai do modo de configuração automaticamente
 - Modos: HH (resfriamento rápido, padrão) e ECO (economia)
-- Para alternar modos: pressionar brevemente o botão de configuração
 - Proteção bateria: segurar botão config por 3 segundos, selecionar Baixo/Médio/Alto
-- Padrão fábrica proteção: Alto
-- Conversão Celsius/Fahrenheit: segurar 3 segundos no status desabilitado até E1, navegar até E5
+- Conversão Celsius/Fahrenheit: segurar 3 segundos até E1, navegar até E5
 - Restaurar fábrica: desligada, segurar 3 segundos até E1, pressionar + e - juntos por 3 segundos
 `,
 
   geladeira_bateria: `
 PROTEÇÃO DE BATERIA DA GELADEIRA:
-Recomendação: Alto quando no veículo | Médio/Baixo com bateria externa
 DC 12V - Baixo: inicia 8,5V / sai 10,9V | Médio: inicia 10,1V / sai 11,4V | Alto: inicia 11,1V / sai 12,4V
 DC 24V - Baixo: inicia 21,3V / sai 21,7V | Médio: inicia 22,3V / sai 22,7V | Alto: inicia 24,3V / sai 24,7V
 `,
@@ -483,10 +432,10 @@ Vinho: 10°C | Gelados: -10°C | Carne: -18°C
 
   geladeira_erros: `
 ERROS DA GELADEIRA:
-F1 - Baixa tensão: desligar interruptor de proteção. Bateria: H=alta, M=média, L=baixa
+F1 - Baixa tensão: desligar interruptor de proteção
 F2 - Sobrecarga ventilador: desligar 5 min e religar. Se persistir: pós-venda
 F3 - Compressor protegendo: desligar 5 min e religar. Se persistir: pós-venda
-F4 - Velocidade compressor baixa/carga grande: desligar 5 min e religar. Se persistir: pós-venda
+F4 - Velocidade compressor baixa: desligar 5 min e religar. Se persistir: pós-venda
 F5 - Temperatura alta no compressor: local ventilado, desligar 5 min. Se persistir: pós-venda
 F6 - Controlador sem parâmetros: desligar 5 min e religar. Se persistir: pós-venda
 F7/F8 - Sensor temperatura anormal: contatar pós-venda
@@ -494,8 +443,8 @@ F7/F8 - Sensor temperatura anormal: contatar pós-venda
 
   geladeira_problemas: `
 PROBLEMAS COMUNS DA GELADEIRA:
-Não funciona: verificar botão liga/desliga, plugue, fusível e fonte de alimentação
-Temperatura muito alta: não abrir porta com frequência, não colocar alimentos quentes
+Não funciona: verificar botão liga/desliga, plugue, fusível e fonte
+Temperatura muito alta: não abrir com frequência, não colocar alimentos quentes
 Alimentos congelando: temperatura muito baixa, aumentar a temperatura
 Som de água correndo: condensação natural — NORMAL
 Gotas de água na porta: condensação natural — NORMAL
@@ -508,17 +457,13 @@ LIMPEZA E MANUTENÇÃO DA GELADEIRA:
 - Limpar com pano macio úmido, secar depois
 - Não usar limpador abrasivo
 DESCONGELAR: desligar, retirar itens, abrir tampa, aguardar degelo, drenar água, secar
-ARMAZENAMENTO LONGO: desligar, esvaziar, limpar, local seco e ventilado, deixar tampa levemente aberta
 `,
 
   geladeira_seguranca: `
 PRECAUÇÕES DA GELADEIRA:
-- Não usar se danificado | Não expor à chuva ou água | Não colocar perto de chamas ou calor
 - Após desembalar: aguardar 6 horas antes de ligar
-- Inclinação máxima uso prolongado: menor que 5° | uso curto: menor que 45°
+- Inclinação máxima uso prolongado: menor que 5°
 - Ventilação: traseira ≥20cm | lateral ≥10cm
-- Crianças devem operar sob supervisão
-- Instalação e manutenção só por pessoal qualificado
 `,
 
   gerador_geral: `
@@ -535,45 +480,33 @@ Garantia: 3 meses
   gerador_seguranca: `
 SEGURANÇA DO GERADOR:
 - NUNCA usar em ambientes fechados: monóxido de carbono pode causar morte
-- Não usar em ambiente úmido
-- Manter combustível a pelo menos 1m de distância
 - Parar o motor ANTES de reabastecer
-- Não fumar durante o reabastecimento
 - Gerador NÃO vem com óleo da fábrica: NUNCA ligar sem colocar óleo primeiro
-- Durante carregamento: não fumar, não conectar/desconectar da bateria
 `,
 
   gerador_operacao: `
 COMO USAR O GERADOR:
 - Ligar imediatamente: interruptor para "Ligar"
 - Modo automático: liga quando bateria cai abaixo de 23V/24V/25V (configurável)
-- Desligar: interruptor para "Desligar"
-- No modo automático: para quando geração cai abaixo de 800W
-- Fio vermelho → terminal positivo (+) | Fio preto → terminal negativo (-)
+- Para quando geração cai abaixo de 800W
+- Fio vermelho → positivo (+) | Fio preto → negativo (-)
 - NUNCA inverter os polos
-- Conexão Bluetooth: ligar Bluetooth do telefone e autorizar permissões
 `,
 
   gerador_luzes: `
 LUZES INDICADORAS DO GERADOR:
 Verde normal: operação normal
 Verde 3x: modo automático ativo
-Verde 2x: condições de parada automática atendidas
-1 vermelho 2 verdes: modo manual
-Vermelho 2x: curto-circuito → verificar fios trifásicos, substituir controlador se persistir
+Vermelho 2x: curto-circuito → verificar fios trifásicos
 Vermelho 3x: anormalidade linha de fase → verificar fios e ponte retificadora
-4 vermelhos 3 verdes: anomalia inicialização → verificar fusível 25A e se motor gira
+4 vermelhos 3 verdes: anomalia inicialização → verificar fusível 25A
 Vermelho 5x: sobretensão → bateria acima de 31V
 Vermelho 6x: detecção velocidade → verificar fio de extinção
-Vermelho 7x: subtensão bateria → bateria descarregada (abaixo de 8V) ou danificada
-2 vermelhos 1 verde: verificar fiação
+Vermelho 7x: subtensão bateria → bateria descarregada (abaixo de 8V)
 3 vermelhos 2 verdes: corrente alta → verificar terminais e rotor
-5 vermelhos 1 verde: sobretensão na geração → medir voltagem, verificar motor de passo
 6 vermelhos 1 verde: motor não liga → verificar carburador, vela, fio de extinção
 7 vermelhos 1 verde: subtensão na geração → verificar sobrecarga e fios
 Luz óleo acesa: óleo insuficiente → adicionar imediatamente
-3 vermelhos 3 verdes: óleo insuficiente (Bluetooth)
-3 vermelhos 5 verdes: alarme vazamento gasolina (Bluetooth)
 `,
 
   gerador_manutencao: `
@@ -582,11 +515,8 @@ Sempre: verificar combustível e óleo antes de usar
 Mensal/20h: verificar e adicionar óleo | limpar filtro de ar
 Trimestral/50h: substituir óleo | limpar vela de ignição
 100h: ajustar válvulas | limpar depósito de combustível
-Em altas temperaturas/cargas: trocar óleo a cada 25h
-Em ambientes poeirentos: limpar filtro de ar a cada 10h
 
 SUBSTITUIÇÃO DO ÓLEO: aquecer motor, desligar, inclinar para drenar, recolocar na horizontal, adicionar 0,4L de SJ10W-40
-FILTRO DE AR: remover, limpar com solvente, secar, adicionar óleo, espremer excesso, reinstalar
 `,
 
   gerador_problemas: `
@@ -598,117 +528,86 @@ MOTOR DO GERADOR NÃO ARRANCA:
 5. Vela com carbono ou umidade → limpar e secar a vela
 6. Problema no sistema de ignição → contatar fabricante
 
-ARMAZENAMENTO: até 1 mês=nenhuma prep | 1-2 meses=trocar gasolina | 2 meses-1 ano=drenar carburador também | mais de 1 ano=tudo + drenar internamente
+ARMAZENAMENTO: até 1 mês=nenhuma prep | 1-2 meses=trocar gasolina | 2 meses-1 ano=drenar carburador | mais de 1 ano=drenar internamente
 `,
 
 };
 
-// Seleciona as seções relevantes para a pergunta
 function selecionarContexto(mensagem) {
   const m = mensagem.toLowerCase();
   const secoes = [CONTEXTO_BASE];
 
-  // Geladeira
-  if (m.includes('geladeira') || m.includes('frigobar') || m.includes('refrigerador') ||
-      m.match(/\b(35|45|55)l?\b/)) {
-
+  if (m.includes('geladeira') || m.includes('frigobar') || m.includes('refrigerador') || m.match(/\b(35|45|55)l?\b/)) {
     secoes.push(SECOES.geladeira_geral);
-
     if (m.match(/\b(35|45|55)\b/) || m.includes('peso') || m.includes('dimens') || m.includes('medida') || m.includes('tamanho'))
       secoes.push(SECOES.geladeira_dimensoes);
-
-    if (m.includes('f1') || m.includes('f2') || m.includes('f3') || m.includes('f4') ||
-        m.includes('f5') || m.includes('f6') || m.includes('f7') || m.includes('f8') ||
-        m.includes('erro') || m.includes('falha') || m.includes('código'))
+    if (m.includes('f1') || m.includes('f2') || m.includes('f3') || m.includes('f4') || m.includes('f5') || m.includes('f6') || m.includes('f7') || m.includes('f8') || m.includes('erro') || m.includes('falha'))
       secoes.push(SECOES.geladeira_erros);
-
-    if (m.includes('não funciona') || m.includes('nao funciona') || m.includes('problema') ||
-        m.includes('som') || m.includes('água') || m.includes('gota') || m.includes('congelando'))
+    if (m.includes('não funciona') || m.includes('nao funciona') || m.includes('problema') || m.includes('som') || m.includes('congelando'))
       secoes.push(SECOES.geladeira_problemas);
-
     if (m.includes('bateria') || m.includes('tensão') || m.includes('voltagem') || m.includes('proteção'))
       secoes.push(SECOES.geladeira_bateria);
-
     if (m.includes('temperatura') || m.includes('carne') || m.includes('fruta') || m.includes('bebida'))
       secoes.push(SECOES.geladeira_temperatura);
-
-    if (m.includes('como usar') || m.includes('ligar') || m.includes('desligar') || m.includes('configurar') ||
-        m.includes('modo') || m.includes('eco') || m.includes('hh') || m.includes('celsius') || m.includes('fahrenheit'))
+    if (m.includes('como usar') || m.includes('ligar') || m.includes('desligar') || m.includes('configurar') || m.includes('modo'))
       secoes.push(SECOES.geladeira_operacao);
-
-    if (m.includes('limpar') || m.includes('limpeza') || m.includes('desgel') || m.includes('guardar') || m.includes('armazenar'))
+    if (m.includes('limpar') || m.includes('limpeza') || m.includes('desgel') || m.includes('guardar'))
       secoes.push(SECOES.geladeira_manutencao);
-
-    if (m.includes('segurança') || m.includes('cuidado') || m.includes('atenção') || m.includes('perigo'))
-      secoes.push(SECOES.geladeira_seguranca);
-
-    if (secoes.length === 2) {
-      secoes.push(SECOES.geladeira_operacao);
-      secoes.push(SECOES.geladeira_dimensoes);
-    }
+    if (secoes.length === 2) { secoes.push(SECOES.geladeira_operacao); secoes.push(SECOES.geladeira_dimensoes); }
   }
 
-  // Gerador
   else if (m.includes('gerador') || m.includes('le-3000') || m.includes('le3000') || m.includes('combustível') || m.includes('combustivel')) {
-
     secoes.push(SECOES.gerador_geral);
-
-    if (m.includes('luz') || m.includes('pisca') || m.includes('vermelho') || m.includes('verde') ||
-        m.includes('indicador') || m.includes('painel') || m.includes('erro') || m.includes('falha'))
+    if (m.includes('luz') || m.includes('pisca') || m.includes('vermelho') || m.includes('verde') || m.includes('erro') || m.includes('falha'))
       secoes.push(SECOES.gerador_luzes);
-
-    if (m.includes('não arranca') || m.includes('nao arranca') || m.includes('não liga') ||
-        m.includes('nao liga') || m.includes('problema') || m.includes('armazenamento'))
+    if (m.includes('não arranca') || m.includes('nao arranca') || m.includes('não liga') || m.includes('nao liga') || m.includes('problema') || m.includes('armazenamento'))
       secoes.push(SECOES.gerador_problemas);
-
-    if (m.includes('óleo') || m.includes('oleo') || m.includes('manutenção') || m.includes('manutencao') ||
-        m.includes('filtro') || m.includes('vela') || m.includes('trocar'))
+    if (m.includes('óleo') || m.includes('oleo') || m.includes('manutenção') || m.includes('manutencao') || m.includes('filtro') || m.includes('vela') || m.includes('trocar'))
       secoes.push(SECOES.gerador_manutencao);
-
-    if (m.includes('como usar') || m.includes('ligar') || m.includes('desligar') || m.includes('automático') ||
-        m.includes('bateria') || m.includes('carregar') || m.includes('bluetooth'))
+    if (m.includes('como usar') || m.includes('ligar') || m.includes('automático') || m.includes('bateria') || m.includes('bluetooth'))
       secoes.push(SECOES.gerador_operacao);
-
-    if (m.includes('segurança') || m.includes('perigo') || m.includes('cuidado') || m.includes('fechado'))
+    if (m.includes('segurança') || m.includes('perigo') || m.includes('fechado'))
       secoes.push(SECOES.gerador_seguranca);
-
-    if (secoes.length === 2) {
-      secoes.push(SECOES.gerador_operacao);
-      secoes.push(SECOES.gerador_seguranca);
-    }
+    if (secoes.length === 2) { secoes.push(SECOES.gerador_operacao); secoes.push(SECOES.gerador_seguranca); }
   }
 
-  // Ar-condicionado
-  else if (m.includes('ar') || m.includes('condicionado') || m.includes('elétrico') || m.includes('eletrico') ||
-           m.includes('eco compact') || m.includes('ecocompact') || m.includes('slim') ||
-           m.includes('instalação') || m.includes('instalacao') || m.includes('caminhão') ||
-           m.includes('caminhao') || m.includes('cortar') || m.includes('corte') || m.includes('teto')) {
-
+  else if (
+    m.includes('ar') || m.includes('condicionado') || m.includes('elétrico') || m.includes('eletrico') ||
+    m.includes('eco compact') || m.includes('ecocompact') || m.includes('slim') ||
+    m.includes('instalação') || m.includes('instalacao') || m.includes('caminhão') || m.includes('caminhao') ||
+    m.includes('cortar') || m.includes('corte') || m.includes('teto') ||
+    m.includes('volvo') || m.includes('worker') || m.includes('delivery') || m.includes('bongo') ||
+    m.includes('constellation') || m.includes('fh') || m.includes('scania') || m.includes('mercedes') ||
+    m.includes('iveco') || m.includes('volkswagen') || m.includes('vw') || m.includes('hyundai') ||
+    m.includes('kia') || m.includes('ford') || m.includes('man') ||
+    m.includes('recomend') || m.includes('indicad') || m.includes('qual modelo')
+  ) {
     if (m.includes('eco') && m.includes('compact')) {
       secoes.push(SECOES.eco_compact);
       secoes.push(SECOES.instalacao_por_caminhao);
-    } else if (m.includes('instalar') || m.includes('instalação') || m.includes('instalacao') ||
-               m.includes('corte') || m.includes('cortar') || m.includes('teto') ||
-               m.includes('caminhão') || m.includes('caminhao') || m.includes('volvo') ||
-               m.includes('worker') || m.includes('delivery') || m.includes('bongo') ||
-               m.includes('recomend') || m.includes('indicad') || m.includes('modelo') ||
-               m.includes('qual ar')) {
+    } else if (
+      m.includes('instalar') || m.includes('instalação') || m.includes('instalacao') ||
+      m.includes('corte') || m.includes('cortar') || m.includes('teto') ||
+      m.includes('caminhão') || m.includes('caminhao') || m.includes('volvo') ||
+      m.includes('worker') || m.includes('delivery') || m.includes('bongo') ||
+      m.includes('recomend') || m.includes('indicad') || m.includes('qual') ||
+      m.includes('scania') || m.includes('mercedes') || m.includes('iveco') ||
+      m.includes('volkswagen') || m.includes('vw') || m.includes('hyundai') ||
+      m.includes('kia') || m.includes('ford') || m.includes('man') ||
+      m.includes('constellation') || m.includes('fh') || m.includes('modelo')
+    ) {
       secoes.push(SECOES.ar_slim_geral);
       secoes.push(SECOES.instalacao_por_caminhao);
-    } else if (m.includes('erro') || m.includes('falha') || m.includes('código') ||
-               m.match(/\be\d+\b/) || m.includes('lu') || m.includes('shr') || m.includes('ope') ||
-               m.includes('não gela') || m.includes('nao gela')) {
+    } else if (m.includes('erro') || m.includes('falha') || m.match(/\be\d+\b/) || m.includes('lu') || m.includes('shr') || m.includes('ope') || m.includes('não gela') || m.includes('nao gela')) {
       secoes.push(SECOES.ar_slim_geral);
       secoes.push(SECOES.ar_slim_erros);
-    } else if (m.includes('consumo') || m.includes('bateria') || m.includes('ampere') ||
-               m.includes('watt') || m.includes('tensão') || m.includes('voltagem')) {
+    } else if (m.includes('consumo') || m.includes('bateria') || m.includes('ampere') || m.includes('watt')) {
       secoes.push(SECOES.ar_slim_geral);
       secoes.push(SECOES.ar_slim_consumo);
-    } else if (m.includes('manut') || m.includes('limpar') || m.includes('inspecionar')) {
+    } else if (m.includes('manut') || m.includes('limpar')) {
       secoes.push(SECOES.ar_slim_geral);
       secoes.push(SECOES.ar_slim_manutencao);
-    } else if (m.includes('como usar') || m.includes('ligar') || m.includes('modo') ||
-               m.includes('temperatura') || m.includes('velocidade')) {
+    } else if (m.includes('como usar') || m.includes('ligar') || m.includes('modo') || m.includes('temperatura') || m.includes('velocidade')) {
       secoes.push(SECOES.ar_slim_geral);
       secoes.push(SECOES.ar_slim_operacao);
     } else {
@@ -718,7 +617,6 @@ function selecionarContexto(mensagem) {
     }
   }
 
-  // Pergunta genérica
   else {
     secoes.push(SECOES.ar_eletrico);
     secoes.push(SECOES.geladeira_geral);
@@ -742,7 +640,7 @@ app.post('/api/chat', async (req, res) => {
       const imagens = IMAGENS_TECNICAS[produtoTecnico];
       if (imagens && imagens.length > 0) {
         const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
-        return res.json({ reply: `Aqui estão as imagens técnicas:\n\n${links}\n\nQualquer dúvida é só chamar! 😊` });
+        return res.json({ reply: `Aqui estão as imagens técnicas:\n\n${links}` });
       }
     }
 
@@ -750,36 +648,28 @@ app.post('/api/chat', async (req, res) => {
     const palavrasDepoimento = ['depoimento', 'foto de cliente', 'video de cliente', 'vídeo de cliente', 'quem instalou', 'ja instalou', 'já instalou', 'cliente que instalou', 'referencia de cliente', 'referência de cliente'];
     const buscaDrive = palavrasDepoimento.some(p => ultimaMensagem.includes(p));
 
-    // Busca Drive
     if (buscaDrive) {
       if (indiceDrive.length === 0) {
-        try {
-          await construirIndice();
-        } catch (err) {
-          console.error('Erro ao construir índice:', err);
-          return res.json({ reply: `No momento não consigo acessar os depoimentos. Por favor ligue para **(34) 3293-8000**. 😊` });
+        try { await construirIndice(); } catch (err) {
+          return res.json({ reply: `No momento não consigo acessar os depoimentos. 😊` });
         }
       }
-
       if (indiceDrive.length === 0) {
-        return res.json({ reply: `No momento não consigo acessar os depoimentos. Por favor ligue para **(34) 3293-8000**. 😊` });
+        return res.json({ reply: `No momento não consigo acessar os depoimentos. 😊` });
       }
-
       const resultados = buscarNoIndice(ultimaMensagem);
-
       if (resultados && resultados.length > 0) {
         const aviso = resultados._aviso || `Encontrei ${resultados.length} pasta(s) no Drive:`;
         const links = resultados.map(r => `📁 **${r.marcaNome} — ${r.modeloNome}**: ${r.link}`).join('\n');
-        return res.json({ reply: `${aviso}\n\n${links}\n\nQualquer dúvida é só chamar! 😊` });
+        return res.json({ reply: `${aviso}\n\n${links}` });
       } else {
-        return res.json({ reply: `Não encontrei depoimentos para essa marca ou modelo. Para mais informações ligue para **(34) 3293-8000**. 😊` });
+        return res.json({ reply: `Não encontrei depoimentos para essa marca ou modelo. 😊` });
       }
     }
 
-    // Seleciona só o contexto relevante para a pergunta
     const dadosPlanilha = await buscarDadosPlanilha();
     const contextoRelevante = selecionarContexto(ultimaMensagem);
-    const contexto = contextoRelevante + `\n========\nDADOS DA PLANILHA (preços/promoções/pagamento):\n${dadosPlanilha || 'Indisponível — sugira ligar para (34) 3293-8000'}`;
+    const contexto = contextoRelevante + `\n========\nDADOS DA PLANILHA (preços/promoções/pagamento):\n${dadosPlanilha || 'Indisponível'}`;
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -802,7 +692,6 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// Atualiza índice a cada 24h
 setInterval(async () => {
   try { await construirIndice(); } catch (err) { console.error(err); }
 }, 24 * 60 * 60 * 1000);
