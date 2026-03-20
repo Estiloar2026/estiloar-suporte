@@ -176,6 +176,89 @@
   @media(max-width:1100px) { .produtos-grid { grid-template-columns:repeat(2,1fr); } }
   @media(max-width:900px) { .main { grid-template-columns:1fr; } .chat-container { position:static; height:580px; } header { padding:0 20px; } .hero { padding:52px 20px 44px; } }
   @media(max-width:600px) { .produtos-grid { grid-template-columns:1fr; } .info-grid { grid-template-columns:1fr; } }
+
+  /* GUIA RÁPIDO */
+  .guia-section {
+    background: var(--navy);
+    padding: 56px 24px;
+    margin-top: 48px;
+  }
+
+  .guia-container { max-width: 1140px; margin: 0 auto; }
+
+  .guia-header { text-align: center; margin-bottom: 40px; }
+
+  .guia-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(77,184,232,0.15); border: 1px solid rgba(77,184,232,0.35);
+    color: var(--sky); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 2px;
+    padding: 6px 16px; border-radius: 20px; margin-bottom: 14px;
+  }
+
+  .guia-title {
+    font-family: 'Montserrat', sans-serif; font-size: 28px;
+    font-weight: 900; text-transform: uppercase; color: white;
+    margin-bottom: 8px;
+  }
+
+  .guia-sub { font-size: 14px; color: rgba(255,255,255,0.5); }
+
+  .guia-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .guia-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(77,184,232,0.2);
+    border-radius: 14px; padding: 22px;
+    transition: all 0.25s;
+  }
+
+  .guia-card:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(77,184,232,0.5);
+    transform: translateY(-2px);
+  }
+
+  .guia-card-icon { font-size: 28px; margin-bottom: 10px; }
+
+  .guia-card-titulo {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px; font-weight: 800;
+    text-transform: uppercase; color: white;
+    margin-bottom: 8px; letter-spacing: 0.5px;
+  }
+
+  .guia-card-desc {
+    font-size: 12px; color: rgba(255,255,255,0.5);
+    line-height: 1.6; margin-bottom: 14px;
+  }
+
+  .guia-exemplos { display: flex; flex-direction: column; gap: 6px; }
+
+  .guia-btn {
+    background: rgba(77,184,232,0.1);
+    border: 1px solid rgba(77,184,232,0.25);
+    color: var(--sky); font-size: 11.5px; font-weight: 500;
+    padding: 7px 12px; border-radius: 8px;
+    cursor: pointer; text-align: left;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s; line-height: 1.4;
+  }
+
+  .guia-btn:hover {
+    background: var(--sky); color: var(--navy);
+    border-color: var(--sky); font-weight: 700;
+  }
+
+  .guia-btn::before { content: '→ '; opacity: 0.6; }
+
+  @media(max-width:900px) { .guia-grid { grid-template-columns: 1fr 1fr; } }
+  @media(max-width:600px) { .guia-grid { grid-template-columns: 1fr; } }
+
 </style>
 </head>
 <body>
@@ -348,6 +431,88 @@
   </div>
 </section>
 
+
+<!-- GUIA RÁPIDO -->
+<section class="guia-section">
+  <div class="guia-container">
+    <div class="guia-header">
+      <div class="guia-badge">💡 Dica de Uso</div>
+      <h2 class="guia-title">Guia Rápido do Assistente</h2>
+      <p class="guia-sub">Clique em qualquer exemplo abaixo para enviar direto ao Pedro</p>
+    </div>
+
+    <div class="guia-grid">
+
+      <div class="guia-card">
+        <div class="guia-card-icon">🌡️</div>
+        <div class="guia-card-titulo">Recomendação de Produto</div>
+        <div class="guia-card-desc">Quer saber qual modelo de ar é ideal para um caminhão específico?</div>
+        <div class="guia-exemplos">
+          <button class="guia-btn" onclick="enviarGuia(this)">Qual ar para Volvo FH?</button>
+          <button class="guia-btn" onclick="enviarGuia(this)">Qual ar para Hyundai HR?</button>
+          <button class="guia-btn" onclick="enviarGuia(this)">Qual ar para Scania R450?</button>
+        </div>
+      </div>
+
+      <div class="guia-card">
+        <div class="guia-card-icon">💰</div>
+        <div class="guia-card-titulo">Preços e Promoções</div>
+        <div class="guia-card-desc">Para consultar preços, promoções e formas de pagamento atualizadas.</div>
+        <div class="guia-exemplos">
+          <button class="guia-btn" onclick="enviarGuia(this)">Qual o preço do ar slim série 2?</button>
+          <button class="guia-btn" onclick="enviarGuia(this)">Tem alguma promoção ativa?</button>
+          <button class="guia-btn" onclick="enviarGuia(this)">Quais as formas de pagamento?</button>
+        </div>
+      </div>
+
+      <div class="guia-card">
+        <div class="guia-card-icon">📁</div>
+        <div class="guia-card-titulo">Depoimentos de Clientes</div>
+        <div class="guia-card-desc">Para buscar fotos e vídeos de clientes que já instalaram nossos produtos.</div>
+        <div class="guia-exemplos">
+          <button class="guia-btn" onclick="enviarGuia(this)">Depoimento de cliente com Scania</button>
+          <button class="guia-btn" onclick="enviarGuia(this)">Foto de cliente com Volvo FH</button>
+          <button class="guia-btn" onclick="enviarGuia(this)">Vídeo de cliente com Mercedes</button>
+        </div>
+      </div>
+
+      <div class="guia-card">
+        <div class="guia-card-icon">🔧</div>
+        <div class="guia-card-titulo">Erros e Falhas</div>
+        <div class="guia-card-desc">Para identificar e resolver erros que aparecem no painel do produto.</div>
+        <div class="guia-exemplos">
+          <button class="guia-btn" onclick="enviarGuia(this)">O que significa erro E3 no ar?</button>
+          <button class="guia-btn" onclick="enviarGuia(this)">Apareceu LU no painel do ar</button>
+          <button class="guia-btn" onclick="enviarGuia(this)">Código F2 na geladeira</button>
+        </div>
+      </div>
+
+      <div class="guia-card">
+        <div class="guia-card-icon">📐</div>
+        <div class="guia-card-titulo">Imagens Técnicas</div>
+        <div class="guia-card-desc">Para acessar imagens com medidas e especificações técnicas dos produtos.</div>
+        <div class="guia-exemplos">
+          <button class="guia-btn" onclick="enviarGuia(this)">Imagem técnica do ar slim série 2</button>
+          <button class="guia-btn" onclick="enviarGuia(this)">Imagem técnica da geladeira 45L</button>
+          <button class="guia-btn" onclick="enviarGuia(this)">Imagem técnica do gerador</button>
+        </div>
+      </div>
+
+      <div class="guia-card">
+        <div class="guia-card-icon">🚛</div>
+        <div class="guia-card-titulo">Instalação por Caminhão</div>
+        <div class="guia-card-desc">Descubra qual modelo instalar e se precisa cortar o teto para cada caminhão.</div>
+        <div class="guia-exemplos">
+          <button class="guia-btn" onclick="enviarGuia(this)">Qual ar instalar no Volvo FH?</button>
+          <button class="guia-btn" onclick="enviarGuia(this)">Precisa cortar o teto do HR?</button>
+          <button class="guia-btn" onclick="enviarGuia(this)">Como instalar no VW Worker?</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 <div class="main">
   <div class="info-card">
     <div class="info-title">🏢 Sobre a Estilo AR</div>
@@ -453,6 +618,13 @@ const conversationHistory = [];
 
 function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,90)+'px'; }
 function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
+
+function enviarGuia(btn) {
+  const texto = btn.textContent.replace('→ ', '').trim();
+  document.getElementById('chatInput').value = texto;
+  document.querySelector('.chat-container').scrollIntoView({behavior:'smooth', block:'center'});
+  setTimeout(() => sendMessage(), 400);
+}
 
 function askProduct(produto) {
   const msg = `Olá! Tenho uma dúvida sobre o ${produto}.`;
