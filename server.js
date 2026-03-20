@@ -345,6 +345,9 @@ async function buscarAssistenciaTecnica(query) {
     if (ufs.includes(q)) { ufBusca = q; }
     else if (ESTADOS[q]) { ufBusca = ESTADOS[q]; }
 
+    console.log('Query:', q, '| UF detectada:', ufBusca);
+    console.log('Estados nos pontos:', pontos.map(p => norm(p.estado)));
+
     if (ufBusca) {
       const resultado = pontos.filter(p => norm(p.estado) === ufBusca);
       return resultado.length > 0
