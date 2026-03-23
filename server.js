@@ -546,7 +546,7 @@ Automático: 12V=600W/50A | 24V=840W/35A
 Turbo: 12V=720W/60A | 24V=960W/40A
 
 Recomendação: alternador mínimo 12V = 85 a 90 amperes
-Bateria mínima para instalação: 150A | Alternador mínimo para instalação: 90A
+Bateria mínima para instalação: 150A | Alternador mínimo para instalação: 90A (VALORES OFICIAIS — não alterar)
 Bateria mínima para instalação: 150A | Alternador mínimo: 90A
 `,
 
@@ -707,9 +707,10 @@ INSTALAÇÃO:
 4. Instalar painel decorativo
 5. Fio VERMELHO → positivo (+) | Fio PRETO → negativo (-)
 
-BATERIA E ALTERNADOR:
+BATERIA E ALTERNADOR (INFORMAÇÃO OFICIAL — NÃO ALTERAR):
 - Bateria mínima para instalação: 150A
 - Alternador mínimo para instalação: 90A
+- NUNCA informar valor diferente de 150A para bateria e 90A para alternador
 
 MANUTENÇÃO:
 - Limpeza com água e detergente neutro | pano úmido na carcaça
@@ -1271,12 +1272,19 @@ app.post('/api/chat', async (req, res) => {
     });
 
     const data = await response.json();
-    if (!response.ok) return res.status(response.status).json({ error: data.error?.message || 'Erro na API' });
+    if (!response.ok) {
+      const errMsg = data.error?.message || '';
+      // Mensagem amigável para rate limit
+      if (response.status === 429 || errMsg.includes('Rate limit') || errMsg.includes('rate limit')) {
+        return res.json({ reply: `⏳ O assistente está recebendo muitas perguntas ao mesmo tempo. Aguarde alguns segundos e tente novamente!` });
+      }
+      return res.json({ reply: `⚠️ Não consegui processar sua pergunta agora. Tente novamente em instantes!` });
+    }
     res.json({ reply: data.choices?.[0]?.message?.content || 'Sem resposta.' });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erro interno.' });
+    res.json({ reply: `⚠️ Ocorreu um erro inesperado. Tente novamente em instantes!` });
   }
 });
 
