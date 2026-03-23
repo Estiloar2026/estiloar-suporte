@@ -947,7 +947,7 @@ function selecionarContexto(mensagem) {
     } else if (m.includes('erro') || m.includes('falha') || /e\d+/.test(m) || m.includes(' e2') || m.includes(' e3') || m.includes(' e4') || m.includes(' e5') || m.includes(' e6') || m.includes(' e7') || m.includes(' e8') || m.includes(' e9') || m.includes(' e10') || m.includes(' e11') || m.includes('lu') || m.includes('shr') || m.includes('ope') || m.includes('não gela') || m.includes('nao gela') || m.includes('nao esta gelando') || m.includes('não está gelando')) {
       secoes.push(SECOES.ar_slim_geral);
       secoes.push(SECOES.ar_slim_erros);
-    } else if (m.includes('consumo') || m.includes('bateria') || m.includes('ampere') || m.includes('watt')) {
+    } else if (m.includes('consumo') || m.includes('bateria') || m.includes('ampere') || m.includes('watt') || m.includes('btu') || m.includes('capacidade') || m.includes('refriger') || m.includes('potencia') || m.includes('potência') || m.includes('fluxo') || m.includes('corrente')) {
       secoes.push(SECOES.ar_slim_geral);
       secoes.push(SECOES.ar_slim_consumo);
     } else if (m.includes('manut') || m.includes('limpar')) {
