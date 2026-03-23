@@ -265,11 +265,21 @@ function buscarNoIndice(query) {
     return null;
   }
 
-  // Sem marca — busca por palavras em qualquer campo
+  // Sem marca conhecida — busca por palavras em qualquer campo (marca, modelo, nome completo)
   const resultados = indiceDrive.filter(item =>
-    palavrasQuery.some(p => normIdx(item.marca).includes(p) || normIdx(item.modeloNome).includes(p))
+    palavrasQuery.some(p =>
+      normIdx(item.marca).includes(p) ||
+      normIdx(item.marcaNome).includes(p) ||
+      normIdx(item.modelo).includes(p) ||
+      normIdx(item.modeloNome).includes(p)
+    )
   );
-  return resultados.length > 0 ? resultados : null;
+
+  if (resultados.length > 0) {
+    resultados._aviso = `Entendi que você busca depoimentos no Drive. Encontrei ${resultados.length} pasta(s):`;
+    return resultados;
+  }
+  return null;
 }
 
 async function buscarDadosPlanilha() {
