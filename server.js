@@ -1065,7 +1065,7 @@ app.post('/api/chat', async (req, res) => {
 
     // Detecta Worker e Delivery — responde direto sem passar pelo modelo
     // Modelos numéricos do Worker
-    const modelosWorker = ['8.120','8.150e','9.150e','13.170e','13.180e','15.170e','15.180e','15.180 4x4','17.180','17.220','17.250e','24.220','24.250e','26.220','26.260e','31.260e'];
+    const modelosWorker = ['8.120','8.150e','9.150e','13.170e','13.170','13.180e','15.170e','15.170','15.180e','15.180 4x4','17.180','17.220','17.250e','24.220','24.250e','26.220','26.260e','31.260e'];
     // Modelos numéricos do Delivery (nova geração — diferente do Worker)
     const modelosDelivery = ['4.150','6.160','9.170','11.180'];
     // Modelos ambíguos (existem nos dois)
@@ -1073,7 +1073,8 @@ app.post('/api/chat', async (req, res) => {
 
     const normMsg = ultimaMensagem.replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '');
     const mencionaWorker = ultimaMensagem.includes('worker') || ultimaMensagem.includes('vw worker') || ultimaMensagem.includes('volkswagen worker') ||
-      modelosWorker.some(m => ultimaMensagem.includes(m));
+      modelosWorker.some(m => ultimaMensagem.includes(m)) ||
+      modelosWorker.some(m => ultimaMensagem.includes(m.replace(/e$/, '').replace(/e2$/, '')));
     const mencionaDelivery = ultimaMensagem.includes('delivery') || ultimaMensagem.includes('vw delivery') || ultimaMensagem.includes('volkswagen delivery') ||
       modelosDelivery.some(m => ultimaMensagem.includes(m));
     // Modelo ambíguo mencionado sem especificar linha
