@@ -1008,7 +1008,17 @@ app.post('/api/chat', async (req, res) => {
         // Volvo FH
         .replace(/fh/gi, 'fh')
         // Erros gerais de acentuação
-        .normalize('NFD').replace(/[̀-ͯ]/g, '');
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        // ─── Normalização de modelos de caminhão ──────────────────────────────────────────────
+        // Converte modelos digitados SEM ponto para o formato COM ponto dos arrays.
+        // Exemplos: "15170" -> "15.170" | "15170e" -> "15.170e" | "13180" -> "13.180"
+        //           "17220" -> "17.220" | "24250e" -> "24.250e" | "8150"  -> "8.150"
+        // Protege anos (20xx) com marcacao temporaria antes de converter.
+        .replace(/\b(20\d{2})\b/g, '__ANO__$1__ANO__')
+        .replace(/\b(\d{1,2})(\d{3})(e2?|4x4|e)?\b/gi, function(match, ton, pot, suf) {
+          return ton + '.' + pot + (suf ? suf.trim().toLowerCase() : '');
+        })
+        .replace(/__ANO__(\d{4})__ANO__/g, '$1');
     }
 
     const ultimaMensagem = normalizarMensagem(mensagemOriginal);
