@@ -1037,6 +1037,23 @@ app.post('/api/chat', async (req, res) => {
       return res.json({ reply: `Para o Volvo FH, o ano faz diferença na instalação. Qual o ano do caminhão do seu cliente? 😊` });
     }
 
+    // Detecta Worker e Delivery — responde direto sem passar pelo modelo
+    const mencionaWorker = ultimaMensagem.includes('worker') || ultimaMensagem.includes('vw worker') || ultimaMensagem.includes('volkswagen worker');
+    const mencionaDelivery = ultimaMensagem.includes('delivery') || ultimaMensagem.includes('vw delivery') || ultimaMensagem.includes('volkswagen delivery');
+    const mencionaHR = ultimaMensagem.includes(' hr') || ultimaMensagem.includes('hyundai hr') || ultimaMensagem.endsWith('hr');
+    const mencionaBongo = ultimaMensagem.includes('bongo') || ultimaMensagem.includes('kia bongo');
+    const ehPerguntaInstalacao = !ehDepoimento && (ultimaMensagem.includes('qual') || ultimaMensagem.includes('modelo') || ultimaMensagem.includes('ar') || ultimaMensagem.includes('indicar') || ultimaMensagem.includes('instalar') || ultimaMensagem.includes('melhor') || ultimaMensagem.includes('recomend'));
+
+    if ((mencionaWorker || mencionaDelivery) && ehPerguntaInstalacao) {
+      const nome = mencionaWorker ? 'VW Worker' : 'VW Delivery';
+      return res.json({ reply: `Para o **${nome}**, você pode indicar ao cliente:\n\n• **Eco Compact** — necessário corte leve de aproximadamente 1,5cm de cada lado do teto\n• **Slim Série 2** — necessário cortar o teto` });
+    }
+
+    if ((mencionaHR || mencionaBongo) && ehPerguntaInstalacao) {
+      const nome = mencionaHR ? 'Hyundai HR' : 'Kia Bongo';
+      return res.json({ reply: `Para o **${nome}**, não há abertura no teto de fábrica. Para qualquer modelo de ar-condicionado será necessário cortar o teto. Recomendamos avaliar com o cliente antes de fechar a venda.` });
+    }
+
     // Detecta pergunta sobre bateria e alternador — responde direto sem passar pelo modelo
     const perguntaBateria = /bater[ia]+|alternador/i.test(ultimaMensagem);
     if (perguntaBateria) {
