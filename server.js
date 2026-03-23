@@ -624,6 +624,22 @@ CHICOTE: ligar direto na bateria, não modificar chicote original
 
 
   instalacao_por_caminhao: `
+MODELOS VOLKSWAGEN WORKER:
+Leves: 8.120, 8.150E, 9.150E
+Médios: 13.170E, 13.180, 13.180E, 15.170E, 15.180, 15.180E, 15.180 4x4
+Semi-pesados: 17.180, 17.220, 17.220 Tractor, 17.250E
+Pesados: 24.220, 24.250E, 26.220, 26.260E, 31.260E
+
+MODELOS VOLKSWAGEN DELIVERY:
+Antigos: 5.140, 8.150, 9.150, 10.160, 13.180
+Nova geração: 4.150, 6.160, 9.170, 11.180, 13.180
+
+ATENÇÃO — WORKER vs DELIVERY:
+O código numérico NÃO identifica sozinho o caminhão (ex: 13.180 existe no Worker E no Delivery).
+Worker = uso pesado, robusto | Delivery = uso urbano, conforto
+Quando cliente mencionar só o número (ex: 8.150), sempre perguntar se é Worker ou Delivery.
+Nomenclatura: primeiro número = toneladas | segundo número = potência em cv
+
 GUIA DE INSTALAÇÃO POR MODELO DE CAMINHÃO:
 
 ATENÇÃO: Responda APENAS com base nas informações abaixo.
@@ -1038,11 +1054,32 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Detecta Worker e Delivery — responde direto sem passar pelo modelo
-    const mencionaWorker = ultimaMensagem.includes('worker') || ultimaMensagem.includes('vw worker') || ultimaMensagem.includes('volkswagen worker');
-    const mencionaDelivery = ultimaMensagem.includes('delivery') || ultimaMensagem.includes('vw delivery') || ultimaMensagem.includes('volkswagen delivery');
+    // Modelos numéricos do Worker
+    const modelosWorker = ['8.120','8.150e','9.150e','13.170e','13.180e','15.170e','15.180e','15.180 4x4','17.180','17.220','17.250e','24.220','24.250e','26.220','26.260e','31.260e'];
+    // Modelos numéricos do Delivery (nova geração — diferente do Worker)
+    const modelosDelivery = ['4.150','6.160','9.170','11.180'];
+    // Modelos ambíguos (existem nos dois)
+    const modelosAmbiguos = ['8.150','9.150','10.160','13.180','15.180','17.220'];
+
+    const normMsg = ultimaMensagem.replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '');
+    const mencionaWorker = ultimaMensagem.includes('worker') || ultimaMensagem.includes('vw worker') || ultimaMensagem.includes('volkswagen worker') ||
+      modelosWorker.some(m => ultimaMensagem.includes(m));
+    const mencionaDelivery = ultimaMensagem.includes('delivery') || ultimaMensagem.includes('vw delivery') || ultimaMensagem.includes('volkswagen delivery') ||
+      modelosDelivery.some(m => ultimaMensagem.includes(m));
+    // Modelo ambíguo mencionado sem especificar linha
+    const mencionaAmbiguo = !mencionaWorker && !mencionaDelivery &&
+      modelosAmbiguos.some(m => ultimaMensagem.includes(m)) &&
+      (ultimaMensagem.includes('vw') || ultimaMensagem.includes('volkswagen') || ultimaMensagem.includes('worker') || ultimaMensagem.includes('delivery') ||
+       modelosWorker.some(m => ultimaMensagem.includes(m.split('.')[0])) ||
+       modelosAmbiguos.some(m => ultimaMensagem.replace(/\s/g,'').includes(m.replace('.',''))));
     const mencionaHR = ultimaMensagem.includes(' hr') || ultimaMensagem.includes('hyundai hr') || ultimaMensagem.endsWith('hr');
     const mencionaBongo = ultimaMensagem.includes('bongo') || ultimaMensagem.includes('kia bongo');
     const ehPerguntaInstalacao = !ehDepoimento && (ultimaMensagem.includes('qual') || ultimaMensagem.includes('modelo') || ultimaMensagem.includes('ar') || ultimaMensagem.includes('indicar') || ultimaMensagem.includes('instalar') || ultimaMensagem.includes('melhor') || ultimaMensagem.includes('recomend'));
+
+    if (mencionaAmbiguo && ehPerguntaInstalacao) {
+      const modelo = modelosAmbiguos.find(m => ultimaMensagem.includes(m));
+      return res.json({ reply: `O modelo **${modelo}** existe tanto na linha **Worker** quanto na **Delivery**. Para indicar o ar correto, confirme com o cliente qual é a linha do caminhão:\n\n• **Worker ${modelo}** ou **Delivery ${modelo}**?\n\nAmbos precisam de corte no teto para instalação de qualquer modelo de ar.` });
+    }
 
     if ((mencionaWorker || mencionaDelivery) && ehPerguntaInstalacao) {
       const nome = mencionaWorker ? 'VW Worker' : 'VW Delivery';
