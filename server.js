@@ -489,37 +489,41 @@ REGRA PARA RECOMENDAÇÃO DE AR POR CAMINHÃO:
 
 MARCAS E MODELOS DE CAMINHÕES DO MERCADO BRASILEIRO (para reconhecimento — NÃO invente regras de instalação para estes):
 
-MERCEDES-BENZ: Actros (2546, 2548, 2651, 2658), Axor (2544, 2546, 2640, 2644), Atego (1419, 1719, 2426), Accelo (815, 1016, 1316, 1017, 1317), OF (1519, 1621, 1718, 1722, 2726), 1113, 1313, 1513, 1620, 1630, 1933, 2213, 2423, 2633, 710, 712, 914, 915
+VOLKSWAGEN Worker: 8.120, 8.150E, 9.150E, 13.170E, 13.180, 13.180E, 15.170E, 15.180, 15.180E, 15.180 4x4, 17.180, 17.220, 17.220 Tractor, 17.250E, 24.220, 24.250E, 26.220, 26.260E, 31.260E
+VOLKSWAGEN Delivery: 4.150, 5.140, 6.160, 8.150, 9.150, 9.170, 10.160, 11.180, 13.180
+VOLKSWAGEN Constellation: 17.230, 19.320, 24.250, 24.280, 25.360, 26.390, 26.420, 30.330
+VOLKSWAGEN Antigos: 11.130, 13.130, 14.140, 16.170, 18.310
 
-VOLVO: FH (420, 460, 500, 540), FM (370, 410, 460), FMX (370, 410, 460, 500), VM (270, 310, 330), NH (12 380)
+MERCEDES-BENZ Accelo: 715, 815, 1016, 1316
+MERCEDES-BENZ Atego: 1419, 1719, 1726, 2426, 2430
+MERCEDES-BENZ Axor: 1933, 2036, 2544, 2644
+MERCEDES-BENZ Actros: 2045, 2546, 2651, 2653
+MERCEDES-BENZ Antigos: 1113, 1313, 1519, 1620, 1634, 1935, 1938, 1941
 
-SCANIA: R (410, 450, 480, 500, 540, 560, 580), S (410, 450, 500, 540, 580, 660), G (360, 410, 450, 500), P (250, 280, 310, 360, 410), L (280, 320), Highline, Streamline, NextGen
+VOLVO VM: 210, 270, 330
+VOLVO FM: 370, 410, 460
+VOLVO FH: 420, 460, 500, 540 (ano faz diferença — perguntar sempre)
+VOLVO Antigos: FH12, FH16, NH12
 
-VOLKSWAGEN: Constellation (17.180, 17.230, 19.360, 24.280, 24.330, 25.390, 26.420, 31.390), Delivery (6.160, 9.170, 11.180, 13.180), Worker (17.220, 17.230, 24.250, 24.280, 31.320), Meteor (29.520)
+SCANIA P: 250, 280, 320
+SCANIA G: 360, 400
+SCANIA R: 440, 450, 500, 540
+SCANIA S: 500, 540
+SCANIA Antigos: 111, 112, 113H, 114, 124
 
-IVECO: Tector (170E22, 170E28, 240E28, 240E30), Stralis (480, 510, 570, 600), Daily (35S14, 35S17, 50C17, 70C17), Hi-Way, Hi-Road, S-Way, T-Way, Vertis
+IVECO Daily: 30-130, 35-150, 45-170, 55-180
+IVECO Tector: 9-190, 11-190, 17-280, 24-280
+IVECO Hi-Way: 440, 480, 540
+IVECO S-Way: 480, 540
+IVECO Stralis: 380, 410, 440, 480, 560
 
-FORD: Cargo (816, 1119, 1317, 1319, 1519, 1722, 1723, 2042, 2428, 2629, 3132), Transit (furgão)
+DAF CF: 310, 410, 450
+DAF XF: 480, 530
 
-MAN: TGX (28.440, 29.440, 33.440), TGS (26.360, 26.440, 33.360), TGM (13.250, 15.250, 18.250, 26.290), TGL (8.180, 10.180, 12.180)
+FORD Cargo: 712, 815, 1317, 1519, 1719, 1723, 1933, 2042, 2842
 
-HYUNDAI: HR (2.5 TCI), HD (65, 78, 120, 170)
-
+HYUNDAI: HR, HD (65, 78, 120, 170)
 KIA: Bongo (K2500, K2700, K3000)
-
-DAF: XF (105, 106, 530), CF (85, 330, 340, 370, 410), LF (45, 55)
-
-AGRALE: Agrale 6000, 7500, 8500, 9200, 10000, MA 8.5, MA 10, Marruá
-
-FIAT: Ducato (cargo, minibus), Fiorino (furgão), Doblô (cargo)
-
-RENAULT: Master (furgão, chassi, plataforma), Kangoo (express)
-
-NISSAN: Frontier (pickup), NP300
-
-TOYOTA: Hilux (pickup), Land Cruiser
-
-MITSUBISHI: L200 Triton, Canter (FE, FG)
 `;
 
 const SECOES = {
@@ -1065,9 +1069,9 @@ app.post('/api/chat', async (req, res) => {
 
     // Detecta Worker e Delivery — responde direto sem passar pelo modelo
     // Modelos numéricos do Worker
-    const modelosWorker = ['8.120','8.150e','9.150e','13.170e','13.170','13.180e','15.170e','15.170','15.180e','15.180 4x4','17.180','17.220','17.250e','24.220','24.250e','26.220','26.260e','31.260e'];
+    const modelosWorker = ['8.120','8.150e','9.150e','13.170e','13.170','13.180','13.180e','15.170e','15.170','15.180','15.180e','15.180 4x4','17.180','17.220','17.220 tractor','17.250e','24.220','24.250e','26.220','26.260e','31.260e'];
     // Modelos numéricos do Delivery (nova geração — diferente do Worker)
-    const modelosDelivery = ['4.150','6.160','9.170','11.180'];
+    const modelosDelivery = ['4.150','5.140','6.160','8.150','9.150','9.170','10.160','11.180','13.180'];
     // Modelos ambíguos (existem nos dois)
     const modelosAmbiguos = ['8.150','9.150','10.160','13.180','15.180','17.220'];
 
@@ -1083,6 +1087,10 @@ app.post('/api/chat', async (req, res) => {
       (ultimaMensagem.includes('vw') || ultimaMensagem.includes('volkswagen') || ultimaMensagem.includes('worker') || ultimaMensagem.includes('delivery') ||
        modelosWorker.some(m => ultimaMensagem.includes(m.split('.')[0])) ||
        modelosAmbiguos.some(m => ultimaMensagem.replace(/\s/g,'').includes(m.replace('.',''))));
+    const modelosConstellation = ['17.230','19.320','24.250','24.280','25.360','26.390','26.420','30.330'];
+    const mencionaConstellation = ultimaMensagem.includes('constellation') ||
+      modelosConstellation.some(m => ultimaMensagem.includes(m)) ||
+      modelosConstellation.some(m => ultimaMensagem.includes(m.replace(/\./, '')));
     const mencionaHR = ultimaMensagem.includes(' hr') || ultimaMensagem.includes('hyundai hr') || ultimaMensagem.endsWith('hr');
     const mencionaBongo = ultimaMensagem.includes('bongo') || ultimaMensagem.includes('kia bongo');
     const ehPerguntaInstalacao = !ehDepoimento && (ultimaMensagem.includes('qual') || ultimaMensagem.includes('modelo') || ultimaMensagem.includes('ar') || ultimaMensagem.includes('indicar') || ultimaMensagem.includes('instalar') || ultimaMensagem.includes('melhor') || ultimaMensagem.includes('recomend'));
@@ -1097,9 +1105,22 @@ app.post('/api/chat', async (req, res) => {
       return res.json({ reply: `Para o **${nome}**, você pode indicar ao cliente:\n\n• **Eco Compact** — necessário corte leve de aproximadamente 1,5cm de cada lado do teto\n• **Slim Série 2** — necessário cortar o teto` });
     }
 
+    if (mencionaConstellation && ehPerguntaInstalacao) {
+      return res.json({ reply: `Para o **VW Constellation**, você pode indicar ao cliente o **Slim Série 2**. Para detalhes de instalação, a equipe técnica pode avaliar. 😊` });
+    }
+
     if ((mencionaHR || mencionaBongo) && ehPerguntaInstalacao) {
       const nome = mencionaHR ? 'Hyundai HR' : 'Kia Bongo';
       return res.json({ reply: `Para o **${nome}**, não há abertura no teto de fábrica. Para qualquer modelo de ar-condicionado será necessário cortar o teto. Recomendamos avaliar com o cliente antes de fechar a venda.` });
+    }
+
+    // Detecta qualquer modelo numérico de caminhão não-VW mencionado isoladamente
+    // (Mercedes, Scania, Ford Cargo, etc.) — responde com fallback hardcoded, sem passar pelo LLM
+    const modeloNumericoMatch = ultimaMensagem.match(/\b(\d{1,2}\.\d{3}[a-z0-9]*)\b/i);
+    const naoEhVW = !mencionaWorker && !mencionaDelivery && !mencionaAmbiguo;
+    if (modeloNumericoMatch && naoEhVW && ehPerguntaInstalacao) {
+      const modeloDetectado = modeloNumericoMatch[1].toUpperCase();
+      return res.json({ reply: `Para o **${modeloDetectado}**, você pode indicar ao cliente o **Ar Slim Série 2**. Para detalhes de instalação, a equipe técnica pode avaliar. 😊` });
     }
 
     // Detecta pergunta sobre bateria e alternador — responde direto sem passar pelo modelo
