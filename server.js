@@ -45,6 +45,53 @@ const IMAGENS_TECNICAS = {
   ]
 };
 
+// Mapeamento de fotos do carrossel
+const FOTOS_PRODUTOS = {
+  'ar': [
+    'https://estiloar-suporte.onrender.com/ar.png',
+    'https://estiloar-suporte.onrender.com/ar-1.png',
+    'https://estiloar-suporte.onrender.com/ar-2.png',
+    'https://estiloar-suporte.onrender.com/ar-3.png'
+  ],
+  'ecocompact': [
+    'https://estiloar-suporte.onrender.com/ecocompact.png',
+    'https://estiloar-suporte.onrender.com/ecocompact-1.png',
+    'https://estiloar-suporte.onrender.com/ecocompact-2.png',
+    'https://estiloar-suporte.onrender.com/ecocompact-3.png',
+    'https://estiloar-suporte.onrender.com/ecocompact-4.png'
+  ],
+  'geladeira': [
+    'https://estiloar-suporte.onrender.com/geladeira.png',
+    'https://estiloar-suporte.onrender.com/geladeira-1.png',
+    'https://estiloar-suporte.onrender.com/geladeira-2.png',
+    'https://estiloar-suporte.onrender.com/geladeira-3.png',
+    'https://estiloar-suporte.onrender.com/geladeira-4.png'
+  ],
+  'gerador': [
+    'https://estiloar-suporte.onrender.com/gerador.png',
+    'https://estiloar-suporte.onrender.com/gerador-1.png',
+    'https://estiloar-suporte.onrender.com/gerador-2.png',
+    'https://estiloar-suporte.onrender.com/gerador-3.png',
+    'https://estiloar-suporte.onrender.com/gerador-4.png'
+  ]
+};
+
+// Detecta pedido de foto do produto
+function detectarFotoProduto(mensagem) {
+  const m = mensagem.toLowerCase();
+  // Não ativa se for imagem técnica ou assistência
+  if (m.includes('tecni') || m.includes('medida') || m.includes('dimensao') || m.includes('dimensão')) return null;
+  if (m.includes('assistencia') || m.includes('assistência')) return null;
+  // Ativa com palavras de foto/imagem + produto
+  const querFoto = m.includes('foto') || m.includes('imagem') || m.includes('fotos') || m.includes('imagens') || m.includes('ver o produto') || m.includes('ver o ar') || m.includes('ver a geladeira') || m.includes('ver o gerador');
+  if (!querFoto) return null;
+  if (m.includes('eco') || m.includes('compact')) return 'ecocompact';
+  if (m.includes('geladeira') || m.includes('frigobar')) return 'geladeira';
+  if (m.includes('gerador')) return 'gerador';
+  if (m.includes('ar') || m.includes('slim') || m.includes('condicionado')) return 'ar';
+  return null;
+}
+
 // Detecta pedido de imagem técnica e qual produto
 function detectarImagemTecnica(mensagem) {
   const m = mensagem.toLowerCase();
@@ -73,6 +120,9 @@ function detectarImagemTecnica(mensagem) {
 // Índice de pastas em memória
 let indiceDrive = [];
 let ultimaAtualizacao = null;
+
+// Paginação de assistência técnica por sessão
+const paginacaoAssistencia = new Map(); // sessionId -> { pontos, offset, local }
 
 // Mapeamento de modelos para marcas
 const MODELOS_MARCAS = {
@@ -496,6 +546,8 @@ Automático: 12V=600W/50A | 24V=840W/35A
 Turbo: 12V=720W/60A | 24V=960W/40A
 
 Recomendação: alternador mínimo 12V = 85 a 90 amperes
+Bateria mínima para instalação: 150A | Alternador mínimo para instalação: 90A
+Bateria mínima para instalação: 150A | Alternador mínimo: 90A
 `,
 
   ar_slim_operacao: `
@@ -623,6 +675,7 @@ Capacidade de refrigeração: 24V=2.000W | 12V=1.800W
 Potência elétrica: 24V=950W | 12V=750W
 Fluxo de ar evaporador: 400m³/h | Condensador: 1.800m³/h
 Inclinação frontal máxima: 20°
+Bateria mínima para instalação: 150A | Alternador mínimo: 90A
 
 OPERAÇÃO:
 - Ligar/desligar: pressionar rapidamente o botão
@@ -653,6 +706,10 @@ INSTALAÇÃO:
 3. Posicionar unidade e fixar com 4 porcas M8
 4. Instalar painel decorativo
 5. Fio VERMELHO → positivo (+) | Fio PRETO → negativo (-)
+
+BATERIA E ALTERNADOR:
+- Bateria mínima para instalação: 150A
+- Alternador mínimo para instalação: 90A
 
 MANUTENÇÃO:
 - Limpeza com água e detergente neutro | pano úmido na carcaça
@@ -979,6 +1036,19 @@ app.post('/api/chat', async (req, res) => {
       return res.json({ reply: `Para o Volvo FH, o ano faz diferença na instalação. Qual o ano do caminhão do seu cliente? 😊` });
     }
 
+    // Detecta pedido de foto do produto
+    const produtoFoto = detectarFotoProduto(ultimaMensagem);
+    if (produtoFoto) {
+      const fotos = FOTOS_PRODUTOS[produtoFoto];
+      if (fotos && fotos.length > 0) {
+        const nomeProduto = produtoFoto === 'ecocompact' ? 'Eco Compact' :
+          produtoFoto === 'geladeira' ? 'Geladeira Portátil' :
+          produtoFoto === 'gerador' ? 'Gerador Digital 24V' : 'Ar Slim Série 2';
+        const links = fotos.map((img, i) => `📷 **Foto ${i+1}**: ${img}`).join('\n');
+        return res.json({ reply: `Entendi que você quer as fotos do **${nomeProduto}**. Aqui estão:\n\n${links}` });
+      }
+    }
+
     // Detecta busca de assistência técnica
     const palavrasAssistencia = [
       // Correto
@@ -1090,18 +1160,62 @@ app.post('/api/chat', async (req, res) => {
         }
       }
 
+      // Detecta pedido de listar todas as assistências
+      const pedirTodas = /cite\s*todas|lista\s*todas|mostra\s*todas|todas\s*as\s*assist|listar\s*todas/i.test(ultimaMensagem);
+      if (pedirTodas) {
+        return res.json({ reply: `Temos muitos pontos cadastrados! Para facilitar, busque por estado ou cidade. Por exemplo:\n\n• *"assistência em SP"*\n• *"assistência em MG"*\n• *"assistência em Campinas"*` });
+      }
+
       const resultado = await buscarAssistenciaTecnica(queryFinal);
 
       if (!resultado || resultado.tipo === 'nenhum' || !resultado.pontos || resultado.pontos.length === 0) {
         return res.json({ reply: `Entendi que você está buscando assistência técnica em **${queryFinal}**. Não temos nenhum ponto cadastrado para essa localidade.` });
       }
 
-      const lista = resultado.pontos.map(p =>
+      const PAGINA = 6;
+      const sessionId = req.ip || 'default';
+      const paginaKey = sessionId + '_' + queryFinal;
+
+      // Verifica se é pedido de "mais" resultados
+      const pedirMais = /mais|continua|proximo|próximo|resto|restante|seguinte|next/i.test(ultimaMensagem);
+
+      let offset = 0;
+      if (pedirMais && paginacaoAssistencia.has(paginaKey)) {
+        offset = paginacaoAssistencia.get(paginaKey).offset;
+      } else {
+        // Nova busca — reseta paginação
+        paginacaoAssistencia.set(paginaKey, { offset: 0, local: queryFinal });
+      }
+
+      const todos = resultado.pontos;
+      const pagina = todos.slice(offset, offset + PAGINA);
+      const novoOffset = offset + pagina.length;
+      const restantes = todos.length - novoOffset;
+
+      // Atualiza offset para próxima página
+      paginacaoAssistencia.set(paginaKey, { offset: novoOffset, local: queryFinal });
+
+      const lista = pagina.map(p =>
         `📍 **${p.nome}**\n📌 ${p.cidade} - ${p.estado}\n🏠 ${p.endereco}\n📞 ${p.telefone}`
       ).join('\n\n');
 
-      const intro = `Entendi que você está buscando assistência técnica em **${queryFinal}**. Encontrei ${resultado.pontos.length === 1 ? 'este ponto' : 'estes pontos'}:`;
-      return res.json({ reply: `${intro}\n\n${lista}` });
+      let intro = '';
+      if (offset === 0) {
+        intro = todos.length <= PAGINA
+          ? `Entendi que você está buscando assistência técnica em **${queryFinal}**. Encontrei ${todos.length} ponto${todos.length !== 1 ? 's' : ''}:`
+          : `Entendi que você está buscando assistência técnica em **${queryFinal}**. Encontrei ${todos.length} pontos, mostrando os primeiros ${pagina.length}:`;
+      } else {
+        intro = `Continuando... mostrando mais ${pagina.length} ponto${pagina.length !== 1 ? 's' : ''}:`;
+      }
+
+      let rodape = '';
+      if (restantes > 0) {
+        rodape = `\n\n_Ainda há **${restantes} ponto${restantes !== 1 ? 's' : ''}** restante${restantes !== 1 ? 's' : ''}. Digite **"assistência em ${queryFinal} mais"** para ver os próximos._`;
+      } else if (offset > 0) {
+        rodape = `\n\n_Esses são todos os pontos disponíveis para **${queryFinal}**._`;
+      }
+
+      return res.json({ reply: `${intro}\n\n${lista}${rodape}` });
     }
 
 
