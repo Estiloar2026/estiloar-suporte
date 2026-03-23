@@ -1037,6 +1037,40 @@ app.post('/api/chat', async (req, res) => {
       return res.json({ reply: `Para o Volvo FH, o ano faz diferença na instalação. Qual o ano do caminhão do seu cliente? 😊` });
     }
 
+    // Detecta pergunta sobre bateria e alternador — responde direto sem passar pelo modelo
+    const perguntaBateria = /bater[ia]+|alternador/i.test(ultimaMensagem);
+    if (perguntaBateria) {
+      const sobreEco = ultimaMensagem.includes('eco') || ultimaMensagem.includes('compact');
+      const sobreSlim = ultimaMensagem.includes('slim') || ultimaMensagem.includes('serie') || ultimaMensagem.includes('série');
+      const sobreAr = sobreEco || sobreSlim || ultimaMensagem.includes('ar') || ultimaMensagem.includes('condicionado');
+
+      // Verifica contexto do histórico se a mensagem for curta
+      let produto = '';
+      if (sobreEco) produto = 'Eco Compact';
+      else if (sobreSlim) produto = 'Slim Série 2';
+      else if (sobreAr || ultimaMensagem.trim().length < 20) {
+        // Busca no histórico recente
+        const historico = messages.slice(-6).map(m => (m.content||'').toLowerCase()).join(' ');
+        if (historico.includes('eco') || historico.includes('compact')) produto = 'Eco Compact';
+        else if (historico.includes('slim') || historico.includes('serie')) produto = 'Slim Série 2';
+        else produto = 'Ar-Condicionado';
+      }
+
+      if (produto) {
+        const temBateria = /bater[ia]+/i.test(ultimaMensagem);
+        const temAlternador = /alternador/i.test(ultimaMensagem);
+        let resposta = '';
+        if (temBateria && temAlternador) {
+          resposta = `Para o **${produto}**, a bateria mínima é de **150A** e o alternador mínimo é de **90A**.`;
+        } else if (temBateria) {
+          resposta = `Para o **${produto}**, a bateria mínima para instalação é de **150A**.`;
+        } else if (temAlternador) {
+          resposta = `Para o **${produto}**, o alternador mínimo para instalação é de **90A**.`;
+        }
+        if (resposta) return res.json({ reply: resposta });
+      }
+    }
+
     // Detecta pedido de foto do produto
     const produtoFoto = detectarFotoProduto(ultimaMensagem);
     if (produtoFoto) {
