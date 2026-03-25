@@ -1445,10 +1445,20 @@ app.post('/api/chat', async (req, res) => {
     // Detecta pedido de imagem técnica
     const produtoTecnico = detectarImagemTecnica(ultimaMensagem);
     if (produtoTecnico) {
+      // Casos especiais sem imagem técnica
+      if (produtoTecnico === 'geladeira-dimensoes') {
+        return res.json({ reply: `Aqui estão as dimensões e pesos da Geladeira Portátil:\n\n• **Modelo 35L:** 647 x 400 x 441mm | Peso: 16,14 kg\n• **Modelo 45L:** 647 x 400 x 506mm | Peso: 16,5 kg\n• **Modelo 55L:** 647 x 400 x 571mm | Peso: 17,2 kg${RODAPE}` });
+      }
+      if (produtoTecnico === 'geladeira-sem-modelo') {
+        return res.json({ reply: `Para te enviar a imagem técnica da geladeira, preciso saber o modelo. Por favor, refaça a solicitação informando:\n\n• **"imagem técnica da geladeira 35L"**\n• **"imagem técnica da geladeira 45L"**\n• **"imagem técnica da geladeira 55L"**` });
+      }
+      if (produtoTecnico === 'ar-sem-modelo') {
+        return res.json({ reply: `Para te enviar a imagem técnica, preciso saber o modelo. Por favor, refaça a solicitação informando:\n\n• **"imagem técnica do Slim Série 2"**\n• **"imagem técnica do Eco Compact"**` });
+      }
       const imagens = IMAGENS_TECNICAS[produtoTecnico];
       if (imagens && imagens.length > 0) {
         const nomeProduto = produtoTecnico.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
-        const links = imagens.map((img, i) => `\uD83D\uDDBC\uFE0F **Imagem ${i+1}**: ${img}`).join('\n');
+        const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
         return res.json({ reply: `Entendi que você quer as imagens técnicas de **${nomeProduto}**. Aqui estão:\n\n${links}${RODAPE}` });
       } else {
         return res.json({ reply: `Entendi que você quer imagens técnicas, mas não encontrei imagens para esse produto.${RODAPE}` });
