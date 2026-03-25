@@ -1129,7 +1129,8 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const ultimaMensagem = normalizarMensagem(mensagemOriginal);
-    const sessionId = (req.ip || 'default') + '_chat';
+    // Usa hash do histórico como sessionId estável entre requisições
+    const sessionId = 'sess_' + Buffer.from(messages.slice(0,3).map(m=>m.content||'').join('|')).toString('base64').slice(0,20);
     const RODAPE = '\n\nPosso ajudar em algo mais? 😊';
 
     // ============================================================
