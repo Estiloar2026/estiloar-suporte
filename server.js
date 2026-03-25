@@ -122,7 +122,29 @@ let indiceDrive = [];
 let ultimaAtualizacao = null;
 
 // Paginação de assistência técnica por sessão
-const paginacaoAssistencia = new Map(); // sessionId -> { pontos, offset, local }
+const paginacaoAssistencia = new Map();
+
+// Sistema de contexto persistente entre mensagens
+const contextosPendentes = new Map(); // sessionId -> { acao, dados, timestamp }
+
+function salvarContexto(sessionId, acao, dados) {
+  contextosPendentes.set(sessionId, { acao, dados, timestamp: Date.now() });
+}
+
+function obterContexto(sessionId) {
+  const ctx = contextosPendentes.get(sessionId);
+  if (!ctx) return null;
+  // Expira após 2 minutos de inatividade
+  if (Date.now() - ctx.timestamp > 2 * 60 * 1000) {
+    contextosPendentes.delete(sessionId);
+    return null;
+  }
+  return ctx;
+}
+
+function limparContexto(sessionId) {
+  contextosPendentes.delete(sessionId);
+} // sessionId -> { pontos, offset, local }
 
 // Mapeamento de modelos para marcas
 const MODELOS_MARCAS = {
@@ -1107,6 +1129,100 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const ultimaMensagem = normalizarMensagem(mensagemOriginal);
+    const sessionId = (req.ip || 'default') + '_chat';
+    const RODAPE = '\n\nPosso ajudar em algo mais? 😊';
+
+    // ============================================================
+    // SISTEMA DE CONTEXTO PERSISTENTE — verifica ação pendente
+    // ============================================================
+    const ctxPendente = obterContexto(sessionId);
+    if (ctxPendente) {
+      const { acao, dados } = ctxPendente;
+      const m = ultimaMensagem;
+      let respondeuContexto = false;
+      let respostaPendente = null;
+
+      // Contexto: perguntou modelo do ar (imagem técnica ou foto)
+      if (acao === 'perguntou_modelo_ar') {
+        const ehSlim = m.includes('slim') || m.includes('serie 2') || m.includes('serie2');
+        const ehEco = m.includes('eco') || m.includes('compact');
+        if (ehSlim || ehEco) {
+          respondeuContexto = true;
+          const produto = ehEco ? 'ecocompact' : 'ar';
+          const nome = ehEco ? 'Eco Compact' : 'Slim Série 2';
+          if (dados.tipo === 'imagem') {
+            const imagens = IMAGENS_TECNICAS[produto];
+            const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
+            respostaPendente = `Aqui estão as imagens técnicas do **${nome}**:\n\n${links}${RODAPE}`;
+          } else if (dados.tipo === 'foto') {
+            const fotos = FOTOS_PRODUTOS[produto];
+            const links = fotos.map((img, i) => `📷 **Foto ${i+1}**: ${img}`).join('\n');
+            respostaPendente = `Aqui estão as fotos do **${nome}**:\n\n${links}${RODAPE}`;
+          }
+        }
+      }
+
+      // Contexto: perguntou modelo da geladeira
+      else if (acao === 'perguntou_modelo_geladeira') {
+        const eh35 = m.includes('35');
+        const eh45 = m.includes('45');
+        const eh55 = m.includes('55');
+        if (eh35 || eh45 || eh55) {
+          respondeuContexto = true;
+          const modelo = eh35 ? 'geladeira-35l' : eh45 ? 'geladeira-45l' : 'geladeira-55l';
+          const nomeModelo = eh35 ? '35L' : eh45 ? '45L' : '55L';
+          if (dados.tipo === 'imagem') {
+            const imagens = IMAGENS_TECNICAS[modelo];
+            const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
+            respostaPendente = `Aqui estão as imagens técnicas da **Geladeira ${nomeModelo}**:\n\n${links}${RODAPE}`;
+          } else if (dados.tipo === 'foto') {
+            const fotos = FOTOS_PRODUTOS['geladeira'];
+            const links = fotos.map((img, i) => `📷 **Foto ${i+1}**: ${img}`).join('\n');
+            respostaPendente = `Aqui estão as fotos da **Geladeira Portátil**:\n\n${links}${RODAPE}`;
+          }
+        }
+      }
+
+      // Contexto: perguntou cidade para assistência técnica
+      else if (acao === 'perguntou_cidade_assistencia') {
+        const queryFinal = ultimaMensagem.replace(/[?!.,;:]/g, '').trim();
+        if (queryFinal.length > 1) {
+          respondeuContexto = true;
+          limparContexto(sessionId);
+          const resultado = await buscarAssistenciaTecnica(queryFinal);
+          if (!resultado || resultado.tipo === 'nenhum' || !resultado.pontos || resultado.pontos.length === 0) {
+            return res.json({ reply: `Não temos assistência técnica cadastrada em **${queryFinal}**.${RODAPE}` });
+          }
+          const lista = resultado.pontos.map(p =>
+            `📍 **${p.nome}**\n📌 ${p.cidade} - ${p.estado}\n🏠 ${p.endereco}\n📞 ${p.telefone}`
+          ).join('\n\n');
+          return res.json({ reply: `Encontrei pontos de assistência em **${queryFinal}**:\n\n${lista}${RODAPE}` });
+        }
+      }
+
+      // Contexto: perguntou marca para depoimento
+      else if (acao === 'perguntou_marca_depoimento') {
+        if (m.length > 1) {
+          respondeuContexto = true;
+          limparContexto(sessionId);
+          const resultados = buscarNoIndice(ultimaMensagem);
+          if (resultados && resultados.length > 0) {
+            const aviso = resultados._aviso || `Encontrei ${resultados.length} pasta(s) no Drive:`;
+            const links = resultados.map(r => `📁 **${r.marcaNome} — ${r.modeloNome}**: ${r.link}`).join('\n');
+            return res.json({ reply: `${aviso}\n\n${links}${RODAPE}` });
+          } else {
+            return res.json({ reply: `Não encontrei depoimentos para essa marca ou modelo.${RODAPE}` });
+          }
+        }
+      }
+
+      if (respondeuContexto) {
+        limparContexto(sessionId);
+        if (respostaPendente) return res.json({ reply: respostaPendente });
+      } else {
+        limparContexto(sessionId); // mudou de assunto — limpa contexto
+      }
+    }
 
     // Verifica se em qualquer parte do histórico da conversa há menção ao FH
     const historicoCompleto = messages.map(m => (m.content || '').toLowerCase()).join(' ');
@@ -1247,7 +1363,7 @@ app.post('/api/chat', async (req, res) => {
           produtoFoto === 'geladeira' ? 'Geladeira Portátil' :
           produtoFoto === 'gerador' ? 'Gerador Digital 24V' : 'Ar Slim Série 2';
         const links = fotos.map((img, i) => `📷 **Foto ${i+1}**: ${img}`).join('\n');
-        return res.json({ reply: `Entendi que você quer as fotos do **${nomeProduto}**. Aqui estão:\n\n${links}` });
+        return res.json({ reply: `Entendi que você quer as fotos do **${nomeProduto}**. Aqui estão:\n\n${links}${RODAPE}` });
       }
     }
 
@@ -1434,9 +1550,9 @@ app.post('/api/chat', async (req, res) => {
       if (imagens && imagens.length > 0) {
         const nomeProduto = produtoTecnico.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
         const links = imagens.map((img, i) => `\uD83D\uDDBC\uFE0F **Imagem ${i+1}**: ${img}`).join('\n');
-        return res.json({ reply: `Entendi que você quer as imagens técnicas de **${nomeProduto}**. Aqui estão:\n\n${links}` });
+        return res.json({ reply: `Entendi que você quer as imagens técnicas de **${nomeProduto}**. Aqui estão:\n\n${links}${RODAPE}` });
       } else {
-        return res.json({ reply: `Entendi que você quer imagens técnicas, mas não encontrei imagens para esse produto.` });
+        return res.json({ reply: `Entendi que você quer imagens técnicas, mas não encontrei imagens para esse produto.${RODAPE}` });
       }
     }
 
