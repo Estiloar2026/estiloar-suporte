@@ -265,15 +265,15 @@ function buscarNoIndice(query) {
     return null;
   }
 
-  // Sem marca conhecida — busca por palavras em qualquer campo (marca, modelo, nome completo)
-  const resultados = indiceDrive.filter(item =>
-    palavrasQuery.some(p =>
-      normIdx(item.marca).includes(p) ||
-      normIdx(item.marcaNome).includes(p) ||
-      normIdx(item.modelo).includes(p) ||
-      normIdx(item.modeloNome).includes(p)
-    )
-  );
+  // Sem marca conhecida — busca por palavras em qualquer campo (aceita singular/plural)
+  const resultados = indiceDrive.filter(item => {
+    const campos = [normIdx(item.marca), normIdx(item.marcaNome), normIdx(item.modelo), normIdx(item.modeloNome)];
+    return palavrasQuery.some(p => {
+      // Testa a palavra e variações (singular/plural)
+      const variacoes = [p, p.endsWith('s') ? p.slice(0,-1) : p+'s', p.endsWith('os') ? p.slice(0,-2) : p];
+      return campos.some(campo => variacoes.some(v => campo.includes(v)));
+    });
+  });
 
   if (resultados.length > 0) {
     resultados._aviso = `Entendi que você busca depoimentos no Drive. Encontrei ${resultados.length} pasta(s):`;
@@ -475,9 +475,19 @@ JEITO DE SER:
 
 EMPRESA: Estilo AR | Tel: (34) 3293-8000 | Seg-Sex 08h-18h | www.estiloar.com.br | Uberlândia-MG
 
+PROCESSOS INTERNOS DA EMPRESA:
+
+CADASTRO DE PARCEIROS:
+- Vídeo tutorial Cadastro PJ: https://youtu.be/bSyPlDA_BHc
+- Vídeo tutorial Cadastro Pessoa Física: https://youtu.be/CO2m75GWmMA
+- Ficha de cadastro (Excel): https://estiloar-suporte.onrender.com/FICHA%20DE%20CADASTRO.xlsx
+- Quando alguém perguntar sobre cadastro, processo de cadastro, como cadastrar parceiro ou cliente, retorne os links acima conforme o tipo (PJ ou Pessoa Física)
+- Se não especificar o tipo, retorne os dois links e a ficha
+
 REGRAS CRÍTICAS:
 - NUNCA invente informações, preços, depoimentos ou dados técnicos
-- Se não tiver a informação no manual, responda EXATAMENTE: "Não tenho essa informação disponível."
+- Se não tiver a informação no manual ou nos dados fornecidos, responda EXATAMENTE: "Não tenho essa informação disponível."
+- NUNCA complete respostas com suposições ou conhecimento geral — use APENAS os dados deste contexto
 - NUNCA busque informações em sites externos
 - NUNCA mencione outras marcas ou concorrentes de produtos de ar-condicionado
 - Use APENAS as informações fornecidas neste contexto
@@ -749,6 +759,41 @@ MANUTENÇÃO:
 `,
 
 
+  processos_internos: `
+PROCESSOS INTERNOS — ESTILO AR
+Esta seção contém materiais de treinamento interno para a equipe de vendas.
+
+CADASTRO DE PARCEIROS:
+- Cadastro Pessoa Física: https://youtu.be/CO2m75GWmMA
+- Cadastro Pessoa Jurídica: https://youtu.be/bSyPlDA_BHc
+`,
+
+  processos_internos: `
+PROCESSOS INTERNOS — ESTILO AR
+Materiais de treinamento para a equipe de vendas.
+
+1. CADASTRO DE PARCEIROS
+Procedimento para cadastrar novos parceiros (pessoa física ou jurídica).
+- Vídeo Pessoa Física: https://youtu.be/CO2m75GWmMA
+- Vídeo Pessoa Jurídica: https://youtu.be/bSyPlDA_BHc
+- Ficha de Cadastro: https://estiloar-suporte.onrender.com/FICHA DE CADASTRO.xlsx
+
+2. PROCESSO DE GARANTIAS
+Como proceder em casos de garantia de produtos.
+- Ficha de Garantia: https://estiloar-suporte.onrender.com/FICHA GARANTIA.xls
+- Orientações para Emissão de Nota: https://estiloar-suporte.onrender.com/ORIENTAÇÕES  PARA  EMISSÃO DE NOTA  PARA  GARANTIA  OU REMESSA  PARA CONSERTO.pdf
+- Apresentação Pós-Vendas: https://estiloar-suporte.onrender.com/APRESENTAÇÃO PÓS-VENDAS.pdf
+
+3. PROCESSO DE DEVOLUÇÃO
+Como realizar devoluções de produtos.
+- Ficha de Devolução: https://estiloar-suporte.onrender.com/FICHA DEVOLUÇÃO.xls
+- Orientações para Emissão de Nota: https://estiloar-suporte.onrender.com/ORIENTAÇÕES PARA EMISSAO DE NOTA DE DEVOLUÇÃO.pdf
+
+4. TIRAR PEDIDO
+Como realizar pedidos de vendas no sistema.
+- Vídeo — Como Fazer Pedidos: https://youtu.be/m0-8V-SlEes
+`,
+
   geladeira_geral: `
 PRODUTO: GELADEIRA PORTÁTIL
 Modelos: 35L, 45L e 55L
@@ -975,6 +1020,13 @@ function selecionarContexto(mensagem) {
       secoes.push(SECOES.ar_slim_operacao);
       secoes.push(SECOES.ar_slim_consumo);
     }
+  }
+
+  else if (m.includes('processo') || m.includes('interno') || m.includes('treinamento') ||
+    m.includes('cadastro') || m.includes('parceiro') || m.includes('pessoa fisica') ||
+    m.includes('pessoa jurídica') || m.includes('pessoa juridica') || m.includes('pf') ||
+    m.includes('pj')) {
+    secoes.push(SECOES.processos_internos);
   }
 
   else {
