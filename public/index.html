@@ -15,60 +15,28 @@
   body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--navy); }
 
   /* LOGIN */
-  #loginScreen {
-    position: fixed; inset: 0; background: linear-gradient(135deg, var(--navy), #0d2d5e);
-    display: flex; align-items: center; justify-content: center; z-index: 9999;
-  }
-  .login-box {
-    background: white; border-radius: 16px; padding: 48px 40px;
-    width: 100%; max-width: 400px; text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  }
+  #loginScreen { position: fixed; inset: 0; background: linear-gradient(135deg, var(--navy), #0d2d5e); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+  .login-box { background: white; border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
   .login-logo { height: 44px; margin-bottom: 28px; }
   .login-title { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 900; text-transform: uppercase; color: var(--navy); margin-bottom: 6px; }
   .login-sub { font-size: 13px; color: var(--gray); margin-bottom: 28px; }
-  .login-input {
-    width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
-    padding: 12px 16px; font-size: 14px; font-family: 'Inter', sans-serif;
-    color: var(--navy); outline: none; margin-bottom: 14px;
-    transition: border-color 0.2s;
-  }
+  .login-input { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 16px; font-size: 14px; font-family: 'Inter', sans-serif; color: var(--navy); outline: none; margin-bottom: 14px; transition: border-color 0.2s; }
   .login-input:focus { border-color: var(--sky); }
-  .login-btn {
-    width: 100%; padding: 13px; background: var(--navy); color: white;
-    border: none; border-radius: 10px; font-size: 14px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
-    font-family: 'Inter', sans-serif; transition: all 0.2s;
-  }
+  .login-btn { width: 100%; padding: 13px; background: var(--navy); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
   .login-btn:hover { background: var(--blue); }
   .login-error { color: #e53e3e; font-size: 13px; margin-top: 10px; display: none; }
 
   /* HEADER */
-  header {
-    background: var(--navy); padding: 0 40px;
-    display: flex; align-items: center; justify-content: space-between;
-    height: 70px; position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 24px rgba(10,30,61,0.4);
-    border-bottom: 2px solid var(--sky);
-  }
+  header { background: var(--navy); padding: 0 40px; display: flex; align-items: center; justify-content: space-between; height: 70px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 24px rgba(10,30,61,0.4); border-bottom: 2px solid var(--sky); }
   .logo img { height: 38px; width: auto; }
   .header-right { display: flex; align-items: center; gap: 20px; }
   .header-contact { color: rgba(255,255,255,0.6); font-size: 13px; font-weight: 500; }
   .header-contact strong { color: var(--sky); }
-  .logout-btn {
-    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-    color: white; font-size: 12px; font-weight: 600; padding: 6px 14px;
-    border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif;
-    transition: all 0.2s;
-  }
+  .logout-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
   .logout-btn:hover { background: rgba(255,255,255,0.2); }
 
   /* HERO */
-  .hero {
-    background: linear-gradient(135deg, var(--navy) 0%, #0d2d5e 50%, #1a4a8a 100%);
-    color: white; padding: 64px 40px 52px; text-align: center;
-    position: relative; overflow: hidden;
-  }
+  .hero { background: linear-gradient(135deg, var(--navy) 0%, #0d2d5e 50%, #1a4a8a 100%); color: white; padding: 64px 40px 52px; text-align: center; position: relative; overflow: hidden; }
   .hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 70% 50%, rgba(77,184,232,0.12) 0%, transparent 60%); }
   .hero::after { content:''; position:absolute; inset:0; background:url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='40' cy='40' r='1.5' fill='%234db8e8' fill-opacity='0.08'/%3E%3C/svg%3E"); }
   .hero-badge { position:relative; z-index:1; display:inline-flex; align-items:center; gap:6px; background:rgba(77,184,232,0.15); border:1px solid rgba(77,184,232,0.35); color:var(--sky); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:2px; padding:6px 16px; border-radius:20px; margin-bottom:20px; }
@@ -78,14 +46,17 @@
   .hero-btn { position:relative; z-index:1; display:inline-flex; align-items:center; gap:8px; background:var(--sky); color:var(--navy); font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:1px; padding:14px 28px; border-radius:8px; border:none; cursor:pointer; transition:all 0.2s; font-family:'Inter',sans-serif; box-shadow:0 4px 20px rgba(77,184,232,0.4); }
   .hero-btn:hover { background:white; transform:translateY(-2px); }
 
+  /* AVISO DO ASSISTENTE */
+  .aviso-assistente { background: rgba(77,184,232,0.08); border: 1px solid rgba(77,184,232,0.25); border-radius: 10px; padding: 12px 20px; max-width: 700px; margin: 0 auto; position: relative; z-index: 1; }
+  .aviso-assistente p { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+  .aviso-assistente strong { color: var(--sky); }
+
   /* PRODUTOS */
   .produtos-section { max-width:1140px; margin:0 auto; padding:60px 24px 0; }
   .section-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:3px; color:var(--sky); margin-bottom:8px; }
   .section-title { font-family:'Montserrat',sans-serif; font-size:30px; font-weight:900; text-transform:uppercase; color:var(--navy); margin-bottom:8px; }
   .section-desc { font-size:14px; color:var(--gray); max-width:520px; line-height:1.7; margin-bottom:40px; }
-
   .produtos-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; }
-
   .produto-card { background:white; border-radius:16px; border:1px solid var(--border); overflow:hidden; transition:all 0.3s; box-shadow:0 4px 16px rgba(10,30,61,0.06); display:flex; flex-direction:column; }
   .produto-card:hover { transform:translateY(-6px); box-shadow:0 16px 40px rgba(10,30,61,0.14); border-color:var(--sky); }
 
@@ -103,7 +74,6 @@
   .carrossel-dots { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); z-index:3; display:flex; gap:5px; }
   .carrossel-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.5); cursor:pointer; transition:all 0.2s; }
   .carrossel-dot.active { background:white; transform:scale(1.2); }
-
   .produto-body { padding:18px; flex:1; display:flex; flex-direction:column; }
   .produto-nome { font-family:'Montserrat',sans-serif; font-size:15px; font-weight:900; text-transform:uppercase; color:var(--navy); margin-bottom:8px; line-height:1.25; }
   .produto-desc { font-size:12px; color:var(--gray); line-height:1.65; flex:1; margin-bottom:14px; }
@@ -112,19 +82,42 @@
   .produto-btn { width:100%; padding:10px; background:var(--navy); color:white; border:none; border-radius:10px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:6px; }
   .produto-btn:hover { background:var(--blue); }
 
-  /* MAIN */
-  .main { max-width:1140px; margin:0 auto; padding:44px 24px 56px; display:grid; grid-template-columns:1fr 410px; gap:32px; align-items:start; }
+  /* GUIA RÁPIDO */
+  .guia-section { background: var(--navy); padding: 56px 24px; margin-top: 48px; }
+  .guia-container { max-width: 1140px; margin: 0 auto; }
+  .guia-header { text-align: center; margin-bottom: 40px; }
+  .guia-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(77,184,232,0.15); border: 1px solid rgba(77,184,232,0.35); color: var(--sky); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; padding: 6px 16px; border-radius: 20px; margin-bottom: 14px; }
+  .guia-title { font-family: 'Montserrat', sans-serif; font-size: 28px; font-weight: 900; text-transform: uppercase; color: white; margin-bottom: 8px; }
+  .guia-aviso { font-size: 12px; color: rgba(255,255,255,0.45); background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.25); border-radius: 8px; padding: 8px 16px; display: inline-block; margin-top: 8px; }
+  .guia-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .guia-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(77,184,232,0.2); border-radius: 14px; padding: 22px; transition: all 0.25s; }
+  .guia-card:hover { background: rgba(255,255,255,0.08); border-color: rgba(77,184,232,0.5); transform: translateY(-2px); }
+  .guia-card-icon { font-size: 28px; margin-bottom: 10px; }
+  .guia-card-titulo { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 800; text-transform: uppercase; color: white; margin-bottom: 8px; letter-spacing: 0.5px; }
+  .guia-card-desc { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.6; margin-bottom: 14px; }
+  .guia-exemplo-box { margin-top: 14px; background: rgba(77,184,232,0.08); border-left: 3px solid var(--sky); border-radius: 0 8px 8px 0; padding: 10px 12px; }
+  .guia-label { display: block; font-size: 10px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .guia-exemplo { font-size: 12px; color: var(--sky); font-style: italic; }
+  .guia-card strong { color: var(--sky); font-weight: 600; }
 
-  .info-card { background:white; border-radius:16px; border:1px solid var(--border); padding:30px; box-shadow:0 4px 16px rgba(10,30,61,0.06); }
-  .info-title { font-family:'Montserrat',sans-serif; font-size:17px; font-weight:900; text-transform:uppercase; color:var(--navy); margin-bottom:20px; padding-bottom:14px; border-bottom:2px solid var(--sky); display:flex; align-items:center; gap:8px; }
-  .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  .info-item { background:var(--bg); border-radius:10px; padding:16px; border:1px solid var(--border); transition:border-color 0.2s; }
-  .info-item:hover { border-color:var(--sky); }
-  .info-item-icon { font-size:20px; margin-bottom:8px; }
-  .info-item-label { font-size:10px; color:var(--gray); text-transform:uppercase; letter-spacing:1px; font-weight:600; margin-bottom:4px; }
-  .info-item-value { font-size:13px; font-weight:700; color:var(--navy); }
+  /* PROCESSOS INTERNOS */
+  .processos-section { max-width: 1140px; margin: 0 auto; padding: 56px 24px; }
+  .processos-title { font-family: 'Montserrat', sans-serif; font-size: 30px; font-weight: 900; text-transform: uppercase; color: var(--navy); margin-bottom: 8px; }
+  .processos-desc { font-size: 14px; color: var(--gray); line-height: 1.7; margin-bottom: 40px; }
+  .processos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .processo-card { background: white; border-radius: 16px; border: 1px solid var(--border); padding: 28px; box-shadow: 0 4px 16px rgba(10,30,61,0.06); transition: all 0.3s; }
+  .processo-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(10,30,61,0.12); border-color: var(--sky); }
+  .processo-num { width: 32px; height: 32px; background: var(--navy); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; margin-bottom: 14px; }
+  .processo-nome { font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 900; text-transform: uppercase; color: var(--navy); margin-bottom: 8px; }
+  .processo-desc { font-size: 13px; color: var(--gray); line-height: 1.65; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .processo-materiais { display: flex; flex-direction: column; gap: 8px; }
+  .processo-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--navy); text-decoration: none; padding: 8px 12px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); transition: all 0.2s; }
+  .processo-item:hover { background: var(--light); border-color: var(--sky); color: var(--blue); }
+  .processo-item-icon { font-size: 16px; flex-shrink: 0; }
+  .processo-item-text { flex: 1; font-weight: 600; }
 
   /* CHAT */
+  .main { max-width:1140px; margin:0 auto; padding:44px 24px 56px; display:grid; grid-template-columns:1fr 410px; gap:32px; align-items:start; }
   .chat-container { position:sticky; top:90px; height:calc(100vh - 120px); display:flex; flex-direction:column; background:white; border-radius:16px; border:1px solid var(--border); box-shadow:0 4px 24px rgba(10,30,61,0.1); overflow:hidden; }
   .chat-header { background:linear-gradient(135deg,var(--navy),#0d2d5e); padding:18px 20px; display:flex; align-items:center; gap:12px; flex-shrink:0; border-bottom:2px solid var(--sky); }
   .chat-avatar { width:42px; height:42px; background:linear-gradient(135deg,var(--sky),var(--blue)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; }
@@ -132,11 +125,9 @@
   .chat-header-status { color:rgba(255,255,255,0.55); font-size:12px; display:flex; align-items:center; gap:4px; margin-top:2px; }
   .status-dot { width:7px; height:7px; background:#22c55e; border-radius:50%; animation:pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
-
   .chat-messages { flex:1; overflow-y:auto; padding:18px 14px; display:flex; flex-direction:column; gap:12px; background:var(--chat-bg); scroll-behavior:smooth; }
   .chat-messages::-webkit-scrollbar { width:4px; }
   .chat-messages::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-
   .msg { display:flex; align-items:flex-end; gap:8px; animation:msgIn 0.3s ease; }
   @keyframes msgIn { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
   .msg.user { flex-direction:row-reverse; }
@@ -149,12 +140,11 @@
   .bubble strong { font-weight:700; }
   .bubble ul { padding-left:16px; margin-top:5px; }
   .bubble li { margin-bottom:3px; }
-
   .typing-indicator { display:flex; align-items:center; gap:4px; padding:11px 14px; background:white; border:1px solid var(--border); border-radius:16px; border-bottom-left-radius:4px; width:fit-content; }
   .dot { width:7px; height:7px; background:var(--gray); border-radius:50%; animation:bounce 1.2s infinite; }
   .dot:nth-child(2){animation-delay:0.2s}.dot:nth-child(3){animation-delay:0.4s}
   @keyframes bounce { 0%,60%,100%{transform:translateY(0);opacity:0.5}30%{transform:translateY(-6px);opacity:1} }
-
+  .chat-info { padding: 10px 14px; background: rgba(77,184,232,0.06); border-bottom: 1px solid var(--border); font-size: 11px; color: var(--gray); text-align: center; flex-shrink: 0; }
   .chat-input-area { padding:12px 14px; border-top:1px solid var(--border); display:flex; gap:8px; align-items:flex-end; background:white; flex-shrink:0; }
   .chat-input { flex:1; border:1.5px solid var(--border); border-radius:20px; padding:10px 16px; font-size:13px; font-family:'Inter',sans-serif; color:var(--navy); resize:none; outline:none; transition:border-color 0.2s; max-height:90px; min-height:40px; line-height:1.4; }
   .chat-input:focus { border-color:var(--sky); box-shadow:0 0 0 3px rgba(77,184,232,0.15); }
@@ -168,106 +158,13 @@
   .contact-icon { width:38px; height:38px; background:rgba(77,184,232,0.12); border:1px solid rgba(77,184,232,0.25); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; }
   .contact-label { font-size:10px; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:1px; font-weight:600; }
   .contact-value { font-weight:700; color:white; font-size:14px; }
-
   footer { background:#060f20; color:rgba(255,255,255,0.3); text-align:center; font-size:12px; padding:20px 16px; display:flex; flex-direction:column; align-items:center; gap:8px; }
   footer img { height:28px; width:auto; opacity:0.5; }
   footer a { color:var(--sky); text-decoration:none; }
 
-  @media(max-width:1100px) { .produtos-grid { grid-template-columns:repeat(2,1fr); } }
+  @media(max-width:1100px) { .produtos-grid { grid-template-columns:repeat(2,1fr); } .processos-grid { grid-template-columns:1fr; } }
   @media(max-width:900px) { .main { grid-template-columns:1fr; } .chat-container { position:static; height:580px; } header { padding:0 20px; } .hero { padding:52px 20px 44px; } }
-  @media(max-width:600px) { .produtos-grid { grid-template-columns:1fr; } .info-grid { grid-template-columns:1fr; } }
-
-  /* GUIA RÁPIDO */
-  .guia-section {
-    background: var(--navy);
-    padding: 56px 24px;
-    margin-top: 48px;
-  }
-
-  .guia-container { max-width: 1140px; margin: 0 auto; }
-
-  .guia-header { text-align: center; margin-bottom: 40px; }
-
-  .guia-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(77,184,232,0.15); border: 1px solid rgba(77,184,232,0.35);
-    color: var(--sky); font-size: 11px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 2px;
-    padding: 6px 16px; border-radius: 20px; margin-bottom: 14px;
-  }
-
-  .guia-title {
-    font-family: 'Montserrat', sans-serif; font-size: 28px;
-    font-weight: 900; text-transform: uppercase; color: white;
-    margin-bottom: 8px;
-  }
-
-  .guia-sub { font-size: 14px; color: rgba(255,255,255,0.5); }
-
-  .guia-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-  }
-
-  .guia-card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(77,184,232,0.2);
-    border-radius: 14px; padding: 22px;
-    transition: all 0.25s;
-  }
-
-  .guia-card:hover {
-    background: rgba(255,255,255,0.08);
-    border-color: rgba(77,184,232,0.5);
-    transform: translateY(-2px);
-  }
-
-  .guia-card-icon { font-size: 28px; margin-bottom: 10px; }
-
-  .guia-card-titulo {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 14px; font-weight: 800;
-    text-transform: uppercase; color: white;
-    margin-bottom: 8px; letter-spacing: 0.5px;
-  }
-
-  .guia-card-desc {
-    font-size: 12px; color: rgba(255,255,255,0.5);
-    line-height: 1.6; margin-bottom: 14px;
-  }
-
-  .guia-exemplo-box {
-    margin-top: 14px;
-    background: rgba(77,184,232,0.08);
-    border-left: 3px solid var(--sky);
-    border-radius: 0 8px 8px 0;
-    padding: 10px 12px;
-  }
-
-  .guia-label {
-    display: block;
-    font-size: 10px;
-    color: rgba(255,255,255,0.35);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 3px;
-  }
-
-  .guia-exemplo {
-    font-size: 12px;
-    color: var(--sky);
-    font-style: italic;
-  }
-
-  .guia-card strong {
-    color: var(--sky);
-    font-weight: 600;
-  }
-
-  @media(max-width:900px) { .guia-grid { grid-template-columns: 1fr 1fr; } }
-  @media(max-width:600px) { .guia-grid { grid-template-columns: 1fr; } }
-
+  @media(max-width:600px) { .produtos-grid { grid-template-columns:1fr; } .guia-grid { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -299,6 +196,11 @@
   <h1>Bem-vindo à<br><span>Estilo AR</span></h1>
   <p>Fale com nosso assistente ou entre em contato pelo telefone.</p>
   <button class="hero-btn" onclick="document.querySelector('.chat-input').focus()">💬 Falar com o Assistente</button>
+  <div style="margin-top:20px;">
+    <div class="aviso-assistente">
+      <p>⚠️ <strong>Importante:</strong> O assistente responde apenas com base nos dados internos da Estilo AR — produtos, processos, preços e materiais cadastrados. Ele não realiza buscas na internet.</p>
+    </div>
+  </div>
 </section>
 
 <section class="produtos-section">
@@ -308,40 +210,37 @@
 
   <div class="produtos-grid">
 
-    <!-- AR-CONDICIONADO -->
+    <!-- AR SLIM SÉRIE 2 -->
     <div class="produto-card">
-      <div class="carrossel" data-index="0" data-auto="true">
+      <div class="carrossel" data-index="0">
         <div class="carrossel-slides">
-          <div class="carrossel-slide"><img src="/ar.png" alt="Ar-Condicionado"><div class="carrossel-overlay"></div></div>
-          <div class="carrossel-slide"><img src="/ar-1.png" alt="Ar-Condicionado 2"><div class="carrossel-overlay"></div></div>
-          <div class="carrossel-slide"><img src="/ar-2.png" alt="Ar-Condicionado 3"><div class="carrossel-overlay"></div></div>
-          <div class="carrossel-slide"><img src="/ar-3.png" alt="Ar-Condicionado 4"><div class="carrossel-overlay"></div></div>
+          <div class="carrossel-slide"><img src="/ar.png" alt="Ar Slim Série 2"><div class="carrossel-overlay"></div></div>
+          <div class="carrossel-slide"><img src="/ar-1.png" alt="Ar Slim 2"><div class="carrossel-overlay"></div></div>
+          <div class="carrossel-slide"><img src="/ar-2.png" alt="Ar Slim 3"><div class="carrossel-overlay"></div></div>
+          <div class="carrossel-slide"><img src="/ar-3.png" alt="Ar Slim 4"><div class="carrossel-overlay"></div></div>
         </div>
         <span class="carrossel-tag">12V / 24V</span>
         <button class="carrossel-btn prev" onclick="moverCarrossel(this,-1)">‹</button>
         <button class="carrossel-btn next" onclick="moverCarrossel(this,1)">›</button>
         <div class="carrossel-dots">
-          <div class="carrossel-dot active"></div>
-          <div class="carrossel-dot"></div>
-          <div class="carrossel-dot"></div>
-          <div class="carrossel-dot"></div>
+          <div class="carrossel-dot active"></div><div class="carrossel-dot"></div><div class="carrossel-dot"></div><div class="carrossel-dot"></div>
         </div>
       </div>
       <div class="produto-body">
-        <div class="produto-nome">Ar-Condicionado<br>100% Elétrico</div>
+        <div class="produto-nome">Ar-Condicionado<br>Slim Série 2</div>
         <p class="produto-desc">Climatização para cabines de veículos com múltiplos modos de operação e proteção inteligente de bateria.</p>
         <div class="produto-specs">
-          <span class="spec-tag">7.750 BTUs (24V)</span>
-          <span class="spec-tag">7.000 BTUs (12V)</span>
+          <span class="spec-tag">9.500 BTUs</span>
+          <span class="spec-tag">12V / 24V</span>
           <span class="spec-tag">Gás R134a</span>
         </div>
-        <button class="produto-btn" onclick="askProduct('ar-condicionado elétrico')">💬 Tenho uma dúvida</button>
+        <button class="produto-btn" onclick="askProduct('ar-condicionado slim série 2')">💬 Tenho uma dúvida</button>
       </div>
     </div>
 
     <!-- ECO COMPACT -->
     <div class="produto-card">
-      <div class="carrossel" data-index="0" data-auto="true">
+      <div class="carrossel" data-index="0">
         <div class="carrossel-slides">
           <div class="carrossel-slide"><img src="/ecocompact.png" alt="Eco Compact"><div class="carrossel-overlay"></div></div>
           <div class="carrossel-slide"><img src="/ecocompact-1.png" alt="Eco Compact 2"><div class="carrossel-overlay"></div></div>
@@ -353,19 +252,16 @@
         <button class="carrossel-btn prev" onclick="moverCarrossel(this,-1)">‹</button>
         <button class="carrossel-btn next" onclick="moverCarrossel(this,1)">›</button>
         <div class="carrossel-dots">
-          <div class="carrossel-dot active"></div>
-          <div class="carrossel-dot"></div>
-          <div class="carrossel-dot"></div>
-          <div class="carrossel-dot"></div>
-          <div class="carrossel-dot"></div>
+          <div class="carrossel-dot active"></div><div class="carrossel-dot"></div><div class="carrossel-dot"></div><div class="carrossel-dot"></div><div class="carrossel-dot"></div>
         </div>
       </div>
       <div class="produto-body">
         <div class="produto-nome">Ar-Condicionado<br>Eco Compact</div>
         <p class="produto-desc">Solução compacta e eficiente para climatização de veículos. Design moderno com alta performance energética.</p>
         <div class="produto-specs">
-          <span class="spec-tag">Eco Compact</span>
-          <span class="spec-tag">Alta Eficiência</span>
+          <span class="spec-tag">8.500 BTUs</span>
+          <span class="spec-tag">12V / 24V</span>
+          <span class="spec-tag">Gás R134a</span>
         </div>
         <button class="produto-btn" onclick="askProduct('ar-condicionado eco compact')">💬 Tenho uma dúvida</button>
       </div>
@@ -373,7 +269,7 @@
 
     <!-- GELADEIRA -->
     <div class="produto-card">
-      <div class="carrossel" data-index="0" data-auto="true">
+      <div class="carrossel" data-index="0">
         <div class="carrossel-slides">
           <div class="carrossel-slide"><img src="/geladeira.png" alt="Geladeira"><div class="carrossel-overlay"></div></div>
           <div class="carrossel-slide"><img src="/geladeira-1.png" alt="Geladeira 2"><div class="carrossel-overlay"></div></div>
@@ -385,11 +281,7 @@
         <button class="carrossel-btn prev" onclick="moverCarrossel(this,-1)">‹</button>
         <button class="carrossel-btn next" onclick="moverCarrossel(this,1)">›</button>
         <div class="carrossel-dots">
-          <div class="carrossel-dot active"></div>
-          <div class="carrossel-dot"></div>
-          <div class="carrossel-dot"></div>
-          <div class="carrossel-dot"></div>
-          <div class="carrossel-dot"></div>
+          <div class="carrossel-dot active"></div><div class="carrossel-dot"></div><div class="carrossel-dot"></div><div class="carrossel-dot"></div><div class="carrossel-dot"></div>
         </div>
       </div>
       <div class="produto-body">
@@ -406,7 +298,7 @@
 
     <!-- GERADOR -->
     <div class="produto-card">
-      <div class="carrossel" data-index="0" data-auto="true">
+      <div class="carrossel" data-index="0">
         <div class="carrossel-slides">
           <div class="carrossel-slide"><img src="/gerador.png" alt="Gerador"><div class="carrossel-overlay"></div></div>
           <div class="carrossel-slide"><img src="/gerador-1.png" alt="Gerador 2"><div class="carrossel-overlay"></div></div>
@@ -418,11 +310,7 @@
         <button class="carrossel-btn prev" onclick="moverCarrossel(this,-1)">‹</button>
         <button class="carrossel-btn next" onclick="moverCarrossel(this,1)">›</button>
         <div class="carrossel-dots">
-          <div class="carrossel-dot active"></div>
-          <div class="carrossel-dot"></div>
-          <div class="carrossel-dot"></div>
-          <div class="carrossel-dot"></div>
-          <div class="carrossel-dot"></div>
+          <div class="carrossel-dot active"></div><div class="carrossel-dot"></div><div class="carrossel-dot"></div><div class="carrossel-dot"></div><div class="carrossel-dot"></div>
         </div>
       </div>
       <div class="produto-body">
@@ -440,92 +328,141 @@
   </div>
 </section>
 
-
 <!-- GUIA RÁPIDO -->
 <section class="guia-section">
   <div class="guia-container">
     <div class="guia-header">
       <div class="guia-badge">💡 Dica de Uso</div>
       <h2 class="guia-title">Guia Rápido do Assistente</h2>
-      <p class="guia-sub">Clique em qualquer exemplo abaixo para enviar direto ao Pedro</p>
+      <div class="guia-aviso">⏳ Aguarde a resposta antes de enviar uma nova mensagem para evitar erros de limite</div>
     </div>
 
     <div class="guia-grid">
-
       <div class="guia-card">
         <div class="guia-card-icon">🚛</div>
         <div class="guia-card-titulo">Modelo e Instalação</div>
         <div class="guia-card-desc">Para saber qual modelo de ar é recomendado para um caminhão e se precisa cortar o teto, mencione a <strong>marca e o modelo do caminhão</strong> na sua mensagem.</div>
-        <div class="guia-exemplo-box">
-          <span class="guia-label">Exemplo:</span>
-          <span class="guia-exemplo">"Qual ar para [marca] [modelo]?"</span>
-        </div>
+        <div class="guia-exemplo-box"><span class="guia-label">Exemplo:</span><span class="guia-exemplo">"Qual ar para [marca] [modelo]?"</span></div>
       </div>
-
       <div class="guia-card">
         <div class="guia-card-icon">💰</div>
         <div class="guia-card-titulo">Preços e Promoções</div>
         <div class="guia-card-desc">Para consultar preços, promoções ativas ou formas de pagamento, mencione o <strong>nome do produto</strong> e o que deseja saber.</div>
-        <div class="guia-exemplo-box">
-          <span class="guia-label">Exemplo:</span>
-          <span class="guia-exemplo">"Qual o preço do [produto]?"</span>
-        </div>
+        <div class="guia-exemplo-box"><span class="guia-label">Exemplo:</span><span class="guia-exemplo">"Qual o preço do [produto]?"</span></div>
       </div>
-
       <div class="guia-card">
         <div class="guia-card-icon">📁</div>
         <div class="guia-card-titulo">Depoimentos de Clientes</div>
         <div class="guia-card-desc">Para buscar fotos ou vídeos de clientes que já instalaram, use a palavra <strong>"depoimento"</strong> junto com a marca do caminhão.</div>
-        <div class="guia-exemplo-box">
-          <span class="guia-label">Exemplo:</span>
-          <span class="guia-exemplo">"Depoimento de cliente com [marca]"</span>
-        </div>
+        <div class="guia-exemplo-box"><span class="guia-label">Exemplo:</span><span class="guia-exemplo">"Depoimento de cliente com [marca]"</span></div>
       </div>
-
       <div class="guia-card">
         <div class="guia-card-icon">🔧</div>
         <div class="guia-card-titulo">Erros e Falhas</div>
         <div class="guia-card-desc">Para identificar um erro, informe o <strong>código exato que apareceu no painel</strong> e o nome do produto.</div>
-        <div class="guia-exemplo-box">
-          <span class="guia-label">Exemplo:</span>
-          <span class="guia-exemplo">"Apareceu [código] no [produto]"</span>
-        </div>
+        <div class="guia-exemplo-box"><span class="guia-label">Exemplo:</span><span class="guia-exemplo">"Apareceu [código] no [produto]"</span></div>
       </div>
-
       <div class="guia-card">
         <div class="guia-card-icon">📐</div>
         <div class="guia-card-titulo">Imagens Técnicas</div>
         <div class="guia-card-desc">Para acessar imagens com medidas e especificações, use as palavras <strong>"imagem técnica"</strong> seguido do produto e modelo.</div>
-        <div class="guia-exemplo-box">
-          <span class="guia-label">Exemplo:</span>
-          <span class="guia-exemplo">"Imagem técnica do [produto] [modelo]"</span>
-        </div>
+        <div class="guia-exemplo-box"><span class="guia-label">Exemplo:</span><span class="guia-exemplo">"Imagem técnica do [produto] [modelo]"</span></div>
       </div>
-
       <div class="guia-card">
         <div class="guia-card-icon">📋</div>
         <div class="guia-card-titulo">Informações Técnicas</div>
         <div class="guia-card-desc">Para saber consumo, dimensões, peso, BTUs ou qualquer dado técnico, mencione o <strong>produto, o modelo e o que quer saber</strong>.</div>
-        <div class="guia-exemplo-box">
-          <span class="guia-label">Exemplo:</span>
-          <span class="guia-exemplo">"Qual o peso da geladeira [modelo]?"</span>
-        </div>
+        <div class="guia-exemplo-box"><span class="guia-label">Exemplo:</span><span class="guia-exemplo">"Qual o peso da geladeira [modelo]?"</span></div>
       </div>
-
     </div>
   </div>
 </section>
 
+<!-- PROCESSOS INTERNOS -->
+<section class="processos-section">
+  <div class="section-label">Treinamento Interno</div>
+  <div class="processos-title">Processos Internos</div>
+  <p class="processos-desc">Materiais de treinamento e documentos internos da Estilo AR para a equipe de vendas.</p>
+
+  <div class="processos-grid">
+
+    <div class="processo-card">
+      <div class="processo-num">1</div>
+      <div class="processo-nome">Cadastro de Parceiros</div>
+      <p class="processo-desc">Procedimento para cadastrar novos parceiros comerciais da Estilo AR, tanto pessoa física quanto jurídica. Inclui vídeos passo a passo e ficha de cadastro.</p>
+      <div class="processo-materiais">
+        <a href="https://youtu.be/CO2m75GWmMA" target="_blank" class="processo-item">
+          <span class="processo-item-icon">▶️</span>
+          <span class="processo-item-text">Vídeo — Cadastro Pessoa Física</span>
+        </a>
+        <a href="https://youtu.be/bSyPlDA_BHc" target="_blank" class="processo-item">
+          <span class="processo-item-icon">▶️</span>
+          <span class="processo-item-text">Vídeo — Cadastro Pessoa Jurídica</span>
+        </a>
+        <a href="/FICHA DE CADASTRO.xlsx" target="_blank" class="processo-item">
+          <span class="processo-item-icon">📄</span>
+          <span class="processo-item-text">Ficha de Cadastro</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="processo-card">
+      <div class="processo-num">2</div>
+      <div class="processo-nome">Processo de Garantias</div>
+      <p class="processo-desc">Orientações sobre como proceder em casos de garantia de produtos Estilo AR, incluindo preenchimento de ficha, emissão de nota fiscal e envio para conserto.</p>
+      <div class="processo-materiais">
+        <a href="/FICHA GARANTIA.xls" target="_blank" class="processo-item">
+          <span class="processo-item-icon">📄</span>
+          <span class="processo-item-text">Ficha de Garantia</span>
+        </a>
+        <a href="/ORIENTAÇÕES  PARA  EMISSÃO DE NOTA  PARA  GARANTIA  OU REMESSA  PARA CONSERTO.pdf" target="_blank" class="processo-item">
+          <span class="processo-item-icon">📄</span>
+          <span class="processo-item-text">Orientações para Emissão de Nota</span>
+        </a>
+        <a href="/APRESENTAÇÃO PÓS-VENDAS.pdf" target="_blank" class="processo-item">
+          <span class="processo-item-icon">📄</span>
+          <span class="processo-item-text">Apresentação Pós-Vendas</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="processo-card">
+      <div class="processo-num">3</div>
+      <div class="processo-nome">Processo de Devolução</div>
+      <p class="processo-desc">Procedimento para realizar devoluções de produtos, com orientações sobre preenchimento da ficha de devolução e emissão da nota fiscal correspondente.</p>
+      <div class="processo-materiais">
+        <a href="/FICHA DEVOLUÇÃO.xls" target="_blank" class="processo-item">
+          <span class="processo-item-icon">📄</span>
+          <span class="processo-item-text">Ficha de Devolução</span>
+        </a>
+        <a href="/ORIENTAÇÕES PARA EMISSAO DE NOTA DE DEVOLUÇÃO.pdf" target="_blank" class="processo-item">
+          <span class="processo-item-icon">📄</span>
+          <span class="processo-item-text">Orientações para Emissão de Nota</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="processo-card">
+      <div class="processo-num">4</div>
+      <div class="processo-nome">Tirar Pedido</div>
+      <p class="processo-desc">Passo a passo de como realizar pedidos de vendas corretamente no sistema da Estilo AR. Assista ao vídeo para entender todo o fluxo.</p>
+      <div class="processo-materiais">
+        <a href="https://youtu.be/m0-8V-SlEes" target="_blank" class="processo-item">
+          <span class="processo-item-icon">▶️</span>
+          <span class="processo-item-text">Vídeo — Como Fazer Pedidos de Vendas</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <div class="main">
-  <div class="info-card">
-    <div class="info-title">🏢 Sobre a Estilo AR</div>
-    <div class="info-grid">
-      <div class="info-item"><div class="info-item-icon">📞</div><div class="info-item-label">Telefone</div><div class="info-item-value">(34) 3293-8000</div></div>
-      <div class="info-item"><div class="info-item-icon">🕐</div><div class="info-item-label">Horário</div><div class="info-item-value">Seg–Sex, 08h–18h</div></div>
-      <div class="info-item"><div class="info-item-icon">📍</div><div class="info-item-label">Endereço</div><div class="info-item-value">Av. Eng. Diniz, 848 – Uberlândia/MG</div></div>
-      <div class="info-item"><div class="info-item-icon">🌐</div><div class="info-item-label">Site</div><div class="info-item-value">www.estiloar.com.br</div></div>
-      <div class="info-item"><div class="info-item-icon">🛡️</div><div class="info-item-label">Garantia</div><div class="info-item-value">3 meses (todos os produtos)</div></div>
-      <div class="info-item"><div class="info-item-icon">📦</div><div class="info-item-label">Dica</div><div class="info-item-value">Guarde a embalagem por 30 dias</div></div>
+  <div style="display:flex; flex-direction:column; gap:16px;">
+    <div style="background:rgba(77,184,232,0.08);border:1px solid var(--border);border-radius:14px;padding:20px;">
+      <p style="font-size:13px;color:var(--gray);line-height:1.7;">
+        💡 <strong style="color:var(--navy);">Dica:</strong> O assistente Pedro responde apenas com base nos dados internos da Estilo AR — manuais dos produtos, preços, depoimentos de clientes e processos internos. Ele não realiza buscas na internet.
+      </p>
     </div>
   </div>
 
@@ -538,10 +475,11 @@
           <div class="chat-header-status"><span class="status-dot"></span>Online agora</div>
         </div>
       </div>
+      <div class="chat-info">⏳ Aguarde a resposta antes de enviar nova mensagem</div>
       <div class="chat-messages" id="chatMessages">
         <div class="msg bot">
           <div class="msg-avatar">EA</div>
-          <div class="bubble">Olá! 👋 Sou o Pedro, do suporte da <strong>Estilo AR</strong>.<br><br>Pode me perguntar sobre produtos, preços, depoimentos de clientes ou assistência técnica. Como posso ajudar? 😊</div>
+          <div class="bubble">Olá! 👋 Sou o Pedro, do suporte da <strong>Estilo AR</strong>.<br><br>Pode me perguntar sobre produtos, preços, depoimentos, assistência técnica ou processos internos. Como posso ajudar? 😊</div>
         </div>
       </div>
       <div class="chat-input-area">
@@ -569,14 +507,9 @@
 </div><!-- /appContent -->
 
 <script>
-// LOGIN
 function fazerLogin() {
   const senha = document.getElementById('senhaInput').value;
-  fetch('/api/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ senha })
-  })
+  fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senha }) })
   .then(r => r.json())
   .then(data => {
     if (data.ok) {
@@ -588,19 +521,12 @@ function fazerLogin() {
     }
   });
 }
-
-function fazerLogout() {
-  sessionStorage.removeItem('logado');
-  location.reload();
-}
-
-// Verifica se já está logado
+function fazerLogout() { sessionStorage.removeItem('logado'); location.reload(); }
 if (sessionStorage.getItem('logado') === '1') {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appContent').style.display = 'block';
 }
 
-// CARROSSEL
 function moverCarrossel(btn, direcao) {
   const carrossel = btn.closest('.carrossel');
   const slides = carrossel.querySelector('.carrossel-slides');
@@ -613,27 +539,15 @@ function moverCarrossel(btn, direcao) {
   dots.forEach((d, i) => d.classList.toggle('active', i === atual));
 }
 
-// Auto-play removido — carrossel só avança ao clicar
-
-// CHAT
 let isLoading = false;
 const conversationHistory = [];
-
 function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,90)+'px'; }
 function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
 
-function enviarGuia(btn) {
-  const texto = btn.textContent.replace('→ ', '').trim();
-  document.getElementById('chatInput').value = texto;
-  document.querySelector('.chat-container').scrollIntoView({behavior:'smooth', block:'center'});
-  setTimeout(() => sendMessage(), 400);
-}
-
 function askProduct(produto) {
-  const msg = `Olá! Tenho uma dúvida sobre o ${produto}.`;
-  document.getElementById('chatInput').value = msg;
+  document.getElementById('chatInput').value = 'Qual a sua dúvida sobre o ' + produto + '?';
   document.querySelector('.chat-container').scrollIntoView({behavior:'smooth', block:'center'});
-  setTimeout(()=>sendMessage(), 300);
+  document.getElementById('chatInput').focus();
 }
 
 function addMessage(role, html) {
@@ -644,7 +558,6 @@ function addMessage(role, html) {
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
 }
-
 function addTyping() {
   const msgs = document.getElementById('chatMessages');
   const div = document.createElement('div');
@@ -653,9 +566,7 @@ function addTyping() {
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
 }
-
 function removeTyping() { const el=document.getElementById('typingIndicator'); if(el)el.remove(); }
-
 function formatResponse(text) {
   return text
     .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
@@ -665,7 +576,6 @@ function formatResponse(text) {
     .replace(/\n\n/g,'<br><br>')
     .replace(/\n/g,'<br>');
 }
-
 async function sendMessage() {
   if(isLoading) return;
   const input = document.getElementById('chatInput');
@@ -678,23 +588,12 @@ async function sendMessage() {
   conversationHistory.push({role:'user', content:text});
   addTyping();
   try {
-    const response = await fetch('/api/chat', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({messages: conversationHistory})
-    });
+    const response = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages: conversationHistory}) });
     const data = await response.json();
     removeTyping();
-    if(data.error) {
-      addMessage('bot','⚠️ Erro: '+data.error);
-    } else {
-      conversationHistory.push({role:'assistant', content:data.reply});
-      addMessage('bot', formatResponse(data.reply));
-    }
-  } catch(err) {
-    removeTyping();
-    addMessage('bot','❌ Não foi possível conectar. Tente novamente.');
-  }
+    if(data.error) { addMessage('bot','⚠️ Erro: '+data.error); }
+    else { conversationHistory.push({role:'assistant', content:data.reply}); addMessage('bot', formatResponse(data.reply)); }
+  } catch(err) { removeTyping(); addMessage('bot','❌ Não foi possível conectar. Tente novamente.'); }
   isLoading = false;
   document.getElementById('sendBtn').disabled = false;
 }
