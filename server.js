@@ -112,7 +112,8 @@ function detectarImagemTecnica(mensagem) {
     return 'geladeira-sem-modelo';
   }
   if (m.includes('gerador')) return 'gerador';
-  if (m.includes('slim') || m.includes('serie 2') || m.includes('série 2') || m.includes('condicionado') || (/\bar\b/.test(m) && !m.includes('geladeira'))) return 'ar';
+  if (m.includes('slim') || m.includes('serie 2') || m.includes('série 2')) return 'ar';
+  if (m.includes('condicionado') || (/\bar\b/.test(m) && !m.includes('geladeira'))) return 'ar-sem-modelo';
   return null;
 }
 
@@ -1425,6 +1426,9 @@ app.post('/api/chat', async (req, res) => {
     if (produtoTecnico) {
       if (produtoTecnico === 'geladeira-sem-modelo') {
         return res.json({ reply: `Qual o modelo da geladeira? **35L**, **45L** ou **55L**?` });
+      }
+      if (produtoTecnico === 'ar-sem-modelo') {
+        return res.json({ reply: `Qual o modelo do ar-condicionado? **Slim Série 2** ou **Eco Compact**?` });
       }
       const imagens = IMAGENS_TECNICAS[produtoTecnico];
       if (imagens && imagens.length > 0) {
