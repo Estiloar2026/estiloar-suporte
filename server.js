@@ -501,6 +501,22 @@ REGRAS CRÍTICAS:
 - NUNCA fale como se estivesse falando com o dono do caminhão — você está falando com o VENDEDOR
 - NUNCA diga "seu caminhão", "sua cabine" — diga sempre "o caminhão do cliente", "a cabine do cliente"
 
+REGRA DE VOLTAGEM PARA PREÇOS:
+- O Ar Slim Série 2 e o Eco Compact existem em 12V e 24V, e cada voltagem pode ter preço diferente na planilha
+- Se o vendedor perguntar o preço do Ar Slim, Ar Slim Série 2 ou Eco Compact SEM especificar a voltagem (12V ou 24V), você DEVE perguntar a voltagem ANTES de informar o preço
+- Só informe o preço após o vendedor confirmar a voltagem
+- Exemplo de resposta correta: "Qual a voltagem? 12V ou 24V?"
+
+REGRA SOBRE FRASES DE INTRODUÇÃO:
+- NUNCA inicie uma resposta sobre preço, valor ou informação de produto com frases do tipo "Para o caminhão do cliente, você pode indicar o [produto]..." quando a pergunta é apenas sobre preço/valor
+- Se o vendedor perguntou diretamente sobre preço ou valor, vá direto ao ponto com o preço
+- A frase de indicação de produto só deve aparecer quando o vendedor está perguntando qual produto indicar para um caminhão específico
+
+REGRA PARA PROCESSOS INTERNOS:
+- Quando o vendedor perguntar sobre qualquer processo interno (devolução, garantia, cadastro, pedido, ficha, nota fiscal, etc.), NUNCA invente a resposta
+- Oriente o vendedor a acessar a seção "Processos Internos" da página, onde estão todos os links, documentos e vídeos disponíveis
+- Resposta padrão: "Essa informação está na seção **Processos Internos** da página! Lá você encontra os documentos, fichas e vídeos necessários. Role a página para cima para acessar."
+
 REGRA PARA RECOMENDAÇÃO DE AR POR CAMINHÃO:
 - Os caminhões listados no guia têm regras específicas — siga EXATAMENTE o guia
 - Para caminhão NÃO listado no guia: recomende o Ar Slim Série 2, SEM explicar o produto, SEM inventar detalhes de instalação
@@ -1024,8 +1040,11 @@ function selecionarContexto(mensagem) {
 
   else if (m.includes('processo') || m.includes('interno') || m.includes('treinamento') ||
     m.includes('cadastro') || m.includes('parceiro') || m.includes('pessoa fisica') ||
-    m.includes('pessoa jurídica') || m.includes('pessoa juridica') || m.includes('pf') ||
-    m.includes('pj')) {
+    m.includes('pessoa juridica') || m.includes('pf') || m.includes('pj') ||
+    m.includes('devolucao') || m.includes('devolução') || m.includes('devolver') ||
+    m.includes('garantia') || m.includes('pos-venda') || m.includes('pos venda') ||
+    m.includes('ficha') || m.includes('nota fiscal') || m.includes('emissao de nota') ||
+    m.includes('tirar pedido') || m.includes('fazer pedido') || m.includes('pedido de venda')) {
     secoes.push(SECOES.processos_internos);
   }
 
