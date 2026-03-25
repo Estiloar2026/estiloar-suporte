@@ -392,15 +392,15 @@
       <p class="processo-desc">Procedimento para cadastrar novos parceiros comerciais da Estilo AR, tanto pessoa física quanto jurídica. Inclui vídeos passo a passo e ficha de cadastro.</p>
       <div class="processo-materiais">
         <a href="https://youtu.be/CO2m75GWmMA" target="_blank" class="processo-item">
-          <span class="processo-item-icon"><img src="https://www.youtube.com/favicon.ico" style="width:16px;height:16px;vertical-align:middle;"></span>
+          <span class="processo-item-icon">▶️</span>
           <span class="processo-item-text">Vídeo — Cadastro Pessoa Física</span>
         </a>
         <a href="https://youtu.be/bSyPlDA_BHc" target="_blank" class="processo-item">
-          <span class="processo-item-icon"><img src="https://www.youtube.com/favicon.ico" style="width:16px;height:16px;vertical-align:middle;"></span>
+          <span class="processo-item-icon">▶️</span>
           <span class="processo-item-text">Vídeo — Cadastro Pessoa Jurídica</span>
         </a>
         <a href="/FICHA DE CADASTRO.xlsx" target="_blank" class="processo-item">
-          <span class="processo-item-icon"><img src="https://upload.wikimedia.org/wikipedia/commons/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg" style="width:16px;height:16px;vertical-align:middle;"></span>
+          <span class="processo-item-icon">📄</span>
           <span class="processo-item-text">Ficha de Cadastro</span>
         </a>
       </div>
@@ -412,15 +412,15 @@
       <p class="processo-desc">Orientações sobre como proceder em casos de garantia de produtos Estilo AR, incluindo preenchimento de ficha, emissão de nota fiscal e envio para conserto.</p>
       <div class="processo-materiais">
         <a href="/FICHA GARANTIA.xls" target="_blank" class="processo-item">
-          <span class="processo-item-icon"><img src="https://upload.wikimedia.org/wikipedia/commons/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg" style="width:16px;height:16px;vertical-align:middle;"></span>
+          <span class="processo-item-icon">📄</span>
           <span class="processo-item-text">Ficha de Garantia</span>
         </a>
         <a href="/ORIENTAÇÕES  PARA  EMISSÃO DE NOTA  PARA  GARANTIA  OU REMESSA  PARA CONSERTO.pdf" target="_blank" class="processo-item">
-          <span class="processo-item-icon"><img src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg" style="width:16px;height:16px;vertical-align:middle;"></span>
+          <span class="processo-item-icon">📄</span>
           <span class="processo-item-text">Orientações para Emissão de Nota</span>
         </a>
         <a href="/APRESENTAÇÃO PÓS-VENDAS.pdf" target="_blank" class="processo-item">
-          <span class="processo-item-icon"><img src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg" style="width:16px;height:16px;vertical-align:middle;"></span>
+          <span class="processo-item-icon">📄</span>
           <span class="processo-item-text">Apresentação Pós-Vendas</span>
         </a>
       </div>
@@ -432,11 +432,11 @@
       <p class="processo-desc">Procedimento para realizar devoluções de produtos, com orientações sobre preenchimento da ficha de devolução e emissão da nota fiscal correspondente.</p>
       <div class="processo-materiais">
         <a href="/FICHA DEVOLUÇÃO.xls" target="_blank" class="processo-item">
-          <span class="processo-item-icon"><img src="https://upload.wikimedia.org/wikipedia/commons/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg" style="width:16px;height:16px;vertical-align:middle;"></span>
+          <span class="processo-item-icon">📄</span>
           <span class="processo-item-text">Ficha de Devolução</span>
         </a>
         <a href="/ORIENTAÇÕES PARA EMISSAO DE NOTA DE DEVOLUÇÃO.pdf" target="_blank" class="processo-item">
-          <span class="processo-item-icon"><img src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg" style="width:16px;height:16px;vertical-align:middle;"></span>
+          <span class="processo-item-icon">📄</span>
           <span class="processo-item-text">Orientações para Emissão de Nota</span>
         </a>
       </div>
@@ -448,7 +448,7 @@
       <p class="processo-desc">Passo a passo de como realizar pedidos de vendas corretamente no sistema da Estilo AR. Assista ao vídeo para entender todo o fluxo.</p>
       <div class="processo-materiais">
         <a href="https://youtu.be/m0-8V-SlEes" target="_blank" class="processo-item">
-          <span class="processo-item-icon"><img src="https://www.youtube.com/favicon.ico" style="width:16px;height:16px;vertical-align:middle;"></span>
+          <span class="processo-item-icon">▶️</span>
           <span class="processo-item-text">Vídeo — Como Fazer Pedidos de Vendas</span>
         </a>
       </div>
@@ -546,9 +546,9 @@ function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send
 
 function askProduct(produto) {
   const input = document.getElementById('chatInput');
-  input.value = 'Tenho uma dúvida sobre o ' + produto;
+  input.value = 'Tenho uma dúvida';
   document.querySelector('.chat-container').scrollIntoView({behavior:'smooth', block:'center'});
-  setTimeout(() => { sendMessage(); }, 400);
+  setTimeout(() => sendMessage(), 300);
 }
 
 function addMessage(role, html) {
