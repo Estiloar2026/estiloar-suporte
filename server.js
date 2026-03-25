@@ -1129,99 +1129,64 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const ultimaMensagem = normalizarMensagem(mensagemOriginal);
-    // Usa hash do histórico como sessionId estável entre requisições
-    const sessionId = 'sess_' + Buffer.from(messages.slice(0,3).map(m=>m.content||'').join('|')).toString('base64').slice(0,20);
     const RODAPE = '\n\nPosso ajudar em algo mais? 😊';
 
     // ============================================================
-    // SISTEMA DE CONTEXTO PERSISTENTE — verifica ação pendente
+    // SISTEMA DE CONTEXTO — detecta pelo histórico da conversa
     // ============================================================
-    const ctxPendente = obterContexto(sessionId);
-    if (ctxPendente) {
-      const { acao, dados } = ctxPendente;
-      const m = ultimaMensagem;
-      let respondeuContexto = false;
-      let respostaPendente = null;
+    // Verifica a última mensagem do assistente para entender contexto pendente
+    const ultimaRespostaBot = messages.slice().reverse().find(m => m.role === 'assistant')?.content || '';
+    const penultimaMsgUsuario = messages.length >= 3 ? messages[messages.length - 2]?.content?.toLowerCase() || '' : '';
+    const m = ultimaMensagem;
 
-      // Contexto: perguntou modelo do ar (imagem técnica ou foto)
-      if (acao === 'perguntou_modelo_ar') {
-        const ehSlim = m.includes('slim') || m.includes('serie 2') || m.includes('serie2');
-        const ehEco = m.includes('eco') || m.includes('compact');
-        if (ehSlim || ehEco) {
-          respondeuContexto = true;
-          const produto = ehEco ? 'ecocompact' : 'ar';
-          const nome = ehEco ? 'Eco Compact' : 'Slim Série 2';
-          if (dados.tipo === 'imagem') {
-            const imagens = IMAGENS_TECNICAS[produto];
+    // Contexto: Pedro perguntou modelo do ar na última resposta
+    const botPerguntouModeloAr = ultimaRespostaBot.includes('Slim Série 2 ou Eco Compact') ||
+                                  ultimaRespostaBot.includes('slim série 2 ou eco compact');
+    if (botPerguntouModeloAr) {
+      const ehSlim = m.includes('slim') || m.includes('serie 2') || m.includes('serie2') || m === 's';
+      const ehEco = m.includes('eco') || m.includes('compact');
+      if (ehSlim || ehEco) {
+        const produto = ehEco ? 'ecocompact' : 'ar';
+        const nome = ehEco ? 'Eco Compact' : 'Slim Série 2';
+        // Detecta se era imagem técnica ou foto pela penúltima mensagem do usuário
+        const eraImagemTecnica = penultimaMsgUsuario.includes('tecni') || penultimaMsgUsuario.includes('medida') || penultimaMsgUsuario.includes('dimensao');
+        if (eraImagemTecnica) {
+          const imagens = IMAGENS_TECNICAS[produto];
+          if (imagens) {
             const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
-            respostaPendente = `Aqui estão as imagens técnicas do **${nome}**:\n\n${links}${RODAPE}`;
-          } else if (dados.tipo === 'foto') {
-            const fotos = FOTOS_PRODUTOS[produto];
+            return res.json({ reply: `Aqui estão as imagens técnicas do **${nome}**:\n\n${links}${RODAPE}` });
+          }
+        } else {
+          const fotos = FOTOS_PRODUTOS[produto];
+          if (fotos) {
             const links = fotos.map((img, i) => `📷 **Foto ${i+1}**: ${img}`).join('\n');
-            respostaPendente = `Aqui estão as fotos do **${nome}**:\n\n${links}${RODAPE}`;
+            return res.json({ reply: `Aqui estão as fotos do **${nome}**:\n\n${links}${RODAPE}` });
           }
         }
       }
+    }
 
-      // Contexto: perguntou modelo da geladeira
-      else if (acao === 'perguntou_modelo_geladeira') {
-        const eh35 = m.includes('35');
-        const eh45 = m.includes('45');
-        const eh55 = m.includes('55');
-        if (eh35 || eh45 || eh55) {
-          respondeuContexto = true;
-          const modelo = eh35 ? 'geladeira-35l' : eh45 ? 'geladeira-45l' : 'geladeira-55l';
-          const nomeModelo = eh35 ? '35L' : eh45 ? '45L' : '55L';
-          if (dados.tipo === 'imagem') {
-            const imagens = IMAGENS_TECNICAS[modelo];
+    // Contexto: Pedro perguntou modelo da geladeira
+    const botPerguntouModeloGeladeira = ultimaRespostaBot.includes('35L') && ultimaRespostaBot.includes('45L') && ultimaRespostaBot.includes('55L');
+    if (botPerguntouModeloGeladeira) {
+      const eh35 = m.includes('35');
+      const eh45 = m.includes('45');
+      const eh55 = m.includes('55');
+      if (eh35 || eh45 || eh55) {
+        const modelo = eh35 ? 'geladeira-35l' : eh45 ? 'geladeira-45l' : 'geladeira-55l';
+        const nomeModelo = eh35 ? '35L' : eh45 ? '45L' : '55L';
+        const eraImagemTecnica = penultimaMsgUsuario.includes('tecni') || penultimaMsgUsuario.includes('medida');
+        if (eraImagemTecnica) {
+          const imagens = IMAGENS_TECNICAS[modelo];
+          if (imagens) {
             const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
-            respostaPendente = `Aqui estão as imagens técnicas da **Geladeira ${nomeModelo}**:\n\n${links}${RODAPE}`;
-          } else if (dados.tipo === 'foto') {
-            const fotos = FOTOS_PRODUTOS['geladeira'];
-            const links = fotos.map((img, i) => `📷 **Foto ${i+1}**: ${img}`).join('\n');
-            respostaPendente = `Aqui estão as fotos da **Geladeira Portátil**:\n\n${links}${RODAPE}`;
+            return res.json({ reply: `Aqui estão as imagens técnicas da **Geladeira ${nomeModelo}**:\n\n${links}${RODAPE}` });
           }
+        } else {
+          const fotos = FOTOS_PRODUTOS['geladeira'];
+          const links = fotos.map((img, i) => `📷 **Foto ${i+1}**: ${img}`).join('\n');
+          return res.json({ reply: `Aqui estão as fotos da **Geladeira Portátil**:\n\n${links}${RODAPE}` });
         }
-      }
-
-      // Contexto: perguntou cidade para assistência técnica
-      else if (acao === 'perguntou_cidade_assistencia') {
-        const queryFinal = ultimaMensagem.replace(/[?!.,;:]/g, '').trim();
-        if (queryFinal.length > 1) {
-          respondeuContexto = true;
-          limparContexto(sessionId);
-          const resultado = await buscarAssistenciaTecnica(queryFinal);
-          if (!resultado || resultado.tipo === 'nenhum' || !resultado.pontos || resultado.pontos.length === 0) {
-            return res.json({ reply: `Não temos assistência técnica cadastrada em **${queryFinal}**.${RODAPE}` });
-          }
-          const lista = resultado.pontos.map(p =>
-            `📍 **${p.nome}**\n📌 ${p.cidade} - ${p.estado}\n🏠 ${p.endereco}\n📞 ${p.telefone}`
-          ).join('\n\n');
-          return res.json({ reply: `Encontrei pontos de assistência em **${queryFinal}**:\n\n${lista}${RODAPE}` });
-        }
-      }
-
-      // Contexto: perguntou marca para depoimento
-      else if (acao === 'perguntou_marca_depoimento') {
-        if (m.length > 1) {
-          respondeuContexto = true;
-          limparContexto(sessionId);
-          const resultados = buscarNoIndice(ultimaMensagem);
-          if (resultados && resultados.length > 0) {
-            const aviso = resultados._aviso || `Encontrei ${resultados.length} pasta(s) no Drive:`;
-            const links = resultados.map(r => `📁 **${r.marcaNome} — ${r.modeloNome}**: ${r.link}`).join('\n');
-            return res.json({ reply: `${aviso}\n\n${links}${RODAPE}` });
-          } else {
-            return res.json({ reply: `Não encontrei depoimentos para essa marca ou modelo.${RODAPE}` });
-          }
-        }
-      }
-
-      if (respondeuContexto) {
-        limparContexto(sessionId);
-        if (respostaPendente) return res.json({ reply: respostaPendente });
-      } else {
-        limparContexto(sessionId); // mudou de assunto — limpa contexto
       }
     }
 
