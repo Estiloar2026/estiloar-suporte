@@ -104,7 +104,8 @@ function detectarImagemTecnica(mensagem) {
   if (m.includes('45') || m.includes('45l')) return 'geladeira-45l';
   if (m.includes('55') || m.includes('55l')) return 'geladeira-55l';
   if (m.includes('geladeira') || m.includes('frigobar')) {
-    // Usuário pediu imagem técnica da geladeira mas não especificou o modelo
+    // Se pediu medidas/dimensões sem modelo — retorna sinal especial para mostrar tabela
+    if (m.includes('medida') || m.includes('dimens') || m.includes('tamanho') || m.includes('peso')) return 'geladeira-dimensoes';
     return 'geladeira-sem-modelo';
   }
   if (m.includes('gerador')) return 'gerador';
