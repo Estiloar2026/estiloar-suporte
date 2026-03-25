@@ -1219,7 +1219,7 @@ app.post('/api/chat', async (req, res) => {
     if (/^\+\d*$/.test(ultimaMensagem.trim())) {
       // Busca a última localidade pesquisada no histórico do Pedro
       const ultimaRespostaBot = messages.slice().reverse().find(msg => msg.role === 'assistant')?.content || '';
-      const matchLocal = ultimaRespostaBot.match(/assistência técnica em \*\*([^*]+)\*\*/i);
+      const matchLocal = ultimaRespostaBot.match(/(?:assistência técnica em|pontos em|pontos disponíveis para) \*\*([^*]+)\*\*/i);
       const localAnterior = matchLocal ? matchLocal[1].trim() : null;
 
       if (localAnterior) {
