@@ -1,10 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const cidadesModule = require('./cidades');
-const buscarCidade = cidadesModule.buscarCidade || (() => null);
-const cidadesMaisProximas = cidadesModule.cidadesMaisProximas || (() => []);
-const duasMaisProximas = cidadesModule.duasMaisProximas || cidadesModule.cidadesMaisProximas || (() => []);
-const CIDADES_BR_MODULE = cidadesModule.CIDADES_BR || cidadesModule.default || cidadesModule;
+
 
 const app = express();
 app.use(cors());
@@ -297,36 +293,7 @@ async function buscarDadosPlanilha() {
   } catch (err) { return ''; }
 }
 
-// Haversine — distância em km entre dois pontos
-function distanciaKm(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLng/2) * Math.sin(dLng/2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
 
-// Normaliza string para comparação
-function norm(str) {
-  return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-}
-
-// Busca coordenadas de uma cidade no banco local
-function buscarCoordenadas(nomeCidade, nomeEstado) {
-  const cn = norm(nomeCidade);
-  const en = norm(nomeEstado || '');
-  let melhor = null;
-  for (const c of CIDADES_BR) {
-    const cc = norm(c.cidade);
-    const ce = norm(c.estado);
-    if (cc === cn && (!en || ce === en)) return c;
-    if (cc === cn && !melhor) melhor = c;
-    if (!melhor && (cc.includes(cn) || cn.includes(cc))) melhor = c;
-  }
-  return melhor;
-}
 
 async function buscarAssistenciaTecnica(query) {
   try {
@@ -384,8 +351,7 @@ async function buscarAssistenciaTecnica(query) {
       return { nome: cols[0]||'', cidade: cols[1]||'', estado: cols[2]||'', endereco: cols[3]||'', telefone: cols[4]||'' };
     }).filter(p => p.nome && p.nome.length > 1 && p.cidade && p.cidade.length > 1 && ufsValidas.includes(p.estado.toLowerCase().trim()));
 
-    console.log('Total pontos lidos:', pontos.length);
-    if (pontos.length > 0) console.log('Primeiro ponto:', JSON.stringify(pontos[0]));
+
     if (!pontos.length) return null;
 
     const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
@@ -414,8 +380,7 @@ async function buscarAssistenciaTecnica(query) {
     if (ufs.includes(q)) { ufBusca = q; }
     else if (ESTADOS[q]) { ufBusca = ESTADOS[q]; }
 
-    console.log('Query:', q, '| UF detectada:', ufBusca);
-    console.log('Estados nos pontos:', pontos.map(p => norm(p.estado)));
+
 
     if (ufBusca) {
       const resultado = pontos.filter(p => norm(p.estado) === ufBusca);
@@ -588,8 +553,7 @@ Automático: 12V=600W/50A | 24V=840W/35A
 Turbo: 12V=720W/60A | 24V=960W/40A
 
 Recomendação: alternador mínimo 12V = 85 a 90 amperes
-Bateria mínima para instalação: 150A | Alternador mínimo para instalação: 90A (VALORES OFICIAIS — não alterar)
-Bateria mínima para instalação: 150A | Alternador mínimo: 90A
+Bateria mínima para instalação: 150A | Alternador mínimo: 90A (VALORES OFICIAIS — não alterar)
 `,
 
   ar_slim_operacao: `
@@ -776,15 +740,6 @@ MANUTENÇÃO:
 - Manter ventilação livre | distância mínima ao redor: 100mm
 `,
 
-
-  processos_internos: `
-PROCESSOS INTERNOS — ESTILO AR
-Esta seção contém materiais de treinamento interno para a equipe de vendas.
-
-CADASTRO DE PARCEIROS:
-- Cadastro Pessoa Física: https://youtu.be/CO2m75GWmMA
-- Cadastro Pessoa Jurídica: https://youtu.be/bSyPlDA_BHc
-`,
 
   processos_internos: `
 PROCESSOS INTERNOS — ESTILO AR
@@ -1111,6 +1066,11 @@ app.post('/api/chat', async (req, res) => {
     const ultimaMensagem = normalizarMensagem(mensagemOriginal);
     const RODAPE = '\n\nPosso ajudar em algo mais? 😊';
 
+    // Detecta botão "Tenho uma dúvida" dos cards
+    if (ultimaMensagem.trim() === 'tenho uma duvida' || ultimaMensagem.trim() === 'tenho uma dúvida') {
+      return res.json({ reply: `Qual a sua dúvida? 😊` });
+    }
+
 
     // Verifica se em qualquer parte do histórico da conversa há menção ao FH
     const historicoCompleto = messages.map(m => (m.content || '').toLowerCase()).join(' ');
@@ -1160,7 +1120,6 @@ app.post('/api/chat', async (req, res) => {
     // Modelos ambíguos (existem nos dois)
     const modelosAmbiguos = ['8.150','9.150','10.160','13.180','15.180','17.220'];
 
-    const normMsg = ultimaMensagem.replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '');
     const mencionaWorker = ultimaMensagem.includes('worker') || ultimaMensagem.includes('vw worker') || ultimaMensagem.includes('volkswagen worker') ||
       modelosWorker.some(m => ultimaMensagem.includes(m)) ||
       modelosWorker.some(m => ultimaMensagem.includes(m.replace(/e$/, '').replace(/e2$/, '')));
@@ -1255,6 +1214,38 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
+    // Detecta paginação com "+" — ex: "+1", "+2"
+    if (/^\+\d*$/.test(ultimaMensagem.trim())) {
+      // Busca a última localidade pesquisada no histórico do Pedro
+      const ultimaRespostaBot = messages.slice().reverse().find(msg => msg.role === 'assistant')?.content || '';
+      const matchLocal = ultimaRespostaBot.match(/assistência técnica em \*\*([^*]+)\*\*/i);
+      const localAnterior = matchLocal ? matchLocal[1].trim() : null;
+
+      if (localAnterior) {
+        const sessionId = 'pag_' + localAnterior.toLowerCase().replace(/\s+/g, '_');
+        const ctx = paginacaoAssistencia.get(sessionId);
+
+        if (ctx && ctx.offset < ctx.pontos.length) {
+          const PAGINA = 6;
+          const pagina = ctx.pontos.slice(ctx.offset, ctx.offset + PAGINA);
+          const novoOffset = ctx.offset + pagina.length;
+          const restantes = ctx.pontos.length - novoOffset;
+          paginacaoAssistencia.set(sessionId, { ...ctx, offset: novoOffset });
+
+          const lista = pagina.map(p =>
+            `📍 **${p.nome}**\n📌 ${p.cidade} - ${p.estado}\n🏠 ${p.endereco}\n📞 ${p.telefone}`
+          ).join('\n\n');
+
+          const rodape = restantes > 0
+            ? `\n\n_Ainda há **${restantes} ponto${restantes !== 1 ? 's' : ''}** restante${restantes !== 1 ? 's' : ''}. Digite **+1** para ver os próximos._`
+            : `\n\n_Esses são todos os pontos disponíveis para **${localAnterior}**._`;
+
+          return res.json({ reply: `Continuando... mais ${pagina.length} ponto${pagina.length !== 1 ? 's' : ''} em **${localAnterior}**:\n\n${lista}${rodape}` });
+        }
+      }
+      return res.json({ reply: `Não há mais resultados para continuar. Faça uma nova busca de assistência técnica informando o estado ou cidade.` });
+    }
+
     // Detecta busca de assistência técnica
     const palavrasAssistencia = [
       // Correto
@@ -1287,32 +1278,6 @@ app.post('/api/chat', async (req, res) => {
       /ponto\s+auto/i.test(ultimaMensagem);
 
     if (buscaAssistencia) {
-      // Extrai cidade da mensagem removendo palavras irrelevantes
-      const stopWords = [
-        // palavras de assistência
-        'assistencia', 'assistência', 'tecnica', 'técnica', 'ponto', 'autorizado', 'autorizada',
-        'asistencia', 'assitencia', 'assistenca', 'tecnico', 'técnico',
-        'conserto', 'consertar', 'onde', 'conseto',
-        // preposições e artigos
-        'em', 'de', 'do', 'da', 'no', 'na', 'para', 'por', 'ao', 'aos', 'as', 'a',
-        'o', 'os', 'e', 'ou', 'um', 'uma', 'uns', 'umas',
-        // pronomes e verbos comuns
-        'me', 'te', 'se', 'nos', 'voce', 'você', 'meu', 'minha', 'seu', 'sua',
-        'tem', 'ter', 'ha', 'há', 'teria', 'seria', 'esta', 'está',
-        // verbos de pedido
-        'quero', 'queria', 'preciso', 'precisaria', 'gostaria', 'busco', 'procuro',
-        'pode', 'dar', 'de', 'falar', 'dizer', 'mostrar', 'mostra', 'mostre',
-        'indicar', 'indica', 'indique', 'encontrar', 'achar', 'ver', 'veja',
-        'buscar', 'procurar', 'pesquisar', 'checar', 'verificar',
-        // palavras genéricas
-        'ola', 'olá', 'oi', 'qual', 'quais', 'alguma', 'algum', 'algumas', 'alguns',
-        'favor', 'por', 'mais', 'perto', 'proximo', 'próximo', 'proxima', 'próxima',
-        'existe', 'existem', 'tem', 'temos', 'possui', 'possuem',
-        'porfavor', 'pfv', 'pf', 'obrigado', 'obrigada',
-        // outras variações
-        'info', 'informacao', 'informação', 'informacoes', 'informações',
-        'dados', 'contato', 'lista', 'listagem'
-      ];
       // Extrai localidade — remove tudo exceto o nome da cidade/estado
       const normLocal = s => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
@@ -1399,7 +1364,7 @@ app.post('/api/chat', async (req, res) => {
       const restantes = todos.length - novoOffset;
 
       // Atualiza offset para próxima página
-      paginacaoAssistencia.set(paginaKey, { offset: novoOffset, local: queryFinal });
+      paginacaoAssistencia.set(paginaKey, { offset: novoOffset, local: queryFinal, pontos: todos });
 
       const lista = pagina.map(p =>
         `📍 **${p.nome}**\n📌 ${p.cidade} - ${p.estado}\n🏠 ${p.endereco}\n📞 ${p.telefone}`
@@ -1416,7 +1381,7 @@ app.post('/api/chat', async (req, res) => {
 
       let rodape = '';
       if (restantes > 0) {
-        rodape = `\n\n_Ainda há **${restantes} ponto${restantes !== 1 ? 's' : ''}** restante${restantes !== 1 ? 's' : ''}. Digite **"assistência em ${queryFinal} mais"** para ver os próximos._`;
+        rodape = `\n\n_Ainda há **${restantes} ponto${restantes !== 1 ? 's' : ''}** restante${restantes !== 1 ? 's' : ''}. Digite **+1** para ver os próximos._`;
       } else if (offset > 0) {
         rodape = `\n\n_Esses são todos os pontos disponíveis para **${queryFinal}**._`;
       }
@@ -1480,12 +1445,6 @@ app.post('/api/chat', async (req, res) => {
     // Detecta pedido de imagem técnica
     const produtoTecnico = detectarImagemTecnica(ultimaMensagem);
     if (produtoTecnico) {
-      if (produtoTecnico === 'geladeira-sem-modelo') {
-        return res.json({ reply: `Qual o modelo da geladeira? **35L**, **45L** ou **55L**?` });
-      }
-      if (produtoTecnico === 'ar-sem-modelo') {
-        return res.json({ reply: `Qual o modelo do ar-condicionado? **Slim Série 2** ou **Eco Compact**?` });
-      }
       const imagens = IMAGENS_TECNICAS[produtoTecnico];
       if (imagens && imagens.length > 0) {
         const nomeProduto = produtoTecnico.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
