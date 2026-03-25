@@ -1400,7 +1400,8 @@ app.post('/api/chat', async (req, res) => {
       !ultimaMensagem.includes('geladeira') && !ultimaMensagem.includes('gerador') &&
       !ultimaMensagem.includes('slim') && !ultimaMensagem.includes('serie') && !ultimaMensagem.includes('eco') && !ultimaMensagem.includes('compact');
     if (querImagemAr) {
-      return res.json({ reply: `Para te enviar a imagem técnica, preciso saber o modelo. Por favor, refaça a solicitação informando:\n\n• **"imagem técnica do Slim Série 2"**\n• **"imagem técnica do Eco Compact"**` });
+      return res.json({ reply: `Para te enviar a imagem técnica, preciso saber o modelo:
+[SUGESTOES]imagem técnica do Slim Série 2|imagem técnica do Eco Compact[/SUGESTOES]` });
     }
 
     // Foto do produto sem modelo (ar)
@@ -1409,7 +1410,8 @@ app.post('/api/chat', async (req, res) => {
       !ultimaMensagem.includes('tecni') && !ultimaMensagem.includes('geladeira') && !ultimaMensagem.includes('gerador') &&
       !ultimaMensagem.includes('slim') && !ultimaMensagem.includes('serie') && !ultimaMensagem.includes('eco') && !ultimaMensagem.includes('compact');
     if (querFotoAr) {
-      return res.json({ reply: `Para te enviar as fotos, preciso saber o modelo. Por favor, refaça a solicitação informando:\n\n• **"fotos do Slim Série 2"**\n• **"fotos do Eco Compact"**` });
+      return res.json({ reply: `Para te enviar as fotos, preciso saber o modelo:
+[SUGESTOES]fotos do Slim Série 2|fotos do Eco Compact[/SUGESTOES]` });
     }
 
     // Foto da geladeira sem modelo
@@ -1417,7 +1419,8 @@ app.post('/api/chat', async (req, res) => {
       ultimaMensagem.includes('geladeira') && !ultimaMensagem.includes('tecni') &&
       !ultimaMensagem.includes('35') && !ultimaMensagem.includes('45') && !ultimaMensagem.includes('55');
     if (querFotoGeladeira) {
-      return res.json({ reply: `Para te enviar as fotos da geladeira, preciso saber o modelo. Por favor, refaça a solicitação informando:\n\n• **"fotos da geladeira 35L"**\n• **"fotos da geladeira 45L"**\n• **"fotos da geladeira 55L"**` });
+      return res.json({ reply: `Para te enviar as fotos da geladeira, preciso saber o modelo:
+[SUGESTOES]fotos da geladeira 35L|fotos da geladeira 45L|fotos da geladeira 55L[/SUGESTOES]` });
     }
 
     // Imagem técnica da geladeira sem modelo
@@ -1425,21 +1428,24 @@ app.post('/api/chat', async (req, res) => {
       ultimaMensagem.includes('geladeira') &&
       !ultimaMensagem.includes('35') && !ultimaMensagem.includes('45') && !ultimaMensagem.includes('55');
     if (querImagemGeladeira) {
-      return res.json({ reply: `Para te enviar a imagem técnica da geladeira, preciso saber o modelo. Por favor, refaça a solicitação informando:\n\n• **"imagem técnica da geladeira 35L"**\n• **"imagem técnica da geladeira 45L"**\n• **"imagem técnica da geladeira 55L"**` });
+      return res.json({ reply: `Para te enviar a imagem técnica da geladeira, preciso saber o modelo:
+[SUGESTOES]imagem técnica da geladeira 35L|imagem técnica da geladeira 45L|imagem técnica da geladeira 55L[/SUGESTOES]` });
     }
 
     // Depoimento sem marca
     const querDepoimentoSemMarca = ['depoimento', 'foto de cliente', 'video de cliente'].some(p => ultimaMensagem.includes(p)) &&
       !['scania','volvo','mercedes','volkswagen','vw','iveco','ford','man','daf','hyundai','kia','fiat','renault','barco'].some(p => ultimaMensagem.includes(p));
     if (querDepoimentoSemMarca) {
-      return res.json({ reply: `Para buscar depoimentos, preciso saber a marca ou modelo do caminhão. Por favor, refaça a solicitação informando:\n\n• **"depoimento Scania NTG"**\n• **"depoimento Volvo FH"**\n• **"depoimento Mercedes Actros"**` });
+      return res.json({ reply: `Para buscar depoimentos, preciso saber a marca ou modelo do caminhão:
+[SUGESTOES]depoimento Scania NTG|depoimento Volvo FH|depoimento Mercedes Actros[/SUGESTOES]` });
     }
 
     // Assistência técnica sem localidade
     const querAssistenciaSemLocal = palavrasAssistencia.some(p => ultimaMensagem.includes(p)) &&
       ultimaMensagem === ultimaMensagem.replace(/assistencia|assistência|tecnica|técnica|ponto|autorizado|autorizada|onde|conserto|quero|preciso|tem|temos|qual/gi, '').trim() === '';
     if (querAssistenciaSemLocal || (buscaAssistencia && queryFinal.trim().length < 2)) {
-      return res.json({ reply: `Para buscar assistência técnica, preciso saber a cidade ou estado. Por favor, refaça a solicitação informando:\n\n• **"assistência técnica em MG"**\n• **"assistência técnica em Uberaba"**\n• **"assistência técnica em São Paulo"**` });
+      return res.json({ reply: `Para buscar assistência técnica, preciso saber a cidade ou estado:
+[SUGESTOES]assistência técnica em MG|assistência técnica em Uberaba|assistência técnica em São Paulo[/SUGESTOES]` });
     }
 
     // Detecta pedido de imagem técnica
@@ -1450,10 +1456,12 @@ app.post('/api/chat', async (req, res) => {
         return res.json({ reply: `Aqui estão as dimensões e pesos da Geladeira Portátil:\n\n• **Modelo 35L:** 647 x 400 x 441mm | Peso: 16,14 kg\n• **Modelo 45L:** 647 x 400 x 506mm | Peso: 16,5 kg\n• **Modelo 55L:** 647 x 400 x 571mm | Peso: 17,2 kg${RODAPE}` });
       }
       if (produtoTecnico === 'geladeira-sem-modelo') {
-        return res.json({ reply: `Para te enviar a imagem técnica da geladeira, preciso saber o modelo. Por favor, refaça a solicitação informando:\n\n• **"imagem técnica da geladeira 35L"**\n• **"imagem técnica da geladeira 45L"**\n• **"imagem técnica da geladeira 55L"**` });
+        return res.json({ reply: `Para te enviar a imagem técnica da geladeira, preciso saber o modelo:
+[SUGESTOES]imagem técnica da geladeira 35L|imagem técnica da geladeira 45L|imagem técnica da geladeira 55L[/SUGESTOES]` });
       }
       if (produtoTecnico === 'ar-sem-modelo') {
-        return res.json({ reply: `Para te enviar a imagem técnica, preciso saber o modelo. Por favor, refaça a solicitação informando:\n\n• **"imagem técnica do Slim Série 2"**\n• **"imagem técnica do Eco Compact"**` });
+        return res.json({ reply: `Para te enviar a imagem técnica, preciso saber o modelo:
+[SUGESTOES]imagem técnica do Slim Série 2|imagem técnica do Eco Compact[/SUGESTOES]` });
       }
       const imagens = IMAGENS_TECNICAS[produtoTecnico];
       if (imagens && imagens.length > 0) {
