@@ -108,9 +108,8 @@ function detectarImagemTecnica(mensagem) {
   if (m.includes('45') || m.includes('45l')) return 'geladeira-45l';
   if (m.includes('55') || m.includes('55l')) return 'geladeira-55l';
   if (m.includes('geladeira') || m.includes('frigobar')) {
-    // Só retorna se especificou o modelo correto (35, 45 ou 55)
-    // Se pediu modelo que não existe, retorna null
-    return null;
+    // Usuário pediu imagem técnica da geladeira mas não especificou o modelo
+    return 'geladeira-sem-modelo';
   }
   if (m.includes('gerador')) return 'gerador';
   if (m.includes('slim') || m.includes('serie 2') || m.includes('série 2') || m.includes('condicionado') || (/\bar\b/.test(m) && !m.includes('geladeira'))) return 'ar';
@@ -1424,10 +1423,13 @@ app.post('/api/chat', async (req, res) => {
     // Detecta pedido de imagem técnica
     const produtoTecnico = detectarImagemTecnica(ultimaMensagem);
     if (produtoTecnico) {
+      if (produtoTecnico === 'geladeira-sem-modelo') {
+        return res.json({ reply: `Qual o modelo da geladeira? **35L**, **45L** ou **55L**?` });
+      }
       const imagens = IMAGENS_TECNICAS[produtoTecnico];
       if (imagens && imagens.length > 0) {
         const nomeProduto = produtoTecnico.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
-        const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
+        const links = imagens.map((img, i) => `\uD83D\uDDBC\uFE0F **Imagem ${i+1}**: ${img}`).join('\n');
         return res.json({ reply: `Entendi que você quer as imagens técnicas de **${nomeProduto}**. Aqui estão:\n\n${links}` });
       } else {
         return res.json({ reply: `Entendi que você quer imagens técnicas, mas não encontrei imagens para esse produto.` });
