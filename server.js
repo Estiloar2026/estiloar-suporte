@@ -1344,8 +1344,7 @@ app.post('/api/chat', async (req, res) => {
       }
 
       const PAGINA = 6;
-      const sessionId = req.ip || 'default';
-      const paginaKey = sessionId + '_' + queryFinal;
+      const paginaKey = 'pag_' + queryFinal.toLowerCase().replace(/\s+/g, '_');
 
       // Verifica se é pedido de "mais" resultados
       const pedirMais = /mais|continua|proximo|próximo|resto|restante|seguinte|next/i.test(ultimaMensagem);
