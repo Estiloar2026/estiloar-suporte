@@ -124,27 +124,7 @@ let ultimaAtualizacao = null;
 // Paginação de assistência técnica por sessão
 const paginacaoAssistencia = new Map();
 
-// Sistema de contexto persistente entre mensagens
-const contextosPendentes = new Map(); // sessionId -> { acao, dados, timestamp }
-
-function salvarContexto(sessionId, acao, dados) {
-  contextosPendentes.set(sessionId, { acao, dados, timestamp: Date.now() });
-}
-
-function obterContexto(sessionId) {
-  const ctx = contextosPendentes.get(sessionId);
-  if (!ctx) return null;
-  // Expira após 2 minutos de inatividade
-  if (Date.now() - ctx.timestamp > 2 * 60 * 1000) {
-    contextosPendentes.delete(sessionId);
-    return null;
-  }
-  return ctx;
-}
-
-function limparContexto(sessionId) {
-  contextosPendentes.delete(sessionId);
-} // sessionId -> { pontos, offset, local }
+ // sessionId -> { pontos, offset, local }
 
 // Mapeamento de modelos para marcas
 const MODELOS_MARCAS = {
@@ -1131,64 +1111,6 @@ app.post('/api/chat', async (req, res) => {
     const ultimaMensagem = normalizarMensagem(mensagemOriginal);
     const RODAPE = '\n\nPosso ajudar em algo mais? 😊';
 
-    // ============================================================
-    // SISTEMA DE CONTEXTO — detecta pelo histórico da conversa
-    // ============================================================
-    // Verifica a última mensagem do assistente para entender contexto pendente
-    const ultimaRespostaBot = messages.slice().reverse().find(m => m.role === 'assistant')?.content || '';
-    const penultimaMsgUsuario = messages.length >= 3 ? messages[messages.length - 2]?.content?.toLowerCase() || '' : '';
-    const m = ultimaMensagem;
-
-    // Contexto: Pedro perguntou modelo do ar na última resposta
-    const botPerguntouModeloAr = ultimaRespostaBot.includes('Slim Série 2 ou Eco Compact') ||
-                                  ultimaRespostaBot.includes('slim série 2 ou eco compact');
-    if (botPerguntouModeloAr) {
-      const ehSlim = m.includes('slim') || m.includes('serie 2') || m.includes('serie2') || m === 's';
-      const ehEco = m.includes('eco') || m.includes('compact');
-      if (ehSlim || ehEco) {
-        const produto = ehEco ? 'ecocompact' : 'ar';
-        const nome = ehEco ? 'Eco Compact' : 'Slim Série 2';
-        // Detecta se era imagem técnica ou foto pela penúltima mensagem do usuário
-        const eraImagemTecnica = penultimaMsgUsuario.includes('tecni') || penultimaMsgUsuario.includes('medida') || penultimaMsgUsuario.includes('dimensao');
-        if (eraImagemTecnica) {
-          const imagens = IMAGENS_TECNICAS[produto];
-          if (imagens) {
-            const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
-            return res.json({ reply: `Aqui estão as imagens técnicas do **${nome}**:\n\n${links}${RODAPE}` });
-          }
-        } else {
-          const fotos = FOTOS_PRODUTOS[produto];
-          if (fotos) {
-            const links = fotos.map((img, i) => `📷 **Foto ${i+1}**: ${img}`).join('\n');
-            return res.json({ reply: `Aqui estão as fotos do **${nome}**:\n\n${links}${RODAPE}` });
-          }
-        }
-      }
-    }
-
-    // Contexto: Pedro perguntou modelo da geladeira
-    const botPerguntouModeloGeladeira = ultimaRespostaBot.includes('35L') && ultimaRespostaBot.includes('45L') && ultimaRespostaBot.includes('55L');
-    if (botPerguntouModeloGeladeira) {
-      const eh35 = m.includes('35');
-      const eh45 = m.includes('45');
-      const eh55 = m.includes('55');
-      if (eh35 || eh45 || eh55) {
-        const modelo = eh35 ? 'geladeira-35l' : eh45 ? 'geladeira-45l' : 'geladeira-55l';
-        const nomeModelo = eh35 ? '35L' : eh45 ? '45L' : '55L';
-        const eraImagemTecnica = penultimaMsgUsuario.includes('tecni') || penultimaMsgUsuario.includes('medida');
-        if (eraImagemTecnica) {
-          const imagens = IMAGENS_TECNICAS[modelo];
-          if (imagens) {
-            const links = imagens.map((img, i) => `🖼️ **Imagem ${i+1}**: ${img}`).join('\n');
-            return res.json({ reply: `Aqui estão as imagens técnicas da **Geladeira ${nomeModelo}**:\n\n${links}${RODAPE}` });
-          }
-        } else {
-          const fotos = FOTOS_PRODUTOS['geladeira'];
-          const links = fotos.map((img, i) => `📷 **Foto ${i+1}**: ${img}`).join('\n');
-          return res.json({ reply: `Aqui estão as fotos da **Geladeira Portátil**:\n\n${links}${RODAPE}` });
-        }
-      }
-    }
 
     // Verifica se em qualquer parte do histórico da conversa há menção ao FH
     const historicoCompleto = messages.map(m => (m.content || '').toLowerCase()).join(' ');
@@ -1502,6 +1424,58 @@ app.post('/api/chat', async (req, res) => {
       return res.json({ reply: `${intro}\n\n${lista}${rodape}` });
     }
 
+
+    // ============================================================
+    // ORIENTAÇÕES PARA MENSAGENS INCOMPLETAS
+    // ============================================================
+
+    // Imagem técnica do ar sem modelo
+    const querImagemAr = (ultimaMensagem.includes('imagem tecni') || ultimaMensagem.includes('foto tecni') || ultimaMensagem.includes('imagem tecnica')) &&
+      (ultimaMensagem.includes(' ar') || ultimaMensagem.includes('condicionado') || ultimaMensagem.endsWith('ar')) &&
+      !ultimaMensagem.includes('geladeira') && !ultimaMensagem.includes('gerador') &&
+      !ultimaMensagem.includes('slim') && !ultimaMensagem.includes('serie') && !ultimaMensagem.includes('eco') && !ultimaMensagem.includes('compact');
+    if (querImagemAr) {
+      return res.json({ reply: `Para te enviar a imagem técnica, preciso saber o modelo. Por favor, refaça a solicitação informando:\n\n• **"imagem técnica do Slim Série 2"**\n• **"imagem técnica do Eco Compact"**` });
+    }
+
+    // Foto do produto sem modelo (ar)
+    const querFotoAr = (ultimaMensagem.includes('foto') || ultimaMensagem.includes('imagem')) &&
+      (ultimaMensagem.includes(' ar') || ultimaMensagem.endsWith('ar')) &&
+      !ultimaMensagem.includes('tecni') && !ultimaMensagem.includes('geladeira') && !ultimaMensagem.includes('gerador') &&
+      !ultimaMensagem.includes('slim') && !ultimaMensagem.includes('serie') && !ultimaMensagem.includes('eco') && !ultimaMensagem.includes('compact');
+    if (querFotoAr) {
+      return res.json({ reply: `Para te enviar as fotos, preciso saber o modelo. Por favor, refaça a solicitação informando:\n\n• **"fotos do Slim Série 2"**\n• **"fotos do Eco Compact"**` });
+    }
+
+    // Foto da geladeira sem modelo
+    const querFotoGeladeira = (ultimaMensagem.includes('foto') || ultimaMensagem.includes('imagem')) &&
+      ultimaMensagem.includes('geladeira') && !ultimaMensagem.includes('tecni') &&
+      !ultimaMensagem.includes('35') && !ultimaMensagem.includes('45') && !ultimaMensagem.includes('55');
+    if (querFotoGeladeira) {
+      return res.json({ reply: `Para te enviar as fotos da geladeira, preciso saber o modelo. Por favor, refaça a solicitação informando:\n\n• **"fotos da geladeira 35L"**\n• **"fotos da geladeira 45L"**\n• **"fotos da geladeira 55L"**` });
+    }
+
+    // Imagem técnica da geladeira sem modelo
+    const querImagemGeladeira = (ultimaMensagem.includes('imagem tecni') || ultimaMensagem.includes('foto tecni')) &&
+      ultimaMensagem.includes('geladeira') &&
+      !ultimaMensagem.includes('35') && !ultimaMensagem.includes('45') && !ultimaMensagem.includes('55');
+    if (querImagemGeladeira) {
+      return res.json({ reply: `Para te enviar a imagem técnica da geladeira, preciso saber o modelo. Por favor, refaça a solicitação informando:\n\n• **"imagem técnica da geladeira 35L"**\n• **"imagem técnica da geladeira 45L"**\n• **"imagem técnica da geladeira 55L"**` });
+    }
+
+    // Depoimento sem marca
+    const querDepoimentoSemMarca = ['depoimento', 'foto de cliente', 'video de cliente'].some(p => ultimaMensagem.includes(p)) &&
+      !['scania','volvo','mercedes','volkswagen','vw','iveco','ford','man','daf','hyundai','kia','fiat','renault','barco'].some(p => ultimaMensagem.includes(p));
+    if (querDepoimentoSemMarca) {
+      return res.json({ reply: `Para buscar depoimentos, preciso saber a marca ou modelo do caminhão. Por favor, refaça a solicitação informando:\n\n• **"depoimento Scania NTG"**\n• **"depoimento Volvo FH"**\n• **"depoimento Mercedes Actros"**` });
+    }
+
+    // Assistência técnica sem localidade
+    const querAssistenciaSemLocal = palavrasAssistencia.some(p => ultimaMensagem.includes(p)) &&
+      ultimaMensagem === ultimaMensagem.replace(/assistencia|assistência|tecnica|técnica|ponto|autorizado|autorizada|onde|conserto|quero|preciso|tem|temos|qual/gi, '').trim() === '';
+    if (querAssistenciaSemLocal || (buscaAssistencia && queryFinal.trim().length < 2)) {
+      return res.json({ reply: `Para buscar assistência técnica, preciso saber a cidade ou estado. Por favor, refaça a solicitação informando:\n\n• **"assistência técnica em MG"**\n• **"assistência técnica em Uberaba"**\n• **"assistência técnica em São Paulo"**` });
+    }
 
     // Detecta pedido de imagem técnica
     const produtoTecnico = detectarImagemTecnica(ultimaMensagem);
