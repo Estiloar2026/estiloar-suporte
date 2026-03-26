@@ -285,12 +285,17 @@ function buscarNoIndice(query) {
     return null;
   }
 
-  // Sem marca conhecida — busca por palavras em qualquer campo (aceita singular/plural)
+  // Sem marca conhecida — busca por palavras em qualquer campo (aceita singular/plural e variações numéricas)
   const resultados = indiceDrive.filter(item => {
     const campos = [normIdx(item.marca), normIdx(item.marcaNome), normIdx(item.modelo), normIdx(item.modeloNome)];
+    const camposSemSep = campos.map(c => normNum(c));
     return palavrasQuery.some(p => {
-      // Testa a palavra e variações (singular/plural)
       const variacoes = [p, p.endsWith('s') ? p.slice(0,-1) : p+'s', p.endsWith('os') ? p.slice(0,-2) : p];
+      // Para números, usa normNum para ignorar pontos e espaços
+      if (/^\d+$/.test(p)) {
+        const pSemSep = normNum(p);
+        return camposSemSep.some(campo => new RegExp('(^|[^\d])' + pSemSep + '([^\d]|$)').test(campo));
+      }
       return campos.some(campo => variacoes.some(v => campo.includes(v)));
     });
   });
