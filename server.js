@@ -1085,6 +1085,28 @@ app.post('/api/chat', async (req, res) => {
       : normalizarMensagem(mensagemOriginal);
     const RODAPE = '\n\nPosso ajudar em algo mais? 😊';
 
+    // Detecta pedido de manual
+    const pedidoManual = ultimaMensagem.includes('manual') || ultimaMensagem.includes('baixar') || ultimaMensagem.includes('download') || ultimaMensagem.includes('pdf');
+    if (pedidoManual) {
+      const sobreSlim = ultimaMensagem.includes('slim') || ultimaMensagem.includes('serie 2') || ultimaMensagem.includes('serie2');
+      const sobreEco = ultimaMensagem.includes('eco') || ultimaMensagem.includes('compact');
+      const sobreGeladeira = ultimaMensagem.includes('geladeira') || ultimaMensagem.includes('frigobar');
+      const sobreGerador = ultimaMensagem.includes('gerador') || ultimaMensagem.includes('le-3000') || ultimaMensagem.includes('le3000');
+      const sobreAr = (ultimaMensagem.includes('ar') || ultimaMensagem.includes('condicionado')) && !sobreGeladeira && !sobreGerador;
+
+      const BASE = 'https://estiloar-suporte.onrender.com';
+      if (sobreSlim) return res.json({ reply: `Aqui está o manual do **Ar-Condicionado Slim Série 2**:\n\n📥 [Baixar Manual](${BASE}/MANUAL AR SLIM SERIE 2.pdf)${RODAPE}` });
+      if (sobreEco) return res.json({ reply: `Aqui está o manual do **Ar-Condicionado Eco Compact**:\n\n📥 [Baixar Manual](${BASE}/MANUAL AR ECO COMPACT.pdf)${RODAPE}` });
+      if (sobreGeladeira) return res.json({ reply: `Aqui está o manual da **Geladeira Portátil**:\n\n📥 [Baixar Manual](${BASE}/MANUAL GELADEIRAS.pdf)${RODAPE}` });
+      if (sobreGerador) return res.json({ reply: `Aqui está o manual do **Gerador Digital 24V**:\n\n📥 [Baixar Manual](${BASE}/MANUAL GERADOR 24V.pdf)${RODAPE}` });
+      if (sobreAr) {
+        // Não especificou qual ar
+        return res.json({ reply: `Qual manual você precisa?\n\n📥 [Manual Ar Slim Série 2](${BASE}/MANUAL AR SLIM SERIE 2.pdf)\n📥 [Manual Eco Compact](${BASE}/MANUAL AR ECO COMPACT.pdf)${RODAPE}` });
+      }
+      // Manual sem produto especificado — lista todos
+      return res.json({ reply: `Aqui estão todos os manuais disponíveis:\n\n📥 [Manual Ar Slim Série 2](${BASE}/MANUAL AR SLIM SERIE 2.pdf)\n📥 [Manual Eco Compact](${BASE}/MANUAL AR ECO COMPACT.pdf)\n📥 [Manual Geladeira Portátil](${BASE}/MANUAL GELADEIRAS.pdf)\n📥 [Manual Gerador Digital 24V](${BASE}/MANUAL GERADOR 24V.pdf)${RODAPE}` });
+    }
+
     // Detecta botão "Tenho uma dúvida" dos cards
     if (ultimaMensagem.trim() === 'tenho uma duvida' || ultimaMensagem.trim() === 'tenho uma dúvida') {
       return res.json({ reply: `Qual a sua dúvida? 😊` });
