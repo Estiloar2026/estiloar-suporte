@@ -248,7 +248,7 @@ function buscarNoIndice(query) {
         const nomeModelo = normIdx(item.modeloNome);
         const nomeModeloSemSep = normNum(nomeModelo);
         return palavrasModelo.every(p => {
-          if (/^\d+$/.test(p)) {
+          if (/^[\d][\d\s.]*[\d]$|^\d+$/.test(p)) {
             const pSemSep = normNum(p);
             // Compara sem separadores e exige boundary
             return new RegExp('(^|[^\d])' + pSemSep + '([^\d]|$)').test(nomeModeloSemSep);
@@ -263,7 +263,7 @@ function buscarNoIndice(query) {
         const nomeModelo = normIdx(item.modeloNome);
         const nomeModeloSemSep = normNum(nomeModelo);
         return palavrasModelo.some(p => {
-          if (/^\d+$/.test(p)) {
+          if (/^[\d][\d\s.]*[\d]$|^\d+$/.test(p)) {
             const pSemSep = normNum(p);
             return new RegExp('(^|[^\d])' + pSemSep + '([^\d]|$)').test(nomeModeloSemSep);
           }
@@ -292,7 +292,7 @@ function buscarNoIndice(query) {
     return palavrasQuery.some(p => {
       const variacoes = [p, p.endsWith('s') ? p.slice(0,-1) : p+'s', p.endsWith('os') ? p.slice(0,-2) : p];
       // Para números, usa normNum para ignorar pontos e espaços
-      if (/^\d+$/.test(p)) {
+      if (/^[\d][\d\s.]*[\d]$|^\d+$/.test(p)) {
         const pSemSep = normNum(p);
         return camposSemSep.some(campo => new RegExp('(^|[^\d])' + pSemSep + '([^\d]|$)').test(campo));
       }
