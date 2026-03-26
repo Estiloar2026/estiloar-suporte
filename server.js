@@ -78,13 +78,20 @@ function detectarFotoProduto(mensagem) {
   // Não ativa se for imagem técnica ou assistência
   if (m.includes('tecni') || m.includes('medida') || m.includes('dimensao') || m.includes('dimensão')) return null;
   if (m.includes('assistencia') || m.includes('assistência')) return null;
-  // Ativa com palavras de foto/imagem + produto
-  const querFoto = m.includes('foto') || m.includes('imagem') || m.includes('fotos') || m.includes('imagens') || m.includes('ver o produto') || m.includes('ver o ar') || m.includes('ver a geladeira') || m.includes('ver o gerador');
+  // Ativa com palavras de foto/imagem + produto (todas as variações)
+  const querFoto = m.includes('foto') || m.includes('fotos') || m.includes('imagem') || m.includes('imagens') ||
+    m.includes('ver o produto') || m.includes('ver o ar') || m.includes('ver a geladeira') || m.includes('ver o gerador') ||
+    m.includes('ver o eco') || m.includes('ver o slim');
   if (!querFoto) return null;
-  if (m.includes('eco') || m.includes('compact')) return 'ecocompact';
   if (m.includes('geladeira') || m.includes('frigobar')) return 'geladeira';
   if (m.includes('gerador')) return 'gerador';
-  if (m.includes('ar') || m.includes('slim') || m.includes('condicionado')) return 'ar';
+  // Ar: só retorna modelo específico se o usuário mencionou explicitamente
+  if (m.includes('eco') || m.includes('compact')) return 'ecocompact';
+  if (m.includes('slim') || m.includes('serie 2') || m.includes('série 2')) return 'ar';
+  // Ar genérico sem modelo -> retorna sinal para mostrar botões de escolha
+  const temReferenciaArGenerico = m.includes(' ar') || m.includes('ar ') || m.endsWith('ar') || m.startsWith('ar') || m.includes('condicionado') || m.includes('ar-condicionado');
+  const semOutroProduto = !m.includes('geladeira') && !m.includes('gerador');
+  if (temReferenciaArGenerico && semOutroProduto) return 'ar-sem-modelo-foto';
   return null;
 }
 
@@ -1205,6 +1212,10 @@ app.post('/api/chat', async (req, res) => {
     // Detecta pedido de foto do produto
     const produtoFoto = detectarFotoProduto(ultimaMensagem);
     if (produtoFoto) {
+      // Ar sem modelo especificado — pergunta com botões
+      if (produtoFoto === 'ar-sem-modelo-foto') {
+        return res.json({ reply: `Para te enviar as fotos, preciso saber o modelo do ar-condicionado:\n[SUGESTOES]fotos do Slim Série 2|fotos do Eco Compact[/SUGESTOES]` });
+      }
       const fotos = FOTOS_PRODUTOS[produtoFoto];
       if (fotos && fotos.length > 0) {
         const nomeProduto = produtoFoto === 'ecocompact' ? 'Eco Compact' :
@@ -1402,16 +1413,6 @@ app.post('/api/chat', async (req, res) => {
     if (querImagemAr) {
       return res.json({ reply: `Para te enviar a imagem técnica, preciso saber o modelo:
 [SUGESTOES]imagem técnica do Slim Série 2|imagem técnica do Eco Compact[/SUGESTOES]` });
-    }
-
-    // Foto do produto sem modelo (ar)
-    const querFotoAr = (ultimaMensagem.includes('foto') || ultimaMensagem.includes('imagem')) &&
-      (ultimaMensagem.includes(' ar') || ultimaMensagem.endsWith('ar')) &&
-      !ultimaMensagem.includes('tecni') && !ultimaMensagem.includes('geladeira') && !ultimaMensagem.includes('gerador') &&
-      !ultimaMensagem.includes('slim') && !ultimaMensagem.includes('serie') && !ultimaMensagem.includes('eco') && !ultimaMensagem.includes('compact');
-    if (querFotoAr) {
-      return res.json({ reply: `Para te enviar as fotos, preciso saber o modelo:
-[SUGESTOES]fotos do Slim Série 2|fotos do Eco Compact[/SUGESTOES]` });
     }
 
     // Foto da geladeira sem modelo
