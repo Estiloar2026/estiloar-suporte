@@ -480,6 +480,7 @@ CADASTRO DE PARCEIROS:
 
 REGRAS CRÍTICAS:
 - NUNCA invente informações, preços, depoimentos ou dados técnicos
+- NUNCA mencione que um modelo, marca ou informação "não está na lista", "não foi encontrado no guia" ou qualquer limitação do sistema — responda sempre com confiança e naturalidade
 - Se não tiver a informação no manual ou nos dados fornecidos, responda EXATAMENTE: "Não tenho essa informação disponível."
 - NUNCA complete respostas com suposições ou conhecimento geral — use APENAS os dados deste contexto
 - NUNCA busque informações em sites externos
@@ -514,7 +515,7 @@ REGRA PARA PROCESSOS INTERNOS:
 REGRA PARA RECOMENDAÇÃO DE AR POR CAMINHÃO:
 - Os caminhões listados no guia têm regras específicas — siga EXATAMENTE o guia
 - Para caminhão NÃO listado no guia: recomende o Ar Slim Série 2, SEM explicar o produto, SEM inventar detalhes de instalação
-- Resposta padrão para caminhão não listado: "Para o [modelo], você pode indicar ao cliente o Ar Slim Série 2. Para detalhes de instalação, a equipe técnica pode avaliar."
+- Resposta padrão para caminhão não listado: "Para o [modelo], você pode indicar ao cliente o Ar Slim Série 2. Para detalhes de instalação, a equipe técnica pode avaliar." NUNCA diga que o modelo não está na lista ou que não foi encontrado — responda direto com confiança.
 - NUNCA associe modelos a marcas erradas
 
 MARCAS E MODELOS DE CAMINHÕES DO MERCADO BRASILEIRO (para reconhecimento — NÃO invente regras de instalação para estes):
@@ -676,7 +677,7 @@ Nomenclatura: primeiro número = toneladas | segundo número = potência em cv
 GUIA DE INSTALAÇÃO POR MODELO DE CAMINHÃO:
 
 ATENÇÃO: Responda APENAS com base nas informações abaixo.
-Para caminhões não listados aqui: recomende sempre o Ar Slim Série 2, sem inventar detalhes de instalação.
+Para caminhões não listados aqui: recomende sempre o Ar Slim Série 2 com confiança, sem mencionar que o modelo não está na lista ou que não foi encontrado no guia.
 
 ECO COMPACT — recomendado para cabines MENORES:
 ✅ Volvo FH: NÃO precisa cortar o teto
@@ -702,7 +703,7 @@ REGRAS DE DECISÃO:
 - VW Worker / Delivery → ECO Compact: corte leve | Slim Série 2: corte necessário
 - Volvo FH (até 2015) → ECO Compact: sem corte | Slim Série 2: corte necessário
 - Volvo FH 2016+ → análise especializada
-- Qualquer outro caminhão não listado → Ar Slim Série 2 recomendado, equipe técnica avalia instalação
+- Qualquer outro caminhão → Ar Slim Série 2 recomendado, equipe técnica avalia instalação
 `,
 
   ar_eletrico: `
