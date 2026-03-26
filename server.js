@@ -1076,7 +1076,13 @@ app.post('/api/chat', async (req, res) => {
         .replace(/__ANO__(\d{4})__ANO__/g, '$1');
     }
 
-    const ultimaMensagem = normalizarMensagem(mensagemOriginal);
+    // Para depoimentos, não normaliza números (ex: 1620 não vira 1.620)
+    const ehMsgDepoimento = /dep[ou]iment[oa]s?|foto de cliente|video de cliente/i.test(mensagemOriginal);
+    const ultimaMensagem = ehMsgDepoimento
+      ? mensagemOriginal.toLowerCase()
+          .replace(/dep[ou]iment[oa]s?/gi, 'depoimento')
+          .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      : normalizarMensagem(mensagemOriginal);
     const RODAPE = '\n\nPosso ajudar em algo mais? 😊';
 
     // Detecta botão "Tenho uma dúvida" dos cards
@@ -1485,7 +1491,34 @@ app.post('/api/chat', async (req, res) => {
       if (indiceDrive.length === 0) {
         return res.json({ reply: `No momento não consigo acessar os depoimentos. 😊` });
       }
-      const resultados = buscarNoIndice(ultimaMensagem);
+
+      // Se não tem marca na mensagem, tenta detectar via MODELOS_MARCAS
+      const marcasDiretasDep = ['scania','volvo','mercedes','iveco','man','daf','ford','volkswagen','vw','hyundai','kia','fiat','renault','barco'];
+      const temMarcaNaMensagem = marcasDiretasDep.some(m => ultimaMensagem.includes(m));
+      let queryParaDrive = ultimaMensagem;
+      if (!temMarcaNaMensagem) {
+        const normQ = normIdx(ultimaMensagem);
+        for (const [modelo, marca] of Object.entries(MODELOS_MARCAS)) {
+          if (normQ.includes(normIdx(modelo))) {
+            // Adiciona a marca automaticamente na query
+            queryParaDrive = ultimaMensagem + ' ' + marca;
+            break;
+          }
+        }
+        // Também testa números soltos (ex: "1620" -> mercedes)
+        const numMatch = normQ.match(/\b(\d{4})\b/);
+        if (numMatch && !queryParaDrive.includes(' mercedes') && !queryParaDrive.includes(' scania')) {
+          const num = numMatch[1];
+          for (const [modelo, marca] of Object.entries(MODELOS_MARCAS)) {
+            if (modelo === num || modelo === num.slice(0,2) + '.' + num.slice(2)) {
+              queryParaDrive = ultimaMensagem + ' ' + marca;
+              break;
+            }
+          }
+        }
+      }
+
+      const resultados = buscarNoIndice(queryParaDrive);
       if (resultados && resultados.length > 0) {
         const aviso = resultados._aviso || `Encontrei ${resultados.length} pasta(s) no Drive:`;
         const links = resultados.map(r => `📁 **${r.marcaNome} — ${r.modeloNome}**: ${r.link}`).join('\n');
