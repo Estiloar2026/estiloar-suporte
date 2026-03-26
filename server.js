@@ -1124,6 +1124,22 @@ app.post('/api/chat', async (req, res) => {
       return res.json({ reply: `Aqui estão todos os manuais disponíveis:\n\n📥 **Ar Slim Série 2:** ${SLIM_PDF}\n📥 **Eco Compact:** ${ECO_PDF}\n📥 **Geladeira Portátil:** ${GEL_PDF}\n📥 **Gerador Digital 24V:** ${GER_PDF}${RODAPE}` });
     }
 
+    // Detecta pedido de preço/valor do ar sem modelo especificado
+    const querPrecoAr = (ultimaMensagem.includes('valor') || ultimaMensagem.includes('preco') || ultimaMensagem.includes('preço') || ultimaMensagem.includes('quanto')) &&
+      (ultimaMensagem.includes('ar') || ultimaMensagem.includes('condicionado') || ultimaMensagem.includes('slim') || ultimaMensagem.includes('eco'));
+    const jaTemVoltagem = ultimaMensagem.includes('12v') || ultimaMensagem.includes('12 v') || ultimaMensagem.includes('24v') || ultimaMensagem.includes('24 v');
+    const jaTemModelo = ultimaMensagem.includes('slim') || ultimaMensagem.includes('serie 2') || ultimaMensagem.includes('eco compact') || ultimaMensagem.includes('eco') || ultimaMensagem.includes('compact');
+
+    if (querPrecoAr && !jaTemVoltagem && !jaTemModelo) {
+      return res.json({ reply: `Para consultar o preço, preciso saber:\n\n**1. Qual modelo?**\n• Ar Slim Série 2\n• Ar Eco Compact\n\n**2. Qual a voltagem do caminhão?**\n• 12V\n• 24V` });
+    }
+    if (querPrecoAr && !jaTemVoltagem && jaTemModelo) {
+      return res.json({ reply: `Qual a voltagem do caminhão do cliente? **12V** ou **24V**?` });
+    }
+    if (querPrecoAr && jaTemVoltagem && !jaTemModelo) {
+      return res.json({ reply: `Qual o modelo desejado?\n\n• **Ar Slim Série 2**\n• **Ar Eco Compact**` });
+    }
+
     // Detecta botão "Tenho uma dúvida" dos cards
     if (ultimaMensagem.trim() === 'tenho uma duvida' || ultimaMensagem.trim() === 'tenho uma dúvida') {
       return res.json({ reply: `Qual a sua dúvida? 😊` });
