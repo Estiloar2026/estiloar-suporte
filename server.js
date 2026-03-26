@@ -1095,16 +1095,19 @@ app.post('/api/chat', async (req, res) => {
       const sobreAr = (ultimaMensagem.includes('ar') || ultimaMensagem.includes('condicionado')) && !sobreGeladeira && !sobreGerador;
 
       const BASE = 'https://estiloar-suporte.onrender.com';
-      if (sobreSlim) return res.json({ reply: `Aqui está o manual do **Ar-Condicionado Slim Série 2**:\n\n📥 [Baixar Manual](${BASE}/MANUAL AR SLIM SERIE 2.pdf)${RODAPE}` });
-      if (sobreEco) return res.json({ reply: `Aqui está o manual do **Ar-Condicionado Eco Compact**:\n\n📥 [Baixar Manual](${BASE}/MANUAL AR ECO COMPACT.pdf)${RODAPE}` });
-      if (sobreGeladeira) return res.json({ reply: `Aqui está o manual da **Geladeira Portátil**:\n\n📥 [Baixar Manual](${BASE}/MANUAL GELADEIRAS.pdf)${RODAPE}` });
-      if (sobreGerador) return res.json({ reply: `Aqui está o manual do **Gerador Digital 24V**:\n\n📥 [Baixar Manual](${BASE}/MANUAL GERADOR 24V.pdf)${RODAPE}` });
+      const SLIM_PDF = `${BASE}/MANUAL%20AR%20SLIM%20SERIE%202.pdf`;
+      const ECO_PDF = `${BASE}/MANUAL%20AR%20ECO%20COMPACT.pdf`;
+      const GEL_PDF = `${BASE}/MANUAL%20GELADEIRAS.pdf`;
+      const GER_PDF = `${BASE}/MANUAL%20GERADOR%2024V.pdf`;
+      if (sobreSlim) return res.json({ reply: `Aqui está o manual do **Ar-Condicionado Slim Série 2**:\n\n${SLIM_PDF}${RODAPE}` });
+      if (sobreEco) return res.json({ reply: `Aqui está o manual do **Ar-Condicionado Eco Compact**:\n\n${ECO_PDF}${RODAPE}` });
+      if (sobreGeladeira) return res.json({ reply: `Aqui está o manual da **Geladeira Portátil**:\n\n${GEL_PDF}${RODAPE}` });
+      if (sobreGerador) return res.json({ reply: `Aqui está o manual do **Gerador Digital 24V**:\n\n${GER_PDF}${RODAPE}` });
       if (sobreAr) {
-        // Não especificou qual ar
-        return res.json({ reply: `Qual manual você precisa?\n\n📥 [Manual Ar Slim Série 2](${BASE}/MANUAL AR SLIM SERIE 2.pdf)\n📥 [Manual Eco Compact](${BASE}/MANUAL AR ECO COMPACT.pdf)${RODAPE}` });
+        return res.json({ reply: `Qual manual você precisa?\n\n${SLIM_PDF}\n${ECO_PDF}${RODAPE}` });
       }
       // Manual sem produto especificado — lista todos
-      return res.json({ reply: `Aqui estão todos os manuais disponíveis:\n\n📥 [Manual Ar Slim Série 2](${BASE}/MANUAL AR SLIM SERIE 2.pdf)\n📥 [Manual Eco Compact](${BASE}/MANUAL AR ECO COMPACT.pdf)\n📥 [Manual Geladeira Portátil](${BASE}/MANUAL GELADEIRAS.pdf)\n📥 [Manual Gerador Digital 24V](${BASE}/MANUAL GERADOR 24V.pdf)${RODAPE}` });
+      return res.json({ reply: `Aqui estão todos os manuais disponíveis:\n\n📥 **Ar Slim Série 2:** ${SLIM_PDF}\n📥 **Eco Compact:** ${ECO_PDF}\n📥 **Geladeira Portátil:** ${GEL_PDF}\n📥 **Gerador Digital 24V:** ${GER_PDF}${RODAPE}` });
     }
 
     // Detecta botão "Tenho uma dúvida" dos cards
