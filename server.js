@@ -1563,7 +1563,7 @@ app.post('/api/chat', async (req, res) => {
         const links = resultados.map(r => `📁 **${r.marcaNome} — ${r.modeloNome}**: ${r.link}`).join('\n');
         return res.json({ reply: `${aviso}\n\n${links}` });
       } else {
-        return res.json({ reply: `Não encontrei depoimentos para essa marca ou modelo. 😊` });
+        return res.json({ reply: `Não encontrei depoimentos para essa marca ou modelo.\n\nVerifique se o nome foi escrito corretamente e tente novamente com a mensagem completa.\nExemplo: **"depoimento Scania NTG"** ou **"depoimento Mercedes 1620"**.` });
       }
     }
 
