@@ -214,8 +214,9 @@ function buscarNoIndice(query) {
   // Identifica marca
   const marcasDiretas = ['scania', 'volvo', 'mercedes', 'iveco', 'man', 'daf', 'ford', 'volkswagen', 'vw', 'hyundai', 'fiat', 'renault', 'isuzu', 'kia'];
   let marcaBusca = '';
+  let modeloDetectadoViaMapa = ''; // modelo identificado via MODELOS_MARCAS (ex: "1620" -> mercedes)
   for (const [modelo, marca] of Object.entries(MODELOS_MARCAS)) {
-    if (q.includes(normIdx(modelo))) { marcaBusca = marca; break; }
+    if (q.includes(normIdx(modelo))) { marcaBusca = marca; modeloDetectadoViaMapa = normIdx(modelo); break; }
   }
   if (!marcaBusca) {
     for (const marca of marcasDiretas) {
@@ -224,7 +225,11 @@ function buscarNoIndice(query) {
   }
 
   // Palavras que identificam o modelo (sem a marca e sem stopwords)
-  const palavrasModelo = palavrasQuery.filter(p => !marcasDiretas.includes(p) && p !== marcaBusca);
+  // Se a marca foi detectada via MODELOS_MARCAS, inclui o modelo detectado nas palavras de busca
+  let palavrasModelo = palavrasQuery.filter(p => !marcasDiretas.includes(p) && p !== marcaBusca);
+  if (modeloDetectadoViaMapa && !palavrasModelo.includes(modeloDetectadoViaMapa)) {
+    palavrasModelo = [modeloDetectadoViaMapa, ...palavrasModelo];
+  }
 
   if (marcaBusca) {
     const pastasMarca = indiceDrive.filter(item => normIdx(item.marca).includes(marcaBusca));
@@ -1437,8 +1442,12 @@ app.post('/api/chat', async (req, res) => {
     const querDepoimentoSemMarca = ['depoimento', 'foto de cliente', 'video de cliente'].some(p => ultimaMensagem.includes(p)) &&
       !['scania','volvo','mercedes','volkswagen','vw','iveco','ford','man','daf','hyundai','kia','fiat','renault','barco'].some(p => ultimaMensagem.includes(p));
     if (querDepoimentoSemMarca) {
-      return res.json({ reply: `Para buscar depoimentos, preciso saber a marca ou modelo do caminhão:
-[SUGESTOES]depoimento Scania NTG|depoimento Volvo FH|depoimento Mercedes Actros[/SUGESTOES]` });
+      return res.json({ reply: `Para buscar depoimentos, preciso saber a marca ou modelo do caminhão. Exemplos:
+
+• "depoimento Scania R450"
+• "depoimento Volvo FH 2019"
+• "depoimento Mercedes Actros"
+• "depoimento VW Constellation"` });
     }
 
     // Assistência técnica sem localidade
