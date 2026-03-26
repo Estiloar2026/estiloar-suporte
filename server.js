@@ -203,6 +203,11 @@ function normIdx(s) {
   return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 }
 
+// Normaliza números removendo pontos e espaços (ex: "8 150", "8.150", "8150" → "8150")
+function normNum(s) {
+  return (s || '').replace(/[\s.]/g, '');
+}
+
 function buscarNoIndice(query) {
   if (indiceDrive.length === 0) return null;
   const q = normIdx(query);
@@ -238,25 +243,29 @@ function buscarNoIndice(query) {
     if (palavrasModelo.length > 0) {
 
       // Match exato — todas as palavras do modelo aparecem no nome da pasta
-      // Usa boundary para números (ex: "260" não deve dar match em "270")
+      // Para números: normaliza removendo pontos e espaços antes de comparar
       const exatos = pastasMarca.filter(item => {
         const nomeModelo = normIdx(item.modeloNome);
+        const nomeModeloSemSep = normNum(nomeModelo);
         return palavrasModelo.every(p => {
-          // Para números, exige match exato (não parcial)
           if (/^\d+$/.test(p)) {
-            return new RegExp('(^|[^\d])' + p + '([^\d]|$)').test(nomeModelo);
+            const pSemSep = normNum(p);
+            // Compara sem separadores e exige boundary
+            return new RegExp('(^|[^\d])' + pSemSep + '([^\d]|$)').test(nomeModeloSemSep);
           }
           return nomeModelo.includes(p);
         });
       });
       if (exatos.length > 0) return exatos;
 
-      // Match parcial — pelo menos uma palavra aparece (com boundary para números)
+      // Match parcial — pelo menos uma palavra aparece
       const parciais = pastasMarca.filter(item => {
         const nomeModelo = normIdx(item.modeloNome);
+        const nomeModeloSemSep = normNum(nomeModelo);
         return palavrasModelo.some(p => {
           if (/^\d+$/.test(p)) {
-            return new RegExp('(^|[^\d])' + p + '([^\d]|$)').test(nomeModelo);
+            const pSemSep = normNum(p);
+            return new RegExp('(^|[^\d])' + pSemSep + '([^\d]|$)').test(nomeModeloSemSep);
           }
           return nomeModelo.includes(p);
         });
