@@ -81,6 +81,8 @@
   .spec-tag { background:var(--light); border:1px solid var(--border); color:var(--blue); font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px; }
   .produto-btn { width:100%; padding:10px; background:var(--navy); color:white; border:none; border-radius:10px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:6px; }
   .produto-btn:hover { background:var(--blue); }
+  .manual-btn { width:100%; padding:8px; background:transparent; color:var(--blue); border:1.5px solid var(--border); border-radius:10px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; margin-top:8px; }
+  .manual-btn:hover { background:var(--light); border-color:var(--sky); color:var(--navy); }
 
   /* GUIA RÁPIDO */
   .guia-section { background: var(--navy); padding: 56px 24px; margin-top: 48px; }
@@ -152,10 +154,6 @@
   .send-btn { width:40px; height:40px; background:var(--blue); border:none; border-radius:50%; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; flex-shrink:0; }
   .send-btn:hover { background:var(--navy); transform:scale(1.08); }
   .send-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
-
-  .sugestoes-container { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
-  .sugestao-btn { background: var(--light); border: 1.5px solid var(--sky); color: var(--blue); font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif; padding: 8px 14px; border-radius: 20px; cursor: pointer; text-align: left; transition: all 0.2s; }
-  .sugestao-btn:hover { background: var(--sky); color: var(--navy); transform: translateX(3px); }
 
   .contact-bar { background:var(--navy); padding:24px 40px; display:flex; justify-content:center; gap:52px; flex-wrap:wrap; border-top:2px solid var(--sky); }
   .contact-item { display:flex; align-items:center; gap:12px; }
@@ -239,6 +237,8 @@
           <span class="spec-tag">Gás R134a</span>
         </div>
         <button class="produto-btn" onclick="askProduct('ar-condicionado slim série 2')">💬 Tenho uma dúvida</button>
+        <a href="/MANUAL AR SLIM SERIE 2.pdf" target="_blank" class="manual-btn">📥 Baixar Manual</a>
+        <a href="/MANUAL AR SLIM SERIE 2.pdf" target="_blank" class="manual-btn">📥 Baixar Manual</a>
       </div>
     </div>
 
@@ -268,6 +268,8 @@
           <span class="spec-tag">Gás R134a</span>
         </div>
         <button class="produto-btn" onclick="askProduct('ar-condicionado eco compact')">💬 Tenho uma dúvida</button>
+        <a href="/MANUAL AR ECO COMPACT.pdf" target="_blank" class="manual-btn">📥 Baixar Manual</a>
+        <a href="/MANUAL AR ECO COMPACT.pdf" target="_blank" class="manual-btn">📥 Baixar Manual</a>
       </div>
     </div>
 
@@ -297,6 +299,8 @@
           <span class="spec-tag">60W</span>
         </div>
         <button class="produto-btn" onclick="askProduct('geladeira portátil')">💬 Tenho uma dúvida</button>
+        <a href="/MANUAL GELADEIRAS.pdf" target="_blank" class="manual-btn">📥 Baixar Manual</a>
+        <a href="/MANUAL GELADEIRAS.pdf" target="_blank" class="manual-btn">📥 Baixar Manual</a>
       </div>
     </div>
 
@@ -326,6 +330,8 @@
           <span class="spec-tag">Bluetooth</span>
         </div>
         <button class="produto-btn" onclick="askProduct('gerador digital 24V')">💬 Tenho uma dúvida</button>
+        <a href="/MANUAL GERADOR 24V.pdf" target="_blank" class="manual-btn">📥 Baixar Manual</a>
+        <a href="/MANUAL GERADOR 24V.pdf" target="_blank" class="manual-btn">📥 Baixar Manual</a>
       </div>
     </div>
 
@@ -573,15 +579,6 @@ function addTyping() {
 }
 function removeTyping() { const el=document.getElementById('typingIndicator'); if(el)el.remove(); }
 function formatResponse(text) {
-  // Processa blocos [SUGESTOES] antes de qualquer outra formatação
-  text = text.replace(/\[SUGESTOES\]([\s\S]*?)\[\/SUGESTOES\]/g, function(_, conteudo) {
-    const opcoes = conteudo.split('|').map(s => s.trim()).filter(Boolean);
-    const botoes = opcoes.map(opcao =>
-      `<button class="sugestao-btn" onclick="enviarSugestao('${opcao.replace(/'/g, "\\'")}')">${opcao}</button>`
-    ).join('');
-    return `<div class="sugestoes-container">${botoes}</div>`;
-  });
-
   return text
     .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
     .replace(/^- (.+)$/gm,'<li>$1</li>')
@@ -589,12 +586,6 @@ function formatResponse(text) {
     .replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:#4db8e8;word-break:break-all;">$1</a>')
     .replace(/\n\n/g,'<br><br>')
     .replace(/\n/g,'<br>');
-}
-
-function enviarSugestao(texto) {
-  const input = document.getElementById('chatInput');
-  input.value = texto;
-  sendMessage();
 }
 async function sendMessage() {
   if(isLoading) return;
