@@ -1438,17 +1438,6 @@ app.post('/api/chat', async (req, res) => {
 [SUGESTOES]imagem técnica da geladeira 35L|imagem técnica da geladeira 45L|imagem técnica da geladeira 55L[/SUGESTOES]` });
     }
 
-    // Depoimento sem marca
-    const querDepoimentoSemMarca = ['depoimento', 'foto de cliente', 'video de cliente'].some(p => ultimaMensagem.includes(p)) &&
-      !['scania','volvo','mercedes','volkswagen','vw','iveco','ford','man','daf','hyundai','kia','fiat','renault','barco'].some(p => ultimaMensagem.includes(p));
-    if (querDepoimentoSemMarca) {
-      return res.json({ reply: `Para buscar depoimentos, preciso saber a marca ou modelo do caminhão. Exemplos:
-
-• "depoimento Scania R450"
-• "depoimento Volvo FH 2019"
-• "depoimento Mercedes Actros"
-• "depoimento VW Constellation"` });
-    }
 
     // Assistência técnica sem localidade
     const querAssistenciaSemLocal = palavrasAssistencia.some(p => ultimaMensagem.includes(p)) &&
