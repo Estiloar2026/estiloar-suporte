@@ -797,7 +797,8 @@ Como realizar pedidos de vendas no sistema.
   geladeira_geral: `
 PRODUTO: GELADEIRA PORTÁTIL
 Modelos: 35L, 45L e 55L
-Tensão: DC 12V/24V ou AC 100~240V
+Tensão: QUADRIVOLT — funciona em DC 12V, DC 24V e AC 100~240V automaticamente (NÃO perguntar voltagem)
+Preço: único por modelo (não há variação por voltagem)
 Resfriamento até -20°C | Potência: 60W | Ruído: <45dB
 Faixa de temperatura: -20°C a +20°C
 Display digital | Duas zonas independentes (esquerda e direita)
@@ -1124,11 +1125,24 @@ app.post('/api/chat', async (req, res) => {
       return res.json({ reply: `Aqui estão todos os manuais disponíveis:\n\n📥 **Ar Slim Série 2:** ${SLIM_PDF}\n📥 **Eco Compact:** ${ECO_PDF}\n📥 **Geladeira Portátil:** ${GEL_PDF}\n📥 **Gerador Digital 24V:** ${GER_PDF}${RODAPE}` });
     }
 
-    // Detecta pedido de preço/valor do ar sem modelo especificado
-    const querPrecoAr = (ultimaMensagem.includes('valor') || ultimaMensagem.includes('preco') || ultimaMensagem.includes('preço') || ultimaMensagem.includes('quanto')) &&
-      (ultimaMensagem.includes('ar') || ultimaMensagem.includes('condicionado') || ultimaMensagem.includes('slim') || ultimaMensagem.includes('eco'));
+    // Detecta pedido de preço/valor do ar sem modelo/voltagem especificados
+    // Exclui geladeira, gerador — só dispara para ar-condicionado
+    const sobreGeladeira = ultimaMensagem.includes('geladeira') || ultimaMensagem.includes('frigobar');
+    const sobreGerador2 = ultimaMensagem.includes('gerador');
+    const querPrecoAr = !sobreGeladeira && !sobreGerador2 &&
+      (ultimaMensagem.includes('valor') || ultimaMensagem.includes('preco') || ultimaMensagem.includes('preço') || ultimaMensagem.includes('quanto')) &&
+      ((/\bar\b/.test(ultimaMensagem)) || ultimaMensagem.includes('condicionado') || ultimaMensagem.includes('slim') || ultimaMensagem.includes('eco compact'));
     const jaTemVoltagem = ultimaMensagem.includes('12v') || ultimaMensagem.includes('12 v') || ultimaMensagem.includes('24v') || ultimaMensagem.includes('24 v');
-    const jaTemModelo = ultimaMensagem.includes('slim') || ultimaMensagem.includes('serie 2') || ultimaMensagem.includes('eco compact') || ultimaMensagem.includes('eco') || ultimaMensagem.includes('compact');
+    const jaTemModelo = ultimaMensagem.includes('slim') || ultimaMensagem.includes('serie 2') || ultimaMensagem.includes('eco compact');
+
+    // Detecta pedido de preço da geladeira sem modelo especificado
+    const querPrecoGeladeira = sobreGeladeira &&
+      (ultimaMensagem.includes('valor') || ultimaMensagem.includes('preco') || ultimaMensagem.includes('preço') || ultimaMensagem.includes('quanto'));
+    const jaTemModeloGeladeira = ultimaMensagem.includes('35') || ultimaMensagem.includes('45') || ultimaMensagem.includes('55');
+
+    if (querPrecoGeladeira && !jaTemModeloGeladeira) {
+      return res.json({ reply: `Qual o modelo da geladeira?\n\n• **35 litros**\n• **45 litros**\n• **55 litros**` });
+    }
 
     if (querPrecoAr && !jaTemVoltagem && !jaTemModelo) {
       return res.json({ reply: `Para consultar o preço, preciso saber:\n\n**1. Qual modelo?**\n• Ar Slim Série 2\n• Ar Eco Compact\n\n**2. Qual a voltagem do caminhão?**\n• 12V\n• 24V` });
