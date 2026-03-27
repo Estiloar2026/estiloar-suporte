@@ -216,6 +216,28 @@
   @media(max-width:1100px) { .produtos-grid { grid-template-columns:repeat(2,1fr); } .processos-grid { grid-template-columns:1fr; } .lojas-grid { grid-template-columns:repeat(2,1fr); } .contatos-grid { grid-template-columns:repeat(2,1fr); } .apresentacao-container { grid-template-columns:1fr; } }
   @media(max-width:900px) { header { padding:0 20px; } .hero { padding:52px 20px 44px; } .chat-container { width:calc(100vw - 40px); right:20px; } }
   @media(max-width:600px) { .produtos-grid { grid-template-columns:1fr; } .guia-grid { grid-template-columns:1fr; } }
+
+  /* MAPA */
+  .mapa-section { background: var(--bg); padding: 56px 0 0; }
+  .mapa-container { max-width: 1140px; margin: 0 auto; padding: 0 24px 48px; }
+  .mapa-header { margin-bottom: 28px; }
+  .mapa-busca-wrap { display: flex; gap: 10px; align-items: center; max-width: 600px; margin-top: 20px; }
+  .mapa-input { flex: 1; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 16px; font-size: 14px; font-family: 'Inter', sans-serif; color: var(--navy); outline: none; transition: border-color 0.2s; }
+  .mapa-input:focus { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(77,184,232,0.15); }
+  .mapa-clear-btn { background: var(--border); border: none; border-radius: 8px; width: 36px; height: 36px; cursor: pointer; font-size: 14px; color: var(--gray); transition: all 0.2s; flex-shrink: 0; }
+  .mapa-clear-btn:hover { background: var(--sky); color: white; }
+  .mapa-contador { font-size: 13px; color: var(--gray); margin-top: 10px; font-weight: 500; }
+  .mapa-leaflet { width: 100%; height: 480px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 24px rgba(10,30,61,0.10); overflow: hidden; margin-bottom: 28px; z-index: 1; }
+  .mapa-lista { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .mapa-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px; transition: all 0.2s; cursor: pointer; }
+  .mapa-card:hover { border-color: var(--sky); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(10,30,61,0.10); }
+  .mapa-card-nome { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 800; color: var(--navy); text-transform: uppercase; margin-bottom: 6px; }
+  .mapa-card-cidade { font-size: 12px; color: var(--blue); font-weight: 600; margin-bottom: 4px; }
+  .mapa-card-end { font-size: 11px; color: var(--gray); line-height: 1.5; margin-bottom: 6px; }
+  .mapa-card-tel { font-size: 12px; color: var(--navy); font-weight: 600; }
+  .mapa-vazio { text-align: center; padding: 32px; color: var(--gray); font-size: 14px; grid-column: 1/-1; }
+  @media(max-width:900px) { .mapa-lista { grid-template-columns: repeat(2,1fr); } .mapa-leaflet { height: 360px; } }
+  @media(max-width:600px) { .mapa-lista { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -669,8 +691,25 @@
   </div>
 </section>
 
+<!-- MAPA DE ASSISTÊNCIAS TÉCNICAS -->
+<section class="mapa-section">
+  <div class="mapa-container">
+    <div class="mapa-header">
+      <div class="section-label">Rede Autorizada</div>
+      <div class="section-title" style="color:var(--navy)">Assistências Técnicas</div>
+      <p class="section-desc">Encontre o ponto de assistência técnica mais próximo de você.</p>
+      <div class="mapa-busca-wrap">
+        <input type="text" id="mapaBusca" class="mapa-input" placeholder="Digite a cidade ou estado (ex: Uberlândia, MG, São Paulo)..." oninput="filtrarMapa(this.value)">
+        <button class="mapa-clear-btn" onclick="limparBuscaMapa()" title="Limpar">✕</button>
+      </div>
+      <div id="mapaContador" class="mapa-contador">Carregando pontos...</div>
+    </div>
+    <div id="mapaLeaflet" class="mapa-leaflet"></div>
+    <div id="mapaLista" class="mapa-lista"></div>
+  </div>
+</section>
+
 <div class="contact-bar">
-  <div class="contact-item"><div class="contact-icon">📞</div><div><div class="contact-label">Telefone</div><div class="contact-value">(34) 3293-8000</div></div></div>
   <div class="contact-item"><div class="contact-icon">🕐</div><div><div class="contact-label">Horário</div><div class="contact-value">Seg–Sex, 08h–18h</div></div></div>
   <div class="contact-item"><div class="contact-icon">📍</div><div><div class="contact-label">Uberlândia – MG</div><div class="contact-value">Av. Eng. Diniz, 848</div></div></div>
   <div class="contact-item"><div class="contact-icon">🌐</div><div><div class="contact-label">Site</div><div class="contact-value">www.estiloar.com.br</div></div></div>
@@ -794,6 +833,164 @@ async function sendMessage() {
   } catch(err) { removeTyping(); addMessage('bot','❌ Não foi possível conectar. Tente novamente.'); }
   isLoading = false;
   document.getElementById('sendBtn').disabled = false;
+}
+</script>
+
+<!-- Leaflet.js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// ============================================================
+// MAPA DE ASSISTÊNCIAS TÉCNICAS
+// ============================================================
+let mapaInstance = null;
+let todosOsPontos = [];
+let marcadores = [];
+let markerGroup = null;
+
+async function iniciarMapa() {
+  try {
+    const resp = await fetch('/api/assistencias-mapa');
+    const data = await resp.json();
+    todosOsPontos = data.pontos || [];
+    
+    // Inicializa mapa centrado no Brasil
+    mapaInstance = L.map('mapaLeaflet', { zoomControl: true }).setView([-15.77972, -47.92972], 4);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 18
+    }).addTo(mapaInstance);
+
+    markerGroup = L.layerGroup().addTo(mapaInstance);
+    
+    renderizarPontos(todosOsPontos);
+  } catch(err) {
+    console.error('Erro ao carregar mapa:', err);
+    document.getElementById('mapaContador').textContent = 'Erro ao carregar pontos.';
+  }
+}
+
+function criarIcone() {
+  return L.divIcon({
+    className: '',
+    html: '<div style="width:28px;height:28px;background:linear-gradient(135deg,#1a6bb5,#4db8e8);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 8px rgba(10,30,61,0.35);"></div>',
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -30]
+  });
+}
+
+function renderizarPontos(pontos) {
+  markerGroup.clearLayers();
+  marcadores = [];
+
+  pontos.forEach((p, i) => {
+    if (!p.lat || !p.lng) return;
+    const marker = L.marker([p.lat, p.lng], { icon: criarIcone() });
+    
+    marker.bindPopup(`
+      <div style="font-family:'Inter',sans-serif;min-width:200px;padding:4px 0">
+        <div style="font-weight:800;font-size:13px;color:#0a1e3d;margin-bottom:6px;text-transform:uppercase">${p.nome}</div>
+        <div style="font-size:12px;color:#1a6bb5;font-weight:600;margin-bottom:4px">📍 ${p.cidade} - ${p.estado}</div>
+        <div style="font-size:11px;color:#64748b;margin-bottom:6px;line-height:1.5">${p.endereco}</div>
+        <div style="font-size:12px;color:#0a1e3d;font-weight:700">📞 ${p.telefone}</div>
+      </div>
+    `, { maxWidth: 280 });
+
+    marker.addTo(markerGroup);
+    marcadores.push({ marker, ponto: p, index: i });
+  });
+
+  // Atualiza contador
+  const total = pontos.length;
+  document.getElementById('mapaContador').textContent =
+    total === 0 ? 'Nenhum ponto encontrado para essa busca.'
+    : total === 1 ? '1 ponto encontrado'
+    : `${total} pontos encontrados`;
+
+  // Renderiza lista de cards
+  renderizarLista(pontos);
+
+  // Ajusta zoom para os pontos visíveis
+  if (pontos.length > 0) {
+    const validos = pontos.filter(p => p.lat && p.lng);
+    if (validos.length > 0) {
+      const bounds = L.latLngBounds(validos.map(p => [p.lat, p.lng]));
+      mapaInstance.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+    }
+  } else {
+    mapaInstance.setView([-15.77972, -47.92972], 4);
+  }
+}
+
+function renderizarLista(pontos) {
+  const lista = document.getElementById('mapaLista');
+  if (pontos.length === 0) {
+    lista.innerHTML = '<div class="mapa-vazio">Nenhum ponto encontrado. Tente outra cidade ou estado.</div>';
+    return;
+  }
+  lista.innerHTML = pontos.map((p, i) => `
+    <div class="mapa-card" onclick="focarPonto(${i}, '${p.lat}', '${p.lng}')">
+      <div class="mapa-card-nome">${p.nome}</div>
+      <div class="mapa-card-cidade">📍 ${p.cidade} — ${p.estado}</div>
+      <div class="mapa-card-end">${p.endereco}</div>
+      <div class="mapa-card-tel">📞 ${p.telefone}</div>
+    </div>
+  `).join('');
+}
+
+function focarPonto(index, lat, lng) {
+  if (!mapaInstance) return;
+  mapaInstance.setView([parseFloat(lat), parseFloat(lng)], 14, { animate: true });
+  const item = marcadores.find(m => m.ponto.lat == lat && m.ponto.lng == lng);
+  if (item) item.marker.openPopup();
+  document.getElementById('mapaLeaflet').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+let debounceTimer;
+function filtrarMapa(valor) {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(async () => {
+    const q = valor.trim();
+    if (q.length < 2) {
+      renderizarPontos(todosOsPontos);
+      return;
+    }
+    try {
+      const resp = await fetch(`/api/assistencias-mapa?q=${encodeURIComponent(q)}`);
+      const data = await resp.json();
+      renderizarPontos(data.pontos || []);
+    } catch(err) {
+      console.error(err);
+    }
+  }, 300);
+}
+
+function limparBuscaMapa() {
+  document.getElementById('mapaBusca').value = '';
+  renderizarPontos(todosOsPontos);
+}
+
+// Inicia o mapa quando o usuário já estiver logado
+function tentarIniciarMapa() {
+  if (sessionStorage.getItem('logado') === '1' && !mapaInstance) {
+    iniciarMapa();
+  }
+}
+
+// Hook no login existente
+const _fazerLoginOriginal = typeof fazerLogin !== 'undefined' ? fazerLogin : null;
+document.addEventListener('DOMContentLoaded', () => {
+  tentarIniciarMapa();
+});
+
+// Patch no botão de login para iniciar mapa após login
+const _loginBtn = document.querySelector('.login-btn');
+if (_loginBtn) {
+  _loginBtn.addEventListener('click', () => {
+    setTimeout(tentarIniciarMapa, 800);
+  });
 }
 </script>
 </body>
