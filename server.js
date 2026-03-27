@@ -134,7 +134,7 @@ const paginacaoAssistencia = new Map();
 const MODELOS_MARCAS = {
   'hr': 'hyundai', 'hd': 'hyundai', 'hr 160': 'hyundai',
   'r450': 'scania', 'r500': 'scania', 's500': 'scania', 'p360': 'scania', 'g420': 'scania',
-  'r410': 'scania', 'r480': 'scania', 'p310': 'scania', 'p340': 'scania',
+  'r410': 'scania', 'r480': 'scania', 'p310': 'scania', 'p340': 'scania', 'ntg': 'scania', 'p400': 'scania', 'r400': 'scania', 's450': 'scania', 'r540': 'scania',
   'fh': 'volvo', 'fm': 'volvo', 'fmx': 'volvo', 'vm': 'volvo', 'fh540': 'volvo',
   'actros': 'mercedes', 'axor': 'mercedes', 'atego': 'mercedes', 'accelo': 'mercedes',
   '1620': 'mercedes', '1933': 'mercedes', '2544': 'mercedes', '2646': 'mercedes',
@@ -987,7 +987,10 @@ function selecionarContexto(mensagem) {
     m.includes('constellation') || m.includes('fh') || m.includes('scania') || m.includes('mercedes') ||
     m.includes('iveco') || m.includes('volkswagen') || m.includes('vw') || m.includes('hyundai') ||
     m.includes('kia') || m.includes('ford') || m.includes('man') ||
-    m.includes('recomend') || m.includes('indicad') || m.includes('qual modelo')
+    m.includes('recomend') || m.includes('indicad') || m.includes('qual modelo') ||
+    m.includes('ntg') || m.includes('actros') || m.includes('axor') || m.includes('atego') ||
+    m.includes('tgx') || m.includes('tgs') || m.includes('stralis') || m.includes('tector') ||
+    m.includes('cargo') || m.includes('atron') || m.includes('acello')
   ) {
     if (m.includes('eco') || m.includes('compact')) {
       secoes.push(SECOES.eco_compact);
@@ -1001,7 +1004,10 @@ function selecionarContexto(mensagem) {
       m.includes('scania') || m.includes('mercedes') || m.includes('iveco') ||
       m.includes('volkswagen') || m.includes('vw') || m.includes('hyundai') ||
       m.includes('kia') || m.includes('ford') || m.includes('man') ||
-      m.includes('constellation') || m.includes('fh') || m.includes('modelo')
+      m.includes('constellation') || m.includes('fh') || m.includes('modelo') ||
+      m.includes('ntg') || m.includes('actros') || m.includes('axor') || m.includes('atego') ||
+      m.includes('tgx') || m.includes('tgs') || m.includes('stralis') || m.includes('tector') ||
+      m.includes('cargo') || m.includes('atron') || m.includes('acello')
     ) {
       secoes.push(SECOES.ar_slim_geral);
       secoes.push(SECOES.instalacao_por_caminhao);
@@ -1291,19 +1297,45 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Detecta pedido de foto do produto
-    const produtoFoto = detectarFotoProduto(ultimaMensagem);
+    // Verifica também se a resposta anterior estava pedindo o modelo de foto
+    const ultimaRespostaFoto = messages.slice().reverse().find(m => m.role === 'assistant')?.content || '';
+    const eraRespostaFoto = ultimaRespostaFoto.includes('fotos do Slim') || ultimaRespostaFoto.includes('fotos do Eco') || ultimaRespostaFoto.includes('modelo do ar-condicionado') || ultimaRespostaFoto.includes('SUGESTOES]fotos do Slim') || ultimaRespostaFoto.includes('preciso saber o modelo do ar');
+    const eraRespostaFotoGeladeira = ultimaRespostaFoto.includes('fotos da geladeira') || ultimaRespostaFoto.includes('modelo da geladeira') || ultimaRespostaFoto.includes('SUGESTOES]fotos da geladeira');
+
+    // Se a resposta anterior pedia modelo de foto de ar, tenta detectar só pelo modelo
+    let produtoFotoContexto = null;
+    if (eraRespostaFoto) {
+      const m2 = ultimaMensagem;
+      if (m2.includes('eco') || m2.includes('compact')) produtoFotoContexto = 'ecocompact';
+      else if (m2.includes('slim') || m2.includes('serie 2') || m2.includes('série 2') || m2.includes('slim serie') || m2.includes('slim série') || m2.includes('é o slim') || m2.includes('e o slim') || m2.includes('slim serie 2') || m2.includes('serie 2')) produtoFotoContexto = 'ar';
+    }
+    if (eraRespostaFotoGeladeira) {
+      const m2 = ultimaMensagem;
+      if (m2.includes('35')) produtoFotoContexto = 'geladeira-35l';
+      else if (m2.includes('45')) produtoFotoContexto = 'geladeira-45l';
+      else if (m2.includes('55')) produtoFotoContexto = 'geladeira-55l';
+      else if (m2.includes('geladeira')) produtoFotoContexto = 'geladeira';
+    }
+
+    const produtoFoto = produtoFotoContexto || detectarFotoProduto(ultimaMensagem);
     if (produtoFoto) {
       // Ar sem modelo especificado — pergunta com botões
       if (produtoFoto === 'ar-sem-modelo-foto') {
         return res.json({ reply: `Para te enviar as fotos, preciso saber o modelo do ar-condicionado:\n[SUGESTOES]fotos do Slim Série 2|fotos do Eco Compact[/SUGESTOES]` });
       }
-      const fotos = FOTOS_PRODUTOS[produtoFoto];
+      // Geladeira sem modelo — pede modelo
+      if (produtoFoto === 'geladeira-sem-modelo-foto') {
+        return res.json({ reply: `Para te enviar as fotos da geladeira, preciso saber o modelo:\n[SUGESTOES]fotos da geladeira 35L|fotos da geladeira 45L|fotos da geladeira 55L[/SUGESTOES]` });
+      }
+      // Geladeiras específicas — usa as fotos genéricas de geladeira
+      const chave = ['geladeira-35l','geladeira-45l','geladeira-55l'].includes(produtoFoto) ? 'geladeira' : produtoFoto;
+      const fotos = FOTOS_PRODUTOS[chave];
       if (fotos && fotos.length > 0) {
         const nomeProduto = produtoFoto === 'ecocompact' ? 'Eco Compact' :
-          produtoFoto === 'geladeira' ? 'Geladeira Portátil' :
+          produtoFoto.startsWith('geladeira') ? 'Geladeira Portátil' :
           produtoFoto === 'gerador' ? 'Gerador Digital 24V' : 'Ar Slim Série 2';
         const links = fotos.map((img, i) => `📷 **Foto ${i+1}**: ${img}`).join('\n');
-        return res.json({ reply: `Entendi que você quer as fotos do **${nomeProduto}**. Aqui estão:\n\n${links}${RODAPE}` });
+        return res.json({ reply: `Aqui estão as fotos do **${nomeProduto}**:\n\n${links}${RODAPE}` });
       }
     }
 
